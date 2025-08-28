@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-impact-blue: #3A6FF8;
+  --color-impact-lime: #8AE34C;
+  --color-impact-dark: #1E1E1E;
+  --color-impact-light: #F4F5F7;
+}
+
+html, body, #__next {
+  height: 100%;
+}
+
+body {
+  color: #1E1E1E;
+  background: #F4F5F7;
+}
