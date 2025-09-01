@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 
 export default async function DashboardPage() {
@@ -18,7 +19,7 @@ export default async function DashboardPage() {
   if (mErr) throw new Error(mErr.message);
 
   let workspaceId = memberships?.[0]?.workspace_id as string | undefined;
-  let workspaceName = (memberships?.[0] as any)?.workspaces?.name as string | undefined;
+  let workspaceName = (memberships?.[0] as { workspaces?: { name: string } })?.workspaces?.name as string | undefined;
 
   // Zo niet: maak workspace + membership
   if (!workspaceId) {
@@ -45,9 +46,9 @@ export default async function DashboardPage() {
         Workspace: <strong>{workspaceName}</strong>
       </p>
       <div className="mt-6">
-        <a className="underline text-blue-600" href="/">
+        <Link className="underline text-blue-600" href="/">
           Naar QBR generator (stap 3)
-        </a>
+        </Link>
       </div>
       <form action="/signout" method="post" />
     </main>
