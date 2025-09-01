@@ -31,6 +31,7 @@ export default async function DashboardPage() {
   if (!workspaceId) {
     const { data: ws, error: wErr } = await supabase
       .from("workspaces")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .insert({ name: "My Workspace", created_by: session.user.id } as any)
       .select("id, name")
       .single();
@@ -38,6 +39,7 @@ export default async function DashboardPage() {
 
     const { error: memErr } = await supabase
       .from("workspace_members")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .insert({ workspace_id: ws.id, user_id: session.user.id, role: "owner" } as any);
     if (memErr) throw new Error(memErr.message);
 
