@@ -18,8 +18,14 @@ export default async function DashboardPage() {
     .limit(1);
   if (mErr) throw new Error(mErr.message);
 
-  let workspaceId = memberships?.[0]?.workspace_id as string | undefined;
-  let workspaceName = (memberships?.[0] as { workspaces?: { name: string } })?.workspaces?.name as string | undefined;
+  const membership = memberships?.[0] as { 
+    workspace_id: string; 
+    role: string; 
+    workspaces?: { name: string } 
+  } | undefined;
+  
+  let workspaceId = membership?.workspace_id;
+  let workspaceName = membership?.workspaces?.name;
 
   // Zo niet: maak workspace + membership
   if (!workspaceId) {
