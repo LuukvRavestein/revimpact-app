@@ -37,14 +37,16 @@ export default async function DashboardPage() {
       .single();
     if (wErr) throw new Error(wErr.message);
 
+    const workspace = ws as { id: string; name: string };
+    
     const { error: memErr } = await supabase
       .from("workspace_members")
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .insert({ workspace_id: ws.id, user_id: session.user.id, role: "owner" } as any);
+      .insert({ workspace_id: workspace.id, user_id: session.user.id, role: "owner" } as any);
     if (memErr) throw new Error(memErr.message);
 
-    workspaceId = ws.id;
-    workspaceName = ws.name;
+    workspaceId = workspace.id;
+    workspaceName = workspace.name;
   }
 
   return (
