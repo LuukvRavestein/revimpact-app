@@ -31,14 +31,14 @@ export default async function DashboardPage() {
   if (!workspaceId) {
     const { data: ws, error: wErr } = await supabase
       .from("workspaces")
-      .insert({ name: "My Workspace", created_by: session.user.id })
+      .insert({ name: "My Workspace", created_by: session.user.id } as any)
       .select("id, name")
       .single();
     if (wErr) throw new Error(wErr.message);
 
     const { error: memErr } = await supabase
       .from("workspace_members")
-      .insert({ workspace_id: ws.id, user_id: session.user.id, role: "owner" });
+      .insert({ workspace_id: ws.id, user_id: session.user.id, role: "owner" } as any);
     if (memErr) throw new Error(memErr.message);
 
     workspaceId = ws.id;
