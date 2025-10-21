@@ -1,19 +1,30 @@
 "use client"
 
-import { useEffect, useState } from "react"
-
-function PingStatus() {
-  const [status, setStatus] = useState<string>("Checking...")
-  useEffect(() => {
-    fetch("/api/ping").then(async (r) => {
-      const data = await r.json()
-      setStatus(`ok: ${String(data.ok)}, ts: ${String(data.ts)}`)
-    }).catch(() => setStatus("unreachable"))
-  }, [])
-  return <p className="text-sm text-impact-dark/70">Status: {status}</p>
-}
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { createSupabaseBrowserClient } from "@/lib/supabaseClient"
 
 export default function Page() {
+  const router = useRouter()
+  const supabase = createSupabaseBrowserClient()
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      
+      if (session?.user) {
+        // User is logged in, redirect to dashboard
+        router.push('/dashboard')
+      } else {
+        // User is not logged in, redirect to signin
+        router.push('/signin')
+      }
+    }
+
+    checkAuth()
+  }, [router, supabase.auth])
+
+  // Show loading while checking auth
   return (
     <main className="flex min-h-[80vh] flex-col items-center justify-center gap-6 text-center p-6">
       <div className="space-y-3">
@@ -21,10 +32,10 @@ export default function Page() {
         <p className="text-lg md:text-xl text-impact-dark/80">AI that turns customer data into impact.</p>
       </div>
       <div className="flex gap-3">
-        <a href="#" className="rounded-md bg-impact-blue text-white px-5 py-2.5 font-medium shadow hover:opacity-95">Join the Beta</a>
-        <a href="#" className="rounded-md bg-impact-light text-impact-dark px-5 py-2.5 font-medium ring-1 ring-impact-dark/10 hover:bg-white">Learn more</a>
+        <div className="rounded-md bg-impact-blue text-white px-5 py-2.5 font-medium shadow opacity-75">
+          Loading...
+        </div>
       </div>
-      <PingStatus />
     </main>
   )
 }

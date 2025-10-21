@@ -5,10 +5,37 @@ import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
   const supabase = createMiddlewareClient({ req, res });
-  await supabase.auth.getSession(); // ververst cookies indien nodig
+  
+  // Get the current session
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  // Define protected routes that require authentication
+  const protectedRoutes = ['/dashboard', '/data', '/qbr'];
+  const isProtectedRoute = protectedRoutes.some(route => 
+    req.nextUrl.pathname.startsWith(route)
+  );
+  
+  // If accessing a protected route without authentication, redirect to signin
+  if (isProtectedRoute && !session) {
+    const signInUrl = new URL('/signin', req.url);
+    return NextResponse.redirect(signInUrl);
+  }
+  
+  // If accessing signin/signup while already authenticated, redirect to dashboard
+  if ((req.nextUrl.pathname === '/signin' || req.nextUrl.pathname === '/') && session) {
+    const dashboardUrl = new URL('/dashboard', req.url);
+    return NextResponse.redirect(dashboardUrl);
+  }
+  
   return res;
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"]
+  matcher: [
+    '/',
+    '/dashboard/:path*',
+    '/data/:path*', 
+    '/qbr/:path*',
+    '/signin'
+  ]
 };
