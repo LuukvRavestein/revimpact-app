@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { useSearchParams } from "next/navigation";
 
-export default function SignInPage() {
+function SignInForm() {
   const supabase = createSupabaseBrowserClient();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
@@ -51,5 +51,18 @@ export default function SignInPage() {
       {sent && <p className="text-green-700">Check je mail voor de magic link ✉️</p>}
       {err && <p className="text-red-600">{err}</p>}
     </main>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense fallback={
+      <main className="max-w-md mx-auto p-8 space-y-4">
+        <h1 className="text-2xl font-semibold">Sign in to RevImpact</h1>
+        <p className="text-gray-600">Loading...</p>
+      </main>
+    }>
+      <SignInForm />
+    </Suspense>
   );
 }
