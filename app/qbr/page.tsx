@@ -20,8 +20,8 @@ interface CustomerData {
 
 export default function QBRPage() {
   // QBR Generator component
-  const [hasUploadedData, setHasUploadedData] = useState(false)
-  const [selectedCustomer, setSelectedCustomer] = useState<string>("")
+  const [hasUploadedData] = useState(false)
+  // const [selectedCustomer, setSelectedCustomer] = useState<string>("") // Will be used later
   const [customerData, setCustomerData] = useState<CustomerData>({
     name: "",
     email: "",

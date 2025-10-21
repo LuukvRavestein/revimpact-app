@@ -3,7 +3,7 @@
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+// import { Input } from "@/components/ui/input" // Will be used later
 import Link from "next/link"
 
 interface ColumnMapping {
@@ -12,7 +12,7 @@ interface ColumnMapping {
 
 interface ParsedData {
   headers: string[]
-  rows: any[][]
+  rows: string[][]
   columnMapping: ColumnMapping
 }
 
