@@ -1,12 +1,21 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
+import { useSearchParams } from "next/navigation";
 
 export default function SignInPage() {
   const supabase = createSupabaseBrowserClient();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    const error = searchParams.get("error");
+    if (error) {
+      setErr(`Login error: ${error}`);
+    }
+  }, [searchParams]);
 
   const sendLink = async () => {
     setErr(null);
