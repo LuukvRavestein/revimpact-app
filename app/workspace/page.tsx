@@ -22,6 +22,12 @@ interface Workspace {
   created_at: string
 }
 
+interface MembershipData {
+  workspace_id: string
+  role: string
+  workspaces: Workspace | Workspace[]
+}
+
 export default function WorkspacePage() {
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
   const [members, setMembers] = useState<WorkspaceMember[]>([])
@@ -53,7 +59,7 @@ export default function WorkspacePage() {
 
       if (mErr) throw new Error(mErr.message)
 
-      const membership = memberships?.[0] as any
+      const membership = memberships?.[0] as MembershipData | undefined
       if (membership) {
         // Handle the case where workspaces might be an array
         const workspaceData = Array.isArray(membership.workspaces) 
