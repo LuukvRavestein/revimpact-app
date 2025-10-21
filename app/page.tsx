@@ -17,7 +17,7 @@ export default function Page() {
   return (
     <main className="flex min-h-[80vh] flex-col items-center justify-center gap-6 text-center p-6">
       <div className="space-y-3">
-        <h1 className="text-4xl md:text-6xl font-semibold tracking-tight">RevImpact — Make Customer Success measurable.</h1>
+        <h1 className="text-4xl md:text-6xl font-semibold tracking-tight">RevImpact — Make Customer Impact measurable.</h1>
         <p className="text-lg md:text-xl text-impact-dark/80">AI that turns customer data into impact.</p>
       </div>
       <div className="flex gap-3">

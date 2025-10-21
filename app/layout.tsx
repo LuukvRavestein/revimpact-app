@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import "../styles/globals.css"
 
 export const metadata: Metadata = {
-  title: "RevImpact — Make Customer Success measurable.",
+  title: "RevImpact — Make Customer Impact measurable.",
   description: "AI that turns customer data into impact."
 }
 
