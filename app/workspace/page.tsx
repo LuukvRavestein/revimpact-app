@@ -76,13 +76,19 @@ export default function WorkspacePage() {
             id,
             user_id,
             role,
-            created_at,
-            user_email:auth.users(email)
+            created_at
           `)
           .eq("workspace_id", membership.workspace_id)
 
         if (wmErr) throw new Error(wmErr.message)
-        setMembers(workspaceMembers || [])
+        
+        // Transform the data to include mock email for now
+        const membersWithEmail = (workspaceMembers || []).map(member => ({
+          ...member,
+          user_email: `user-${member.user_id.slice(0, 8)}@example.com` // Mock email
+        }))
+        
+        setMembers(membersWithEmail)
       }
     } catch (error) {
       console.error("Error loading workspace:", error)
