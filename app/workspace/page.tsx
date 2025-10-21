@@ -53,18 +53,14 @@ export default function WorkspacePage() {
 
       if (mErr) throw new Error(mErr.message)
 
-      const membership = memberships?.[0] as {
-        workspace_id: string
-        role: string
-        workspaces: {
-          id: string
-          name: string
-          created_by: string
-          created_at: string
-        }
-      } | undefined
+      const membership = memberships?.[0] as any
       if (membership) {
-        setWorkspace(membership.workspaces)
+        // Handle the case where workspaces might be an array
+        const workspaceData = Array.isArray(membership.workspaces) 
+          ? membership.workspaces[0] 
+          : membership.workspaces
+        
+        setWorkspace(workspaceData)
         setCurrentUserRole(membership.role)
 
         // Load all workspace members
