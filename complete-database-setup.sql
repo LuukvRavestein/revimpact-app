@@ -25,7 +25,8 @@ ALTER TABLE workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workspace_members ENABLE ROW LEVEL SECURITY;
 
 -- Basic RLS policies for workspaces
-CREATE POLICY IF NOT EXISTS "Users can view workspaces they belong to" ON workspaces
+DROP POLICY IF EXISTS "Users can view workspaces they belong to" ON workspaces;
+CREATE POLICY "Users can view workspaces they belong to" ON workspaces
   FOR SELECT USING (
     id IN (
       SELECT workspace_id FROM workspace_members 
@@ -33,14 +34,17 @@ CREATE POLICY IF NOT EXISTS "Users can view workspaces they belong to" ON worksp
     )
   );
 
-CREATE POLICY IF NOT EXISTS "Users can create workspaces" ON workspaces
+DROP POLICY IF EXISTS "Users can create workspaces" ON workspaces;
+CREATE POLICY "Users can create workspaces" ON workspaces
   FOR INSERT WITH CHECK (created_by = auth.uid());
 
 -- Basic RLS policies for workspace_members
-CREATE POLICY IF NOT EXISTS "Users can view their workspace memberships" ON workspace_members
+DROP POLICY IF EXISTS "Users can view their workspace memberships" ON workspace_members;
+CREATE POLICY "Users can view their workspace memberships" ON workspace_members
   FOR SELECT USING (user_id = auth.uid());
 
-CREATE POLICY IF NOT EXISTS "Users can create workspace memberships" ON workspace_members
+DROP POLICY IF EXISTS "Users can create workspace memberships" ON workspace_members;
+CREATE POLICY "Users can create workspace memberships" ON workspace_members
   FOR INSERT WITH CHECK (user_id = auth.uid());
 
 -- Now create the customer data tables
@@ -106,7 +110,8 @@ ALTER TABLE customer_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE qbr_reports ENABLE ROW LEVEL SECURITY;
 
 -- Policies for customer_data_uploads
-CREATE POLICY IF NOT EXISTS "Users can view uploads in their workspace" ON customer_data_uploads
+DROP POLICY IF EXISTS "Users can view uploads in their workspace" ON customer_data_uploads;
+CREATE POLICY "Users can view uploads in their workspace" ON customer_data_uploads
   FOR SELECT USING (
     workspace_id IN (
       SELECT workspace_id FROM workspace_members 
@@ -114,7 +119,8 @@ CREATE POLICY IF NOT EXISTS "Users can view uploads in their workspace" ON custo
     )
   );
 
-CREATE POLICY IF NOT EXISTS "Users can create uploads in their workspace" ON customer_data_uploads
+DROP POLICY IF EXISTS "Users can create uploads in their workspace" ON customer_data_uploads;
+CREATE POLICY "Users can create uploads in their workspace" ON customer_data_uploads
   FOR INSERT WITH CHECK (
     workspace_id IN (
       SELECT workspace_id FROM workspace_members 
@@ -123,7 +129,8 @@ CREATE POLICY IF NOT EXISTS "Users can create uploads in their workspace" ON cus
   );
 
 -- Policies for column_mappings
-CREATE POLICY IF NOT EXISTS "Users can view mappings for their uploads" ON column_mappings
+DROP POLICY IF EXISTS "Users can view mappings for their uploads" ON column_mappings;
+CREATE POLICY "Users can view mappings for their uploads" ON column_mappings
   FOR SELECT USING (
     upload_id IN (
       SELECT id FROM customer_data_uploads 
@@ -134,7 +141,8 @@ CREATE POLICY IF NOT EXISTS "Users can view mappings for their uploads" ON colum
     )
   );
 
-CREATE POLICY IF NOT EXISTS "Users can create mappings for their uploads" ON column_mappings
+DROP POLICY IF EXISTS "Users can create mappings for their uploads" ON column_mappings;
+CREATE POLICY "Users can create mappings for their uploads" ON column_mappings
   FOR INSERT WITH CHECK (
     upload_id IN (
       SELECT id FROM customer_data_uploads 
@@ -146,7 +154,8 @@ CREATE POLICY IF NOT EXISTS "Users can create mappings for their uploads" ON col
   );
 
 -- Policies for customer_records
-CREATE POLICY IF NOT EXISTS "Users can view customer records in their workspace" ON customer_records
+DROP POLICY IF EXISTS "Users can view customer records in their workspace" ON customer_records;
+CREATE POLICY "Users can view customer records in their workspace" ON customer_records
   FOR SELECT USING (
     workspace_id IN (
       SELECT workspace_id FROM workspace_members 
@@ -154,7 +163,8 @@ CREATE POLICY IF NOT EXISTS "Users can view customer records in their workspace"
     )
   );
 
-CREATE POLICY IF NOT EXISTS "Users can create customer records in their workspace" ON customer_records
+DROP POLICY IF EXISTS "Users can create customer records in their workspace" ON customer_records;
+CREATE POLICY "Users can create customer records in their workspace" ON customer_records
   FOR INSERT WITH CHECK (
     workspace_id IN (
       SELECT workspace_id FROM workspace_members 
@@ -163,7 +173,8 @@ CREATE POLICY IF NOT EXISTS "Users can create customer records in their workspac
   );
 
 -- Policies for qbr_reports
-CREATE POLICY IF NOT EXISTS "Users can view QBR reports in their workspace" ON qbr_reports
+DROP POLICY IF EXISTS "Users can view QBR reports in their workspace" ON qbr_reports;
+CREATE POLICY "Users can view QBR reports in their workspace" ON qbr_reports
   FOR SELECT USING (
     workspace_id IN (
       SELECT workspace_id FROM workspace_members 
@@ -171,7 +182,8 @@ CREATE POLICY IF NOT EXISTS "Users can view QBR reports in their workspace" ON q
     )
   );
 
-CREATE POLICY IF NOT EXISTS "Users can create QBR reports in their workspace" ON qbr_reports
+DROP POLICY IF EXISTS "Users can create QBR reports in their workspace" ON qbr_reports;
+CREATE POLICY "Users can create QBR reports in their workspace" ON qbr_reports
   FOR INSERT WITH CHECK (
     workspace_id IN (
       SELECT workspace_id FROM workspace_members 
