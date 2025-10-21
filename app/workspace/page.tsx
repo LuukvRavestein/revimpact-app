@@ -46,7 +46,7 @@ export default function WorkspacePage() {
         .select(`
           workspace_id, 
           role, 
-          workspaces(id, name, created_by, created_at)
+          workspaces!inner(id, name, created_by, created_at)
         `)
         .eq("user_id", session.user.id)
         .limit(1)
@@ -62,7 +62,7 @@ export default function WorkspacePage() {
           created_by: string
           created_at: string
         }
-      }
+      } | undefined
       if (membership) {
         setWorkspace(membership.workspaces)
         setCurrentUserRole(membership.role)

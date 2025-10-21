@@ -33,7 +33,9 @@ export default function InvitePage() {
     }
   }, [params.token])
 
-  const loadInvitation = async (_token: string) => {
+  const loadInvitation = async (token: string) => {
+    // Token will be used in real implementation
+    console.log('Loading invitation for token:', token)
     try {
       // In a real implementation, you would fetch the invitation from the database
       // For now, we'll simulate this
