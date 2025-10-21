@@ -56,7 +56,7 @@ export default async function DashboardPage() {
         Workspace: <strong>{workspaceName}</strong>
       </p>
       <div className="mt-6">
-        <Link className="underline text-blue-600" href="/">
+        <Link className="underline text-blue-600" href="/qbr">
           Naar QBR generator (stap 3)
         </Link>
       </div>
