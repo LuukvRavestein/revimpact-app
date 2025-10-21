@@ -66,6 +66,11 @@ export default async function DashboardPage() {
             📋 QBR Generator (stap 2)
           </Link>
         </div>
+        <div>
+          <Link className="underline text-blue-600" href="/workspace">
+            ⚙️ Workspace Settings
+          </Link>
+        </div>
       </div>
       <form action="/signout" method="post" />
     </main>
