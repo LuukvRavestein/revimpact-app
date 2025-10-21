@@ -20,6 +20,8 @@ interface CustomerData {
 
 export default function QBRPage() {
   // QBR Generator component
+  const [hasUploadedData, setHasUploadedData] = useState(false)
+  const [selectedCustomer, setSelectedCustomer] = useState<string>("")
   const [customerData, setCustomerData] = useState<CustomerData>({
     name: "",
     email: "",
@@ -83,10 +85,32 @@ ${customerData.churnRisk === "High" ?
           <h1 className="text-3xl font-semibold">QBR Generator</h1>
           <p className="text-gray-600 mt-2">Generate AI-powered Quarterly Business Reviews</p>
         </div>
-        <Link href="/dashboard">
-          <Button variant="secondary">← Back to Dashboard</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/data">
+            <Button variant="secondary">📊 Upload Data</Button>
+          </Link>
+          <Link href="/dashboard">
+            <Button variant="secondary">← Dashboard</Button>
+          </Link>
+        </div>
       </div>
+
+      {!hasUploadedData && (
+        <Card>
+          <CardContent className="p-6 text-center">
+            <div className="space-y-4">
+              <div className="text-6xl">📊</div>
+              <h2 className="text-xl font-semibold">No Customer Data Found</h2>
+              <p className="text-gray-600">
+                Upload your customer data first to generate QBR reports automatically.
+              </p>
+              <Link href="/data">
+                <Button>Upload Customer Data</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {!generatedQBR ? (
         <Card>

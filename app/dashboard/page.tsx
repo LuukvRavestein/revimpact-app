@@ -55,10 +55,17 @@ export default async function DashboardPage() {
       <p className="text-gray-600">
         Workspace: <strong>{workspaceName}</strong>
       </p>
-      <div className="mt-6">
-        <Link className="underline text-blue-600" href="/qbr">
-          Naar QBR generator (stap 3)
-        </Link>
+      <div className="mt-6 space-y-3">
+        <div>
+          <Link className="underline text-blue-600" href="/data">
+            📊 Upload Customer Data (stap 1)
+          </Link>
+        </div>
+        <div>
+          <Link className="underline text-blue-600" href="/qbr">
+            📋 QBR Generator (stap 2)
+          </Link>
+        </div>
       </div>
       <form action="/signout" method="post" />
     </main>
