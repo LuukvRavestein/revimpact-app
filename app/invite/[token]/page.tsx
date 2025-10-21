@@ -33,7 +33,7 @@ export default function InvitePage() {
     }
   }, [params.token])
 
-  const loadInvitation = async (token: string) => {
+  const loadInvitation = async (_token: string) => {
     try {
       // In a real implementation, you would fetch the invitation from the database
       // For now, we'll simulate this
@@ -144,9 +144,9 @@ export default function InvitePage() {
       <Card className="max-w-md w-full">
         <CardHeader className="text-center">
           <div className="text-6xl mb-4">🎉</div>
-          <h1 className="text-2xl font-semibold">You're Invited!</h1>
+          <h1 className="text-2xl font-semibold">You&apos;re Invited!</h1>
           <p className="text-gray-600">
-            You've been invited to join a workspace on RevImpact
+            You&apos;ve been invited to join a workspace on RevImpact
           </p>
         </CardHeader>
         <CardContent className="space-y-4">

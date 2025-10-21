@@ -32,7 +32,7 @@ export default function WorkspacePage() {
 
   useEffect(() => {
     loadWorkspaceData()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadWorkspaceData = async () => {
     try {
@@ -53,7 +53,16 @@ export default function WorkspacePage() {
 
       if (mErr) throw new Error(mErr.message)
 
-      const membership = memberships?.[0] as any
+      const membership = memberships?.[0] as {
+        workspace_id: string
+        role: string
+        workspaces: {
+          id: string
+          name: string
+          created_by: string
+          created_at: string
+        }
+      }
       if (membership) {
         setWorkspace(membership.workspaces)
         setCurrentUserRole(membership.role)
