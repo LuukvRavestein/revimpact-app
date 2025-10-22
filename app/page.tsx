@@ -10,14 +10,20 @@ export default function Page() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (session?.user) {
-        // User is logged in, redirect to dashboard
-        router.push('/dashboard')
+      // Only redirect if we're on the app domain
+      if (window.location.hostname === 'app.revimpact.nl') {
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          // User is logged in, redirect to dashboard
+          router.push('/dashboard')
+        } else {
+          // User is not logged in, redirect to signin
+          router.push('/signin')
+        }
       } else {
-        // User is not logged in, redirect to signin
-        router.push('/signin')
+        // For other domains (www.revimpact.nl, revimpact.nl), redirect to marketing
+        router.push('/marketing')
       }
     }
 
