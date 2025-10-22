@@ -6,13 +6,20 @@ import * as XLSX from 'xlsx';
 
 interface ChatbotData {
   conversation_id: string;
-  user_id: string;
-  cu_id: string;
-  label: string;
-  content: string;
-  type: string;
-  username: string;
-  timestamp: string;
+  usr_id: string;
+  Cli_Id: string;
+  Content: string;
+  Type: string;
+  Username: string;
+  Timestamp: string;
+  // Legacy fields for compatibility
+  user_id?: string;
+  cu_id?: string;
+  label?: string;
+  content?: string;
+  type?: string;
+  username?: string;
+  timestamp?: string;
 }
 
 interface ProcessedData {
@@ -81,10 +88,12 @@ export default function ChatbotPage() {
     
     // Filter user questions - check multiple possible field values
     const userQuestions = data.filter(row => {
-      const isUser = row.label === 'USER' || 
+      const isUser = row.Type === 'USER' || 
                     row.type === 'USER' || 
-                    row.label?.toLowerCase() === 'user' ||
-                    row.type?.toLowerCase() === 'user';
+                    row.label === 'USER' ||
+                    row.Type?.toLowerCase() === 'user' ||
+                    row.type?.toLowerCase() === 'user' ||
+                    row.label?.toLowerCase() === 'user';
       if (isUser) {
         console.log('Found user question:', row);
       }
@@ -96,15 +105,18 @@ export default function ChatbotPage() {
     const customerMap = new Map<string, string>();
     data.forEach(row => {
       try {
-        if (row.username && row.username !== '[username]') {
-          const userInfo = JSON.parse(row.username);
+        const username = row.Username || row.username;
+        const userId = row.usr_id || row.user_id;
+        
+        if (username && username !== '[username]') {
+          const userInfo = JSON.parse(username);
           if (userInfo.clientName) {
-            customerMap.set(row.user_id, userInfo.clientName);
-            console.log('Found customer:', userInfo.clientName, 'for user:', row.user_id);
+            customerMap.set(userId, userInfo.clientName);
+            console.log('Found customer:', userInfo.clientName, 'for user:', userId);
           }
         }
       } catch (e) {
-        console.log('Failed to parse username:', row.username, 'Error:', e);
+        console.log('Failed to parse username:', row.Username || row.username, 'Error:', e);
       }
     });
     console.log('Customers found:', customerMap.size);
@@ -119,7 +131,7 @@ export default function ChatbotPage() {
       
       // Try to find any rows that might be user questions by looking at content patterns
       const alternativeUserQuestions = data.filter(row => {
-        const content = row.content?.toLowerCase() || '';
+        const content = (row.Content || row.content || '').toLowerCase();
         const hasQuestionWords = content.includes('?') || 
                                 content.includes('hoe') || 
                                 content.includes('wat') || 
@@ -163,9 +175,11 @@ export default function ChatbotPage() {
     let satisfactionCount = 0;
 
     conversationMap.forEach((messages, conversationId) => {
-      const sortedMessages = messages.sort((a, b) => 
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      );
+        const sortedMessages = messages.sort((a, b) => {
+          const timestampA = a.Timestamp || a.timestamp;
+          const timestampB = b.Timestamp || b.timestamp;
+          return new Date(timestampA).getTime() - new Date(timestampB).getTime();
+        });
       
       const userMessages = sortedMessages.filter(m => 
         m.label === 'USER' || m.type === 'USER' || 
@@ -182,15 +196,17 @@ export default function ChatbotPage() {
         const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
         
         // Simple heuristic: if assistant responded after user's last message, consider it resolved
+        const lastUserTimestamp = lastUserMessage.Timestamp || lastUserMessage.timestamp;
+        const lastAssistantTimestamp = lastAssistantMessage.Timestamp || lastAssistantMessage.timestamp;
         if (lastAssistantMessage && 
-            new Date(lastAssistantMessage.timestamp) > new Date(lastUserMessage.timestamp)) {
+            new Date(lastAssistantTimestamp) > new Date(lastUserTimestamp)) {
           selfResolvedCount++;
         } else {
           forwardedCount++;
         }
         
         // Look for satisfaction indicators in content (simple keyword matching)
-        const allContent = messages.map(m => m.content.toLowerCase()).join(' ');
+        const allContent = messages.map(m => (m.Content || m.content || '').toLowerCase()).join(' ');
         if (allContent.includes('thank') || allContent.includes('bedankt') || 
             allContent.includes('perfect') || allContent.includes('great') ||
             allContent.includes('helpful') || allContent.includes('nuttig')) {
@@ -214,7 +230,8 @@ export default function ChatbotPage() {
     // Weekly trends
     const weeklyData = new Map<string, number>();
     userQuestions.forEach(q => {
-      const date = new Date(q.timestamp);
+      const timestamp = q.Timestamp || q.timestamp;
+      const date = new Date(timestamp);
       const week = `${date.getFullYear()}-W${Math.ceil(date.getDate() / 7)}`;
       weeklyData.set(week, (weeklyData.get(week) || 0) + 1);
     });
@@ -234,7 +251,8 @@ export default function ChatbotPage() {
     }>();
     
     userQuestions.forEach(q => {
-      const customer = customerMap.get(q.user_id) || 'Unknown';
+      const userId = q.usr_id || q.user_id;
+      const customer = customerMap.get(userId) || 'Unknown';
       if (!customerStats.has(customer)) {
         customerStats.set(customer, { 
           questions: 0, 
@@ -247,7 +265,7 @@ export default function ChatbotPage() {
       }
       const stats = customerStats.get(customer)!;
       stats.questions++;
-      stats.customers.add(q.user_id);
+      stats.customers.add(userId);
       if (!stats.conversations.includes(q.conversation_id)) {
         stats.conversations.push(q.conversation_id);
       }
@@ -323,7 +341,7 @@ export default function ChatbotPage() {
 
     const topicCounts = new Map<string, number>();
     userQuestions.forEach(q => {
-      const content = q.content.toLowerCase();
+      const content = (q.Content || q.content || '').toLowerCase();
       Object.entries(topicKeywords).forEach(([topic, keywords]) => {
         if (keywords.some(keyword => content.includes(keyword))) {
           topicCounts.set(topic, (topicCounts.get(topic) || 0) + 1);
@@ -344,9 +362,11 @@ export default function ChatbotPage() {
     }> = [];
 
     conversationMap.forEach((messages, conversationId) => {
-      const sortedMessages = messages.sort((a, b) => 
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      );
+        const sortedMessages = messages.sort((a, b) => {
+          const timestampA = a.Timestamp || a.timestamp;
+          const timestampB = b.Timestamp || b.timestamp;
+          return new Date(timestampA).getTime() - new Date(timestampB).getTime();
+        });
       
       const userMessages = sortedMessages.filter(m => 
         m.label === 'USER' || m.type === 'USER' || 
@@ -362,15 +382,19 @@ export default function ChatbotPage() {
         const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
         
         // If no assistant response after last user message, consider it forwarded
+        const lastUserTimestamp = lastUserMessage.Timestamp || lastUserMessage.timestamp;
+        const lastAssistantTimestamp = lastAssistantMessage.Timestamp || lastAssistantMessage.timestamp;
         if (!lastAssistantMessage || 
-            new Date(lastAssistantMessage.timestamp) <= new Date(lastUserMessage.timestamp)) {
-          const customer = customerMap.get(lastUserMessage.user_id) || 'Unknown';
+            new Date(lastAssistantTimestamp) <= new Date(lastUserTimestamp)) {
+          const userId = lastUserMessage.usr_id || lastUserMessage.user_id;
+          const customer = customerMap.get(userId) || 'Unknown';
+          const content = lastUserMessage.Content || lastUserMessage.content || '';
           forwardedTickets.push({
             customer,
-            content: lastUserMessage.content.length > 100 
-              ? lastUserMessage.content.substring(0, 100) + '...' 
-              : lastUserMessage.content,
-            timestamp: lastUserMessage.timestamp
+            content: content.length > 100 
+              ? content.substring(0, 100) + '...' 
+              : content,
+            timestamp: lastUserTimestamp
           });
         }
       }
