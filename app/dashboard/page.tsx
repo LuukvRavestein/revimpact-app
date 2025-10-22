@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { SignOutButton } from "@/components/SignOutButton";
+// import { SignOutButton } from "@/components/SignOutButton";
 
 export default function DashboardPage() {
   const [workspaceName, setWorkspaceName] = useState<string>("");
@@ -43,7 +43,7 @@ export default function DashboardPage() {
         workspaces?: { name: string } 
       } | undefined;
       
-      let workspaceId = membership?.workspace_id;
+      const workspaceId = membership?.workspace_id;
       let name = membership?.workspaces?.name;
 
       // Zo niet: maak workspace + membership
@@ -91,7 +91,11 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-semibold">{t.loading}</h1>
           <div className="flex items-center space-x-4">
             <LanguageSwitcher />
-            <SignOutButton />
+            <form action="/signout" method="post">
+              <button type="submit" className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700">
+                {t.navSignOut}
+              </button>
+            </form>
           </div>
         </div>
       </main>
@@ -104,7 +108,11 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-semibold">{t.dashboard.welcome}</h1>
         <div className="flex items-center space-x-4">
           <LanguageSwitcher />
-          <SignOutButton />
+          <form action="/signout" method="post">
+            <button type="submit" className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700">
+              {t.navSignOut}
+            </button>
+          </form>
         </div>
       </div>
       

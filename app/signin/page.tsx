@@ -18,7 +18,7 @@ function SignInForm() {
     if (error) {
       setErr(`${t.signInPage.errorMessage}: ${error}`);
     }
-  }, [searchParams]);
+  }, [searchParams, t.signInPage.errorMessage]);
 
   const sendLink = async () => {
     setErr(null);
