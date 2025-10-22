@@ -89,7 +89,7 @@ export default function ChatbotPage() {
         if (userInfo.clientName) {
           customerMap.set(row.user_id, userInfo.clientName);
         }
-      } catch (e) {
+      } catch {
         // Skip invalid JSON
       }
     });

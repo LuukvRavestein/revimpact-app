@@ -113,6 +113,34 @@ export interface Translations {
     passwordTooShort: string
     signUpError: string
   }
+
+  // Chatbot Analytics Page
+  chatbot: {
+    title: string
+    subtitle: string
+    uploadTitle: string
+    uploadSubtitle: string
+    dragDrop: string
+    fileTypes: string
+    processing: string
+    fileSelected: string
+    errorProcessing: string
+    totalQuestions: string
+    uniqueCustomers: string
+    selfResolved: string
+    forwarded: string
+    satisfaction: string
+    weeklyTrends: string
+    topCustomers: string
+    customer: string
+    questions: string
+    selfResolvedPct: string
+    forwardedPct: string
+    satisfactionScore: string
+    topTopics: string
+    forwardedTickets: string
+    uploadNew: string
+  }
   
   // Dashboard
   dashboard: {
