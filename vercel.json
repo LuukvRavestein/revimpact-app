@@ -4,12 +4,22 @@
   "framework": "nextjs",
   "rewrites": [
     {
-      "source": "/((?!app\\.).*)",
+      "source": "/(.*)",
       "destination": "/marketing",
       "has": [
         {
           "type": "host",
           "value": "www.revimpact.nl"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/marketing",
+      "has": [
+        {
+          "type": "host",
+          "value": "revimpact.nl"
         }
       ]
     }
