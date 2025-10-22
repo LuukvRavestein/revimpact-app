@@ -40,11 +40,19 @@ export default function DashboardPage() {
       const membership = memberships?.[0] as { 
         workspace_id: string; 
         role: string; 
-        workspaces?: { name: string } 
+        workspaces: { name: string }[] | { name: string }
       } | undefined;
       
       const workspaceId = membership?.workspace_id;
-      let name = membership?.workspaces?.name;
+      let name: string | undefined;
+      
+      if (membership?.workspaces) {
+        if (Array.isArray(membership.workspaces)) {
+          name = membership.workspaces[0]?.name;
+        } else {
+          name = membership.workspaces.name;
+        }
+      }
 
       // Zo niet: maak workspace + membership
       if (!workspaceId) {
