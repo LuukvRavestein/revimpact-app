@@ -76,10 +76,13 @@ export default function ChatbotPage() {
   };
 
   const processChatbotData = (data: ChatbotData[]): ProcessedData => {
+    console.log('Processing data:', data.length, 'rows');
+    
     // Filter user questions
     const userQuestions = data.filter(row => 
       row.label === 'USER' || row.type === 'USER'
     );
+    console.log('User questions found:', userQuestions.length);
 
     // Extract customer names from username JSON
     const customerMap = new Map<string, string>();
@@ -93,15 +96,69 @@ export default function ChatbotPage() {
         // Skip invalid JSON
       }
     });
+    console.log('Customers found:', customerMap.size);
 
     // Calculate basic metrics
     const totalQuestions = userQuestions.length;
     const uniqueCustomers = new Set(customerMap.values()).size;
 
-    // Mock calculations (in real implementation, you'd analyze conversation flows)
-    const selfResolvedPercentage = 75; // Mock: 75% self-resolved
-    const forwardedPercentage = 25; // Mock: 25% forwarded
-    const averageSatisfaction = 4.2; // Mock: 4.2/5 average satisfaction
+    // Analyze conversation flows to determine resolution
+    const conversationMap = new Map<string, ChatbotData[]>();
+    data.forEach(row => {
+      if (!conversationMap.has(row.conversation_id)) {
+        conversationMap.set(row.conversation_id, []);
+      }
+      conversationMap.get(row.conversation_id)!.push(row);
+    });
+
+    // Analyze each conversation to determine if it was self-resolved
+    let selfResolvedCount = 0;
+    let forwardedCount = 0;
+    let totalSatisfaction = 0;
+    let satisfactionCount = 0;
+
+    conversationMap.forEach((messages, conversationId) => {
+      const sortedMessages = messages.sort((a, b) => 
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+      
+      const userMessages = sortedMessages.filter(m => m.label === 'USER' || m.type === 'USER');
+      const assistantMessages = sortedMessages.filter(m => m.label === 'ASSISTANT' || m.type === 'ASSISTANT');
+      
+      if (userMessages.length > 0) {
+        // Check if conversation seems resolved by looking at patterns
+        const lastUserMessage = userMessages[userMessages.length - 1];
+        const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
+        
+        // Simple heuristic: if assistant responded after user's last message, consider it resolved
+        if (lastAssistantMessage && 
+            new Date(lastAssistantMessage.timestamp) > new Date(lastUserMessage.timestamp)) {
+          selfResolvedCount++;
+        } else {
+          forwardedCount++;
+        }
+        
+        // Look for satisfaction indicators in content (simple keyword matching)
+        const allContent = messages.map(m => m.content.toLowerCase()).join(' ');
+        if (allContent.includes('thank') || allContent.includes('bedankt') || 
+            allContent.includes('perfect') || allContent.includes('great') ||
+            allContent.includes('helpful') || allContent.includes('nuttig')) {
+          totalSatisfaction += 4.5;
+          satisfactionCount++;
+        } else if (allContent.includes('not helpful') || allContent.includes('niet nuttig') ||
+                   allContent.includes('wrong') || allContent.includes('fout')) {
+          totalSatisfaction += 2.0;
+          satisfactionCount++;
+        } else {
+          totalSatisfaction += 3.5; // Default neutral satisfaction
+          satisfactionCount++;
+        }
+      }
+    });
+
+    const selfResolvedPercentage = totalQuestions > 0 ? Math.round((selfResolvedCount / totalQuestions) * 100) : 0;
+    const forwardedPercentage = totalQuestions > 0 ? Math.round((forwardedCount / totalQuestions) * 100) : 0;
+    const averageSatisfaction = satisfactionCount > 0 ? totalSatisfaction / satisfactionCount : 3.5;
 
     // Weekly trends
     const weeklyData = new Map<string, number>();
@@ -115,46 +172,157 @@ export default function ChatbotPage() {
       .map(([week, questions]) => ({ week, questions }))
       .sort((a, b) => a.week.localeCompare(b.week));
 
-    // Top customers
-    const customerStats = new Map<string, { questions: number; customers: Set<string> }>();
+    // Top customers with real data
+    const customerStats = new Map<string, { 
+      questions: number; 
+      customers: Set<string>;
+      conversations: string[];
+      selfResolved: number;
+      forwarded: number;
+      satisfaction: number[];
+    }>();
+    
     userQuestions.forEach(q => {
       const customer = customerMap.get(q.user_id) || 'Unknown';
       if (!customerStats.has(customer)) {
-        customerStats.set(customer, { questions: 0, customers: new Set() });
+        customerStats.set(customer, { 
+          questions: 0, 
+          customers: new Set(),
+          conversations: [],
+          selfResolved: 0,
+          forwarded: 0,
+          satisfaction: []
+        });
       }
-      customerStats.get(customer)!.questions++;
-      customerStats.get(customer)!.customers.add(q.user_id);
+      const stats = customerStats.get(customer)!;
+      stats.questions++;
+      stats.customers.add(q.user_id);
+      if (!stats.conversations.includes(q.conversation_id)) {
+        stats.conversations.push(q.conversation_id);
+      }
+    });
+
+    // Calculate real stats per customer
+    customerStats.forEach((stats, customer) => {
+      stats.conversations.forEach(convId => {
+        const convMessages = conversationMap.get(convId) || [];
+        const sortedMessages = convMessages.sort((a, b) => 
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+        );
+        
+        const userMessages = sortedMessages.filter(m => m.label === 'USER' || m.type === 'USER');
+        const assistantMessages = sortedMessages.filter(m => m.label === 'ASSISTANT' || m.type === 'ASSISTANT');
+        
+        if (userMessages.length > 0) {
+          const lastUserMessage = userMessages[userMessages.length - 1];
+          const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
+          
+          if (lastAssistantMessage && 
+              new Date(lastAssistantMessage.timestamp) > new Date(lastUserMessage.timestamp)) {
+            stats.selfResolved++;
+          } else {
+            stats.forwarded++;
+          }
+          
+          // Calculate satisfaction for this conversation
+          const allContent = convMessages.map(m => m.content.toLowerCase()).join(' ');
+          if (allContent.includes('thank') || allContent.includes('bedankt') || 
+              allContent.includes('perfect') || allContent.includes('great') ||
+              allContent.includes('helpful') || allContent.includes('nuttig')) {
+            stats.satisfaction.push(4.5);
+          } else if (allContent.includes('not helpful') || allContent.includes('niet nuttig') ||
+                     allContent.includes('wrong') || allContent.includes('fout')) {
+            stats.satisfaction.push(2.0);
+          } else {
+            stats.satisfaction.push(3.5);
+          }
+        }
+      });
     });
 
     const topCustomers = Array.from(customerStats.entries())
       .map(([customer, stats]) => ({
         customer,
         questions: stats.questions,
-        selfResolved: Math.round(stats.questions * 0.75), // Mock
-        forwarded: Math.round(stats.questions * 0.25), // Mock
-        satisfaction: 4.0 + Math.random() * 1.0 // Mock: 4.0-5.0
+        selfResolved: stats.selfResolved,
+        forwarded: stats.forwarded,
+        satisfaction: stats.satisfaction.length > 0 
+          ? stats.satisfaction.reduce((a, b) => a + b, 0) / stats.satisfaction.length 
+          : 3.5
       }))
       .sort((a, b) => b.questions - a.questions)
       .slice(0, 10);
 
-    // Top topics (mock - in real implementation, use NLP)
-    const topTopics = [
-      { topic: 'Planning & Scheduling', count: 45 },
-      { topic: 'Facturatie', count: 32 },
-      { topic: 'Integratie Odoo', count: 28 },
-      { topic: 'Rapportage', count: 22 },
-      { topic: 'Gebruikersbeheer', count: 18 }
-    ];
+    // Extract topics from actual content using keyword analysis
+    const topicKeywords = {
+      'Planning & Scheduling': ['planning', 'schedule', 'agenda', 'tijd', 'rooster'],
+      'Facturatie': ['factuur', 'invoice', 'billing', 'betaling', 'payment'],
+      'Integratie': ['integratie', 'integration', 'api', 'connect', 'koppeling'],
+      'Rapportage': ['rapport', 'report', 'overzicht', 'dashboard', 'statistiek'],
+      'Gebruikersbeheer': ['user', 'gebruiker', 'account', 'login', 'permissie'],
+      'Technische Support': ['error', 'fout', 'bug', 'probleem', 'issue'],
+      'Training': ['training', 'uitleg', 'help', 'tutorial', 'gids']
+    };
 
-    // Forwarded tickets (mock)
-    const forwardedTickets = userQuestions
-      .filter((_, index) => index % 4 === 0) // Mock: every 4th question forwarded
-      .slice(0, 10)
-      .map(q => ({
-        customer: customerMap.get(q.user_id) || 'Unknown',
-        content: q.content.length > 100 ? q.content.substring(0, 100) + '...' : q.content,
-        timestamp: q.timestamp
-      }));
+    const topicCounts = new Map<string, number>();
+    userQuestions.forEach(q => {
+      const content = q.content.toLowerCase();
+      Object.entries(topicKeywords).forEach(([topic, keywords]) => {
+        if (keywords.some(keyword => content.includes(keyword))) {
+          topicCounts.set(topic, (topicCounts.get(topic) || 0) + 1);
+        }
+      });
+    });
+
+    const topTopics = Array.from(topicCounts.entries())
+      .map(([topic, count]) => ({ topic, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // Real forwarded tickets from conversations that weren't resolved
+    const forwardedTickets: Array<{
+      customer: string;
+      content: string;
+      timestamp: string;
+    }> = [];
+
+    conversationMap.forEach((messages, conversationId) => {
+      const sortedMessages = messages.sort((a, b) => 
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+      
+      const userMessages = sortedMessages.filter(m => m.label === 'USER' || m.type === 'USER');
+      const assistantMessages = sortedMessages.filter(m => m.label === 'ASSISTANT' || m.type === 'ASSISTANT');
+      
+      if (userMessages.length > 0) {
+        const lastUserMessage = userMessages[userMessages.length - 1];
+        const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
+        
+        // If no assistant response after last user message, consider it forwarded
+        if (!lastAssistantMessage || 
+            new Date(lastAssistantMessage.timestamp) <= new Date(lastUserMessage.timestamp)) {
+          const customer = customerMap.get(lastUserMessage.user_id) || 'Unknown';
+          forwardedTickets.push({
+            customer,
+            content: lastUserMessage.content.length > 100 
+              ? lastUserMessage.content.substring(0, 100) + '...' 
+              : lastUserMessage.content,
+            timestamp: lastUserMessage.timestamp
+          });
+        }
+      }
+    });
+
+    console.log('Processed data:', {
+      totalQuestions,
+      uniqueCustomers,
+      selfResolvedPercentage,
+      forwardedPercentage,
+      averageSatisfaction,
+      topCustomers: topCustomers.length,
+      topTopics: topTopics.length,
+      forwardedTickets: forwardedTickets.length
+    });
 
     return {
       totalQuestions,
@@ -267,6 +435,20 @@ export default function ChatbotPage() {
         ) : (
           /* Dashboard Section */
           <div className="space-y-8">
+            {/* Debug Info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-sm font-medium text-blue-900 mb-2">📊 Data Processing Info</h3>
+              <div className="text-sm text-blue-800 space-y-1">
+                <p><strong>File:</strong> {uploadedFile?.name}</p>
+                <p><strong>Total Rows:</strong> {processedData.totalQuestions + (processedData.totalQuestions * 2)} (estimated)</p>
+                <p><strong>User Questions:</strong> {processedData.totalQuestions}</p>
+                <p><strong>Unique Customers:</strong> {processedData.uniqueCustomers}</p>
+                <p><strong>Conversations Analyzed:</strong> {Math.round(processedData.totalQuestions / 3)} (estimated)</p>
+                <p className="text-xs text-blue-600 mt-2">
+                  💡 Open browser console (F12) to see detailed processing logs
+                </p>
+              </div>
+            </div>
             {/* KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <div className="bg-white rounded-lg shadow-sm border p-6">
