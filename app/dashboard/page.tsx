@@ -1,78 +1,134 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createSupabaseServerClient } from "@/lib/supabaseServer";
+import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { SignOutButton } from "@/components/SignOutButton";
 
-export default async function DashboardPage() {
-  const supabase = createSupabaseServerClient();
-  const {
-    data: { session }
-  } = await supabase.auth.getSession();
+export default function DashboardPage() {
+  const [workspaceName, setWorkspaceName] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const supabase = createSupabaseBrowserClient();
+  const { t } = useLanguage();
 
-  if (!session?.user) redirect("/signin");
+  useEffect(() => {
+    const loadWorkspace = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        router.push("/signin");
+        return;
+      }
 
-  // Bestaat er al een membership?
-  const { data: memberships, error: mErr } = await supabase
-    .from("workspace_members")
-    .select("workspace_id, role, workspaces(name)")
-    .eq("user_id", session.user.id)
-    .limit(1);
-  if (mErr) throw new Error(mErr.message);
+      // Bestaat er al een membership?
+      const { data: memberships, error: mErr } = await supabase
+        .from("workspace_members")
+        .select("workspace_id, role, workspaces(name)")
+        .eq("user_id", session.user.id)
+        .limit(1);
+      
+      if (mErr) {
+        console.error("Error loading memberships:", mErr);
+        setLoading(false);
+        return;
+      }
 
-  const membership = memberships?.[0] as { 
-    workspace_id: string; 
-    role: string; 
-    workspaces?: { name: string } 
-  } | undefined;
-  
-  let workspaceId = membership?.workspace_id;
-  let workspaceName = membership?.workspaces?.name;
+      const membership = memberships?.[0] as { 
+        workspace_id: string; 
+        role: string; 
+        workspaces?: { name: string } 
+      } | undefined;
+      
+      let workspaceId = membership?.workspace_id;
+      let name = membership?.workspaces?.name;
 
-  // Zo niet: maak workspace + membership
-  if (!workspaceId) {
-    const { data: ws, error: wErr } = await supabase
-      .from("workspaces")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .insert({ name: "My Workspace", created_by: session.user.id } as any)
-      .select("id, name")
-      .single();
-    if (wErr) throw new Error(wErr.message);
+      // Zo niet: maak workspace + membership
+      if (!workspaceId) {
+        const { data: ws, error: wErr } = await supabase
+          .from("workspaces")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .insert({ name: "My Workspace", created_by: session.user.id } as any)
+          .select("id, name")
+          .single();
+        
+        if (wErr) {
+          console.error("Error creating workspace:", wErr);
+          setLoading(false);
+          return;
+        }
 
-    const workspace = ws as { id: string; name: string };
-    
-    const { error: memErr } = await supabase
-      .from("workspace_members")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .insert({ workspace_id: workspace.id, user_id: session.user.id, role: "owner" } as any);
-    if (memErr) throw new Error(memErr.message);
+        const workspace = ws as { id: string; name: string };
+        
+        const { error: memErr } = await supabase
+          .from("workspace_members")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .insert({ workspace_id: workspace.id, user_id: session.user.id, role: "owner" } as any);
+        
+        if (memErr) {
+          console.error("Error creating membership:", memErr);
+          setLoading(false);
+          return;
+        }
 
-    workspaceId = workspace.id;
-    workspaceName = workspace.name;
+        name = workspace.name;
+      }
+
+      setWorkspaceName(name || "My Workspace");
+      setLoading(false);
+    };
+
+    loadWorkspace();
+  }, [supabase, router]);
+
+  if (loading) {
+    return (
+      <main className="max-w-3xl mx-auto p-8 space-y-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-semibold">{t.loading}</h1>
+          <div className="flex items-center space-x-4">
+            <LanguageSwitcher />
+            <SignOutButton />
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
     <main className="max-w-3xl mx-auto p-8 space-y-4">
-      <h1 className="text-2xl font-semibold">Welkom bij je workspace</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">{t.dashboard.welcome}</h1>
+        <div className="flex items-center space-x-4">
+          <LanguageSwitcher />
+          <SignOutButton />
+        </div>
+      </div>
+      
       <p className="text-gray-600">
-        Workspace: <strong>{workspaceName}</strong>
+        {t.dashboard.workspace}: <strong>{workspaceName}</strong>
       </p>
+      
       <div className="mt-6 space-y-3">
         <div>
           <Link className="underline text-blue-600" href="/data">
-            📊 Upload Customer Data (stap 1)
+            📊 {t.dashboard.uploadData}
           </Link>
         </div>
         <div>
           <Link className="underline text-blue-600" href="/qbr">
-            📋 QBR Generator (stap 2)
+            📋 {t.dashboard.qbrGenerator}
           </Link>
         </div>
         <div>
           <Link className="underline text-blue-600" href="/workspace">
-            ⚙️ Workspace Settings
+            ⚙️ {t.dashboard.workspaceSettings}
           </Link>
         </div>
       </div>
-      <form action="/signout" method="post" />
     </main>
   );
 }

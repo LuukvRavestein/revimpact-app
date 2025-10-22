@@ -2,6 +2,8 @@
 import { useState, useEffect, Suspense } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { useSearchParams } from "next/navigation";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 function SignInForm() {
   const supabase = createSupabaseBrowserClient();
@@ -9,11 +11,12 @@ function SignInForm() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const error = searchParams.get("error");
     if (error) {
-      setErr(`Login error: ${error}`);
+      setErr(`${t.signInPage.errorMessage}: ${error}`);
     }
   }, [searchParams]);
 
@@ -31,11 +34,16 @@ function SignInForm() {
 
   return (
     <main className="max-w-md mx-auto p-8 space-y-4">
-      <h1 className="text-2xl font-semibold">Sign in to RevImpact</h1>
-      <p className="text-gray-600">Ontvang een magic link per e-mail.</p>
+      {/* Language switcher in top right */}
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+      
+      <h1 className="text-2xl font-semibold">{t.signInPage.title}</h1>
+      <p className="text-gray-600">{t.signInPage.subtitle}</p>
       <input
         className="border rounded w-full p-2"
-        placeholder="jij@bedrijf.com"
+        placeholder={t.signInPage.emailPlaceholder}
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         type="email"
@@ -46,9 +54,9 @@ function SignInForm() {
         className="rounded px-4 py-2 bg-[#3A6FF8] text-white"
         disabled={!email}
       >
-        Send magic link
+        {t.signInPage.sendButton}
       </button>
-      {sent && <p className="text-green-700">Check je mail voor de magic link ✉️</p>}
+      {sent && <p className="text-green-700">{t.signInPage.successMessage}</p>}
       {err && <p className="text-red-600">{err}</p>}
     </main>
   );
