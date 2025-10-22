@@ -77,23 +77,34 @@ export default function ChatbotPage() {
 
   const processChatbotData = (data: ChatbotData[]): ProcessedData => {
     console.log('Processing data:', data.length, 'rows');
+    console.log('Sample data structure:', data.slice(0, 3));
     
-    // Filter user questions
-    const userQuestions = data.filter(row => 
-      row.label === 'USER' || row.type === 'USER'
-    );
+    // Filter user questions - check multiple possible field values
+    const userQuestions = data.filter(row => {
+      const isUser = row.label === 'USER' || 
+                    row.type === 'USER' || 
+                    row.label?.toLowerCase() === 'user' ||
+                    row.type?.toLowerCase() === 'user';
+      if (isUser) {
+        console.log('Found user question:', row);
+      }
+      return isUser;
+    });
     console.log('User questions found:', userQuestions.length);
 
     // Extract customer names from username JSON
     const customerMap = new Map<string, string>();
     data.forEach(row => {
       try {
-        const userInfo = JSON.parse(row.username);
-        if (userInfo.clientName) {
-          customerMap.set(row.user_id, userInfo.clientName);
+        if (row.username && row.username !== '[username]') {
+          const userInfo = JSON.parse(row.username);
+          if (userInfo.clientName) {
+            customerMap.set(row.user_id, userInfo.clientName);
+            console.log('Found customer:', userInfo.clientName, 'for user:', row.user_id);
+          }
         }
-      } catch {
-        // Skip invalid JSON
+      } catch (e) {
+        console.log('Failed to parse username:', row.username, 'Error:', e);
       }
     });
     console.log('Customers found:', customerMap.size);
@@ -101,6 +112,40 @@ export default function ChatbotPage() {
     // Calculate basic metrics
     const totalQuestions = userQuestions.length;
     const uniqueCustomers = new Set(customerMap.values()).size;
+
+    // If no user questions found, try alternative approach
+    if (totalQuestions === 0) {
+      console.log('No user questions found with standard filtering, trying alternative approach...');
+      
+      // Try to find any rows that might be user questions by looking at content patterns
+      const alternativeUserQuestions = data.filter(row => {
+        const content = row.content?.toLowerCase() || '';
+        const hasQuestionWords = content.includes('?') || 
+                                content.includes('hoe') || 
+                                content.includes('wat') || 
+                                content.includes('waar') ||
+                                content.includes('wanneer') ||
+                                content.includes('why') ||
+                                content.includes('how') ||
+                                content.includes('what') ||
+                                content.includes('where') ||
+                                content.includes('when');
+        
+        // Exclude obvious assistant responses
+        const isNotAssistant = !content.includes('as an ai') && 
+                              !content.includes('ik ben een ai') &&
+                              !content.includes('i can help') &&
+                              !content.includes('ik kan helpen');
+        
+        return hasQuestionWords && isNotAssistant && content.length > 10;
+      });
+      
+      console.log('Alternative user questions found:', alternativeUserQuestions.length);
+      if (alternativeUserQuestions.length > 0) {
+        // Use alternative questions for analysis
+        userQuestions.push(...alternativeUserQuestions);
+      }
+    }
 
     // Analyze conversation flows to determine resolution
     const conversationMap = new Map<string, ChatbotData[]>();
@@ -122,8 +167,14 @@ export default function ChatbotPage() {
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
       
-      const userMessages = sortedMessages.filter(m => m.label === 'USER' || m.type === 'USER');
-      const assistantMessages = sortedMessages.filter(m => m.label === 'ASSISTANT' || m.type === 'ASSISTANT');
+      const userMessages = sortedMessages.filter(m => 
+        m.label === 'USER' || m.type === 'USER' || 
+        m.label?.toLowerCase() === 'user' || m.type?.toLowerCase() === 'user'
+      );
+      const assistantMessages = sortedMessages.filter(m => 
+        m.label === 'ASSISTANT' || m.type === 'ASSISTANT' ||
+        m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
+      );
       
       if (userMessages.length > 0) {
         // Check if conversation seems resolved by looking at patterns
@@ -210,8 +261,14 @@ export default function ChatbotPage() {
           new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
         );
         
-        const userMessages = sortedMessages.filter(m => m.label === 'USER' || m.type === 'USER');
-        const assistantMessages = sortedMessages.filter(m => m.label === 'ASSISTANT' || m.type === 'ASSISTANT');
+        const userMessages = sortedMessages.filter(m => 
+          m.label === 'USER' || m.type === 'USER' || 
+          m.label?.toLowerCase() === 'user' || m.type?.toLowerCase() === 'user'
+        );
+        const assistantMessages = sortedMessages.filter(m => 
+          m.label === 'ASSISTANT' || m.type === 'ASSISTANT' ||
+          m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
+        );
         
         if (userMessages.length > 0) {
           const lastUserMessage = userMessages[userMessages.length - 1];
@@ -291,8 +348,14 @@ export default function ChatbotPage() {
         new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
       
-      const userMessages = sortedMessages.filter(m => m.label === 'USER' || m.type === 'USER');
-      const assistantMessages = sortedMessages.filter(m => m.label === 'ASSISTANT' || m.type === 'ASSISTANT');
+      const userMessages = sortedMessages.filter(m => 
+        m.label === 'USER' || m.type === 'USER' || 
+        m.label?.toLowerCase() === 'user' || m.type?.toLowerCase() === 'user'
+      );
+      const assistantMessages = sortedMessages.filter(m => 
+        m.label === 'ASSISTANT' || m.type === 'ASSISTANT' ||
+        m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
+      );
       
       if (userMessages.length > 0) {
         const lastUserMessage = userMessages[userMessages.length - 1];
