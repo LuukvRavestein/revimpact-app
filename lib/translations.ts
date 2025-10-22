@@ -84,15 +84,15 @@ export interface Translations {
     }
   }
   
-  // Sign In Page
-  signIn: {
-    title: string
-    subtitle: string
-    emailPlaceholder: string
-    sendButton: string
-    successMessage: string
-    errorMessage: string
-  }
+    // Sign In Page
+    signInPage: {
+      title: string
+      subtitle: string
+      emailPlaceholder: string
+      sendButton: string
+      successMessage: string
+      errorMessage: string
+    }
   
   // Dashboard
   dashboard: {
@@ -257,7 +257,7 @@ export const translations: Record<Language, Translations> = {
     },
     
     // Sign In Page
-    signIn: {
+    signInPage: {
       title: 'Sign in to RevImpact',
       subtitle: 'Ontvang een magic link per e-mail.',
       emailPlaceholder: 'jij@bedrijf.com',
@@ -428,7 +428,7 @@ export const translations: Record<Language, Translations> = {
     },
     
     // Sign In Page
-    signIn: {
+    signInPage: {
       title: 'Sign in to RevImpact',
       subtitle: 'Receive a magic link via email.',
       emailPlaceholder: 'you@company.com',
