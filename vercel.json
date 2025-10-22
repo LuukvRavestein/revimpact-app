@@ -1,5 +1,17 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/((?!app\\.).*)",
+      "destination": "/marketing",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.revimpact.nl"
+        }
+      ]
+    }
+  ]
 }
