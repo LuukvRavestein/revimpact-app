@@ -84,15 +84,35 @@ export interface Translations {
     }
   }
   
-    // Sign In Page
-    signInPage: {
-      title: string
-      subtitle: string
-      emailPlaceholder: string
-      sendButton: string
-      successMessage: string
-      errorMessage: string
-    }
+  // Sign In Page
+  signInPage: {
+    title: string
+    subtitle: string
+    emailPlaceholder: string
+    passwordPlaceholder: string
+    signInButton: string
+    signUpLink: string
+    signUpButton: string
+    errorMessage: string
+    successMessage: string
+  }
+
+  // Sign Up Page
+  signUpPage: {
+    title: string
+    subtitle: string
+    confirmPasswordPlaceholder: string
+    createButton: string
+    signInLink: string
+    signInButton: string
+    checkEmail: string
+    emailSent: string
+    clickLink: string
+    backToSignIn: string
+    passwordMismatch: string
+    passwordTooShort: string
+    signUpError: string
+  }
   
   // Dashboard
   dashboard: {
