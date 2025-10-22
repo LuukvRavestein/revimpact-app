@@ -3,6 +3,8 @@
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
+import { useLanguage } from "@/contexts/LanguageContext"
 // import { Input } from "@/components/ui/input" // Will be used later
 import Link from "next/link"
 
@@ -22,6 +24,7 @@ export default function DataPage() {
   const [isUploading, setIsUploading] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { t } = useLanguage()
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -80,19 +83,19 @@ export default function DataPage() {
     console.log('Saving data mapping:', parsedData.columnMapping)
     
     setIsProcessing(false)
-    alert('Data mapping saved successfully! You can now use this data in QBR and Dashboard.')
+    alert(t.dataUpload.saveMapping + ' - ' + t.dataUpload.nextSteps)
   }
 
   const columnMappingOptions = [
-    { value: 'unmapped', label: 'Not used' },
-    { value: 'customer_name', label: 'Customer Name' },
-    { value: 'customer_email', label: 'Customer Email' },
-    { value: 'company', label: 'Company' },
-    { value: 'mrr', label: 'Monthly Recurring Revenue' },
-    { value: 'churn_risk', label: 'Churn Risk' },
-    { value: 'last_activity', label: 'Last Activity' },
-    { value: 'support_tickets', label: 'Support Tickets' },
-    { value: 'feature_usage', label: 'Feature Usage' },
+    { value: 'unmapped', label: t.dataUpload.columnMapping },
+    { value: 'customer_name', label: t.qbrGenerator.customerName },
+    { value: 'customer_email', label: t.qbrGenerator.email },
+    { value: 'company', label: t.qbrGenerator.company },
+    { value: 'mrr', label: t.qbrGenerator.mrr },
+    { value: 'churn_risk', label: t.qbrGenerator.churnRisk },
+    { value: 'last_activity', label: t.qbrGenerator.lastActivity },
+    { value: 'support_tickets', label: t.qbrGenerator.supportTickets },
+    { value: 'feature_usage', label: t.qbrGenerator.featureUsage },
     { value: 'industry', label: 'Industry' },
     { value: 'company_size', label: 'Company Size' },
     { value: 'contract_value', label: 'Contract Value' },
@@ -103,19 +106,22 @@ export default function DataPage() {
     <main className="max-w-6xl mx-auto p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold">Customer Data Management</h1>
-          <p className="text-gray-600 mt-2">Upload and map your customer data for QBR and Dashboard</p>
+          <h1 className="text-3xl font-semibold">{t.dataUpload.title}</h1>
+          <p className="text-gray-600 mt-2">{t.dataUpload.subtitle}</p>
         </div>
-        <Link href="/dashboard">
-          <Button variant="secondary">← Back to Dashboard</Button>
-        </Link>
+        <div className="flex items-center space-x-4">
+          <LanguageSwitcher />
+          <Link href="/dashboard">
+            <Button variant="secondary">← {t.back} {t.navDashboard}</Button>
+          </Link>
+        </div>
       </div>
 
       {!parsedData ? (
         <Card>
           <CardHeader>
-            <h2 className="text-xl font-semibold">Upload Customer Data</h2>
-            <p className="text-gray-600">Upload Excel (.xlsx) or CSV files with your customer data</p>
+            <h2 className="text-xl font-semibold">{t.dataUpload.uploadTitle}</h2>
+            <p className="text-gray-600">{t.dataUpload.uploadSubtitle}</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
@@ -128,10 +134,10 @@ export default function DataPage() {
                 <div>
                   <label htmlFor="file-upload" className="cursor-pointer">
                     <span className="mt-2 block text-sm font-medium text-gray-900">
-                      {isUploading ? 'Processing file...' : 'Click to upload or drag and drop'}
+                      {isUploading ? t.loading : t.dataUpload.dragDrop}
                     </span>
                     <span className="mt-1 block text-sm text-gray-500">
-                      Excel (.xlsx) or CSV files up to 10MB
+                      {t.dataUpload.fileTypes}
                     </span>
                   </label>
                   <input
@@ -146,7 +152,7 @@ export default function DataPage() {
                 </div>
                 {uploadedFile && (
                   <p className="text-sm text-gray-600">
-                    Selected: {uploadedFile.name}
+                    {t.dataUpload.selectedFile}: {uploadedFile.name}
                   </p>
                 )}
               </div>
@@ -157,8 +163,8 @@ export default function DataPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <h2 className="text-xl font-semibold">Data Preview & Column Mapping</h2>
-              <p className="text-gray-600">Map your columns to RevImpact data fields</p>
+              <h2 className="text-xl font-semibold">{t.dataUpload.columnMapping}</h2>
+              <p className="text-gray-600">{t.dataUpload.columnMappingSubtitle}</p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -184,7 +190,7 @@ export default function DataPage() {
                 </div>
 
                 <div className="pt-4 border-t">
-                  <h3 className="text-lg font-medium mb-3">Data Preview (first 10 rows)</h3>
+                  <h3 className="text-lg font-medium mb-3">{t.dataUpload.dataPreview}</h3>
                   <div className="overflow-x-auto">
                     <table className="min-w-full border border-gray-200 rounded-lg">
                       <thead className="bg-gray-50">
@@ -217,7 +223,7 @@ export default function DataPage() {
                     disabled={isProcessing}
                     className="flex-1"
                   >
-                    {isProcessing ? 'Saving...' : 'Save Data Mapping'}
+                    {isProcessing ? t.loading : t.dataUpload.saveMapping}
                   </Button>
                   <Button 
                     variant="secondary"
@@ -229,7 +235,7 @@ export default function DataPage() {
                       }
                     }}
                   >
-                    Upload New File
+                    {t.dataUpload.uploadNew}
                   </Button>
                 </div>
               </div>
@@ -238,20 +244,20 @@ export default function DataPage() {
 
           <Card>
             <CardHeader>
-              <h2 className="text-xl font-semibold">Next Steps</h2>
+              <h2 className="text-xl font-semibold">{t.dataUpload.nextSteps}</h2>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Link href="/qbr">
                   <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <h3 className="font-medium">Generate QBR</h3>
-                    <p className="text-sm text-gray-600">Create Quarterly Business Reviews using your mapped data</p>
+                    <h3 className="font-medium">{t.dataUpload.generateQbr}</h3>
+                    <p className="text-sm text-gray-600">{t.dataUpload.qbrDescription}</p>
                   </div>
                 </Link>
                 <Link href="/dashboard">
                   <div className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                    <h3 className="font-medium">View Dashboard</h3>
-                    <p className="text-sm text-gray-600">See analytics and insights from your customer data</p>
+                    <h3 className="font-medium">{t.dataUpload.viewDashboard}</h3>
+                    <p className="text-sm text-gray-600">{t.dataUpload.dashboardDescription}</p>
                   </div>
                 </Link>
               </div>

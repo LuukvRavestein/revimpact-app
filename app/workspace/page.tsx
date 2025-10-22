@@ -4,6 +4,8 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
+import { useLanguage } from "@/contexts/LanguageContext"
 import Link from "next/link"
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient"
 
@@ -35,6 +37,7 @@ export default function WorkspacePage() {
   const [isInviting, setIsInviting] = useState(false)
   const [currentUserRole, setCurrentUserRole] = useState<string>("")
   const supabase = createSupabaseBrowserClient()
+  const { t } = useLanguage()
 
   useEffect(() => {
     loadWorkspaceData()
@@ -108,18 +111,18 @@ export default function WorkspacePage() {
       // For now, we'll simulate this
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      alert(`Invitation sent to ${inviteEmail}`)
+      alert(`${t.workspace.sendInvite} ${inviteEmail}`)
       setInviteEmail("")
     } catch (error) {
       console.error("Error inviting user:", error)
-      alert("Failed to send invitation")
+      alert(t.error)
     } finally {
       setIsInviting(false)
     }
   }
 
   const removeMember = async (memberId: string) => {
-    if (!confirm("Are you sure you want to remove this member?")) return
+    if (!confirm(t.confirm)) return
 
     try {
       const { error } = await supabase
@@ -132,7 +135,7 @@ export default function WorkspacePage() {
       loadWorkspaceData() // Reload data
     } catch (error) {
       console.error("Error removing member:", error)
-      alert("Failed to remove member")
+      alert(t.error)
     }
   }
 
@@ -148,7 +151,7 @@ export default function WorkspacePage() {
       loadWorkspaceData() // Reload data
     } catch (error) {
       console.error("Error updating role:", error)
-      alert("Failed to update role")
+      alert(t.error)
     }
   }
 
@@ -156,7 +159,7 @@ export default function WorkspacePage() {
     return (
       <main className="max-w-4xl mx-auto p-8">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold mb-4">Loading workspace...</h1>
+          <h1 className="text-2xl font-semibold mb-4">{t.loading}</h1>
         </div>
       </main>
     )
@@ -166,27 +169,30 @@ export default function WorkspacePage() {
     <main className="max-w-6xl mx-auto p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold">Workspace Settings</h1>
-          <p className="text-gray-600 mt-2">Manage your team and workspace</p>
+          <h1 className="text-3xl font-semibold">{t.workspace.title}</h1>
+          <p className="text-gray-600 mt-2">{t.workspace.subtitle}</p>
         </div>
-        <Link href="/dashboard">
-          <Button variant="secondary">← Back to Dashboard</Button>
-        </Link>
+        <div className="flex items-center space-x-4">
+          <LanguageSwitcher />
+          <Link href="/dashboard">
+            <Button variant="secondary">← {t.back} {t.navDashboard}</Button>
+          </Link>
+        </div>
       </div>
 
       {/* Workspace Info */}
       <Card>
         <CardHeader>
-          <h2 className="text-xl font-semibold">Workspace Information</h2>
+          <h2 className="text-xl font-semibold">{t.workspace.workspaceInfo}</h2>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Workspace Name</label>
+              <label className="block text-sm font-medium mb-2">{t.workspace.workspaceName}</label>
               <Input value={workspace.name} readOnly />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Created</label>
+              <label className="block text-sm font-medium mb-2">{t.workspace.created}</label>
               <Input value={new Date(workspace.created_at).toLocaleDateString()} readOnly />
             </div>
           </div>
@@ -197,14 +203,14 @@ export default function WorkspacePage() {
       {currentUserRole === "owner" && (
         <Card>
           <CardHeader>
-            <h2 className="text-xl font-semibold">Invite Team Members</h2>
-            <p className="text-gray-600">Add new users to your workspace</p>
+            <h2 className="text-xl font-semibold">{t.workspace.inviteTeam}</h2>
+            <p className="text-gray-600">{t.workspace.inviteSubtitle}</p>
           </CardHeader>
           <CardContent>
             <div className="flex gap-3">
               <Input
                 type="email"
-                placeholder="Enter email address"
+                placeholder={t.workspace.emailPlaceholder}
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
                 className="flex-1"
@@ -213,7 +219,7 @@ export default function WorkspacePage() {
                 onClick={inviteUser}
                 disabled={isInviting || !inviteEmail}
               >
-                {isInviting ? "Sending..." : "Send Invite"}
+                {isInviting ? t.workspace.sending : t.workspace.sendInvite}
               </Button>
             </div>
           </CardContent>
@@ -223,8 +229,8 @@ export default function WorkspacePage() {
       {/* Team Members */}
       <Card>
         <CardHeader>
-          <h2 className="text-xl font-semibold">Team Members</h2>
-          <p className="text-gray-600">{members.length} member{members.length !== 1 ? 's' : ''}</p>
+          <h2 className="text-xl font-semibold">{t.workspace.teamMembers}</h2>
+          <p className="text-gray-600">{members.length} {t.workspace.membersCount}{members.length !== 1 ? 's' : ''}</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -250,8 +256,8 @@ export default function WorkspacePage() {
                       onChange={(e) => updateMemberRole(member.id, e.target.value)}
                       className="p-2 border rounded-md"
                     >
-                      <option value="member">Member</option>
-                      <option value="admin">Admin</option>
+                      <option value="member">{t.workspace.member}</option>
+                      <option value="admin">{t.workspace.admin}</option>
                     </select>
                   ) : (
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -269,7 +275,7 @@ export default function WorkspacePage() {
                       onClick={() => removeMember(member.id)}
                       className="text-red-600 hover:text-red-700"
                     >
-                      Remove
+                      {t.delete}
                     </Button>
                   )}
                 </div>
@@ -282,35 +288,35 @@ export default function WorkspacePage() {
       {/* Role Permissions */}
       <Card>
         <CardHeader>
-          <h2 className="text-xl font-semibold">Role Permissions</h2>
+          <h2 className="text-xl font-semibold">{t.workspace.rolePermissions}</h2>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="p-4 border rounded-lg">
-              <h3 className="font-semibold mb-2">Owner</h3>
+              <h3 className="font-semibold mb-2">{t.workspace.owner}</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Full workspace access</li>
-                <li>• Manage team members</li>
-                <li>• Delete workspace</li>
-                <li>• All admin permissions</li>
+                <li>• {t.workspace.ownerDesc.split(', ')[0]}</li>
+                <li>• {t.workspace.ownerDesc.split(', ')[1]}</li>
+                <li>• {t.workspace.ownerDesc.split(', ')[2]}</li>
+                <li>• {t.workspace.ownerDesc.split(', ')[3]}</li>
               </ul>
             </div>
             <div className="p-4 border rounded-lg">
-              <h3 className="font-semibold mb-2">Admin</h3>
+              <h3 className="font-semibold mb-2">{t.workspace.admin}</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Upload and manage data</li>
-                <li>• Generate QBR reports</li>
-                <li>• Invite new members</li>
-                <li>• View all analytics</li>
+                <li>• {t.workspace.adminDesc.split(', ')[0]}</li>
+                <li>• {t.workspace.adminDesc.split(', ')[1]}</li>
+                <li>• {t.workspace.adminDesc.split(', ')[2]}</li>
+                <li>• {t.workspace.adminDesc.split(', ')[3]}</li>
               </ul>
             </div>
             <div className="p-4 border rounded-lg">
-              <h3 className="font-semibold mb-2">Member</h3>
+              <h3 className="font-semibold mb-2">{t.workspace.member}</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• View data and reports</li>
-                <li>• Generate QBR reports</li>
-                <li>• Basic analytics access</li>
-                <li>• Limited permissions</li>
+                <li>• {t.workspace.memberDesc.split(', ')[0]}</li>
+                <li>• {t.workspace.memberDesc.split(', ')[1]}</li>
+                <li>• {t.workspace.memberDesc.split(', ')[2]}</li>
+                <li>• {t.workspace.memberDesc.split(', ')[3]}</li>
               </ul>
             </div>
           </div>

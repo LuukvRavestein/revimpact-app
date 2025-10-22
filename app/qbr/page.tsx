@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
+import { useLanguage } from "@/contexts/LanguageContext"
 import Link from "next/link"
 
 interface CustomerData {
@@ -35,6 +37,7 @@ export default function QBRPage() {
 
   const [isGenerating, setIsGenerating] = useState(false)
   const [generatedQBR, setGeneratedQBR] = useState<string | null>(null)
+  const { t } = useLanguage()
 
   const handleInputChange = (field: keyof CustomerData, value: string) => {
     setCustomerData(prev => ({ ...prev, [field]: value }))
@@ -82,16 +85,19 @@ ${customerData.churnRisk === "High" ?
     <main className="max-w-4xl mx-auto p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold">QBR Generator</h1>
-          <p className="text-gray-600 mt-2">Generate AI-powered Quarterly Business Reviews</p>
+          <h1 className="text-3xl font-semibold">{t.qbrGenerator.title}</h1>
+          <p className="text-gray-600 mt-2">{t.qbrGenerator.subtitle}</p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/data">
-            <Button variant="secondary">📊 Upload Data</Button>
-          </Link>
-          <Link href="/dashboard">
-            <Button variant="secondary">← Dashboard</Button>
-          </Link>
+        <div className="flex items-center space-x-4">
+          <LanguageSwitcher />
+          <div className="flex gap-2">
+            <Link href="/data">
+              <Button variant="secondary">📊 {t.dataUpload.uploadTitle}</Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button variant="secondary">← {t.navDashboard}</Button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -100,12 +106,12 @@ ${customerData.churnRisk === "High" ?
           <CardContent className="p-6 text-center">
             <div className="space-y-4">
               <div className="text-6xl">📊</div>
-              <h2 className="text-xl font-semibold">No Customer Data Found</h2>
+              <h2 className="text-xl font-semibold">{t.qbrGenerator.noDataTitle}</h2>
               <p className="text-gray-600">
-                Upload your customer data first to generate QBR reports automatically.
+                {t.qbrGenerator.noDataMessage}
               </p>
               <Link href="/data">
-                <Button>Upload Customer Data</Button>
+                <Button>{t.qbrGenerator.uploadDataButton}</Button>
               </Link>
             </div>
           </CardContent>
@@ -115,13 +121,13 @@ ${customerData.churnRisk === "High" ?
       {!generatedQBR ? (
         <Card>
           <CardHeader>
-            <h2 className="text-xl font-semibold">Customer Information</h2>
+            <h2 className="text-xl font-semibold">{t.qbrGenerator.customerInfo}</h2>
             <p className="text-gray-600">Enter customer data to generate a comprehensive QBR</p>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">Customer Name</label>
+                <label className="block text-sm font-medium mb-2">{t.qbrGenerator.customerName}</label>
                 <Input
                   value={customerData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
@@ -129,7 +135,7 @@ ${customerData.churnRisk === "High" ?
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Email</label>
+                <label className="block text-sm font-medium mb-2">{t.qbrGenerator.email}</label>
                 <Input
                   type="email"
                   value={customerData.email}
@@ -138,7 +144,7 @@ ${customerData.churnRisk === "High" ?
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Company</label>
+                <label className="block text-sm font-medium mb-2">{t.qbrGenerator.company}</label>
                 <Input
                   value={customerData.company}
                   onChange={(e) => handleInputChange("company", e.target.value)}
@@ -146,7 +152,7 @@ ${customerData.churnRisk === "High" ?
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Monthly Recurring Revenue</label>
+                <label className="block text-sm font-medium mb-2">{t.qbrGenerator.mrr}</label>
                 <Input
                   value={customerData.mrr}
                   onChange={(e) => handleInputChange("mrr", e.target.value)}
@@ -154,7 +160,7 @@ ${customerData.churnRisk === "High" ?
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Churn Risk</label>
+                <label className="block text-sm font-medium mb-2">{t.qbrGenerator.churnRisk}</label>
                 <select
                   value={customerData.churnRisk}
                   onChange={(e) => handleInputChange("churnRisk", e.target.value)}
@@ -167,7 +173,7 @@ ${customerData.churnRisk === "High" ?
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">Last Activity</label>
+                <label className="block text-sm font-medium mb-2">{t.qbrGenerator.lastActivity}</label>
                 <Input
                   value={customerData.lastActivity}
                   onChange={(e) => handleInputChange("lastActivity", e.target.value)}
@@ -177,7 +183,7 @@ ${customerData.churnRisk === "High" ?
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-2">Support Tickets (Last Quarter)</label>
+              <label className="block text-sm font-medium mb-2">{t.qbrGenerator.supportTickets}</label>
               <Input
                 value={customerData.supportTickets}
                 onChange={(e) => handleInputChange("supportTickets", e.target.value)}
@@ -186,7 +192,7 @@ ${customerData.churnRisk === "High" ?
             </div>
             
             <div>
-              <label className="block text-sm font-medium mb-2">Feature Usage Notes</label>
+              <label className="block text-sm font-medium mb-2">{t.qbrGenerator.featureUsage}</label>
               <Textarea
                 value={customerData.featureUsage}
                 onChange={(e) => handleInputChange("featureUsage", e.target.value)}
@@ -201,7 +207,7 @@ ${customerData.churnRisk === "High" ?
                 disabled={isGenerating || !customerData.name || !customerData.company}
                 className="w-full"
               >
-                {isGenerating ? "Generating QBR..." : "Generate QBR"}
+                {isGenerating ? t.qbrGenerator.generating : t.qbrGenerator.generateButton}
               </Button>
             </div>
           </CardContent>
@@ -210,13 +216,13 @@ ${customerData.churnRisk === "High" ?
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">Generated QBR Report</h2>
+              <h2 className="text-xl font-semibold">{t.qbrGenerator.reportTitle}</h2>
               <div className="space-x-2">
                 <Button 
                   variant="secondary" 
                   onClick={() => setGeneratedQBR(null)}
                 >
-                  Generate New
+                  {t.qbrGenerator.generateNew}
                 </Button>
                 <Button onClick={() => {
                   const blob = new Blob([generatedQBR], { type: 'text/markdown' })
@@ -226,7 +232,7 @@ ${customerData.churnRisk === "High" ?
                   a.download = `QBR-${customerData.company}-${new Date().toISOString().split('T')[0]}.md`
                   a.click()
                 }}>
-                  Download
+                  {t.qbrGenerator.download}
                 </Button>
               </div>
             </div>
