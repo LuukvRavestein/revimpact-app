@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import Link from "next/link";
@@ -9,7 +9,7 @@ import Link from "next/link";
 function SignUpForm() {
   const supabase = createSupabaseBrowserClient();
   const searchParams = useSearchParams();
-  const router = useRouter();
+  // const router = useRouter(); // Not used in current implementation
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -58,7 +58,7 @@ function SignUpForm() {
       } else {
         setSuccess(true);
       }
-    } catch (error) {
+    } catch {
       setErr(t.signUpPage.signUpError);
     } finally {
       setIsLoading(false);

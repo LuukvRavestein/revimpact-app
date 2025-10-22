@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect, Suspense } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
+import Link from "next/link";
 
 function SignInForm() {
   const supabase = createSupabaseBrowserClient();
@@ -39,7 +40,7 @@ function SignInForm() {
         // Redirect to dashboard on successful login
         router.push('/dashboard');
       }
-    } catch (error) {
+    } catch {
       setErr(t.signInPage.errorMessage);
     } finally {
       setIsLoading(false);
