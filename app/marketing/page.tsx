@@ -19,7 +19,7 @@ export default function MarketingPage() {
             <div className="flex items-center space-x-4">
               <LanguageSwitcher />
               <Link href="https://app.revimpact.nl/signin">
-                <Button>{t.signIn}</Button>
+                <Button>{t.navSignIn}</Button>
               </Link>
             </div>
           </div>

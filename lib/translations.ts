@@ -15,12 +15,12 @@ export interface Translations {
   confirm: string
   
   // Navigation
-  signIn: string
-  signOut: string
-  dashboard: string
-  workspace: string
-  data: string
-  qbr: string
+  navSignIn: string
+  navSignOut: string
+  navDashboard: string
+  navWorkspace: string
+  navData: string
+  navQbr: string
   
   // Marketing Page
   marketing: {
@@ -187,12 +187,12 @@ export const translations: Record<Language, Translations> = {
     confirm: 'Bevestigen',
     
     // Navigation
-    signIn: 'Inloggen',
-    signOut: 'Uitloggen',
-    dashboard: 'Dashboard',
-    workspace: 'Workspace',
-    data: 'Data',
-    qbr: 'QBR',
+    navSignIn: 'Inloggen',
+    navSignOut: 'Uitloggen',
+    navDashboard: 'Dashboard',
+    navWorkspace: 'Workspace',
+    navData: 'Data',
+    navQbr: 'QBR',
     
     // Marketing Page
     marketing: {
@@ -358,12 +358,12 @@ export const translations: Record<Language, Translations> = {
     confirm: 'Confirm',
     
     // Navigation
-    signIn: 'Sign In',
-    signOut: 'Sign Out',
-    dashboard: 'Dashboard',
-    workspace: 'Workspace',
-    data: 'Data',
-    qbr: 'QBR',
+    navSignIn: 'Sign In',
+    navSignOut: 'Sign Out',
+    navDashboard: 'Dashboard',
+    navWorkspace: 'Workspace',
+    navData: 'Data',
+    navQbr: 'QBR',
     
     // Marketing Page
     marketing: {
