@@ -8,8 +8,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 function SignInForm() {
   const supabase = createSupabaseBrowserClient();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const { t } = useLanguage();
 
@@ -20,16 +22,28 @@ function SignInForm() {
     }
   }, [searchParams, t.signInPage.errorMessage]);
 
-  const sendLink = async () => {
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
     setErr(null);
-    const base =
-      typeof window !== "undefined" ? window.location.origin : "https://app.revimpact.nl";
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: `${base}/auth/callback` }
-    });
-    if (error) setErr(error.message);
-    else setSent(true);
+    setIsLoading(true);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setErr(t.signInPage.errorMessage);
+      } else {
+        // Redirect to dashboard on successful login
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      setErr(t.signInPage.errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -41,23 +55,45 @@ function SignInForm() {
       
       <h1 className="text-2xl font-semibold">{t.signInPage.title}</h1>
       <p className="text-gray-600">{t.signInPage.subtitle}</p>
-      <input
-        className="border rounded w-full p-2"
-        placeholder={t.signInPage.emailPlaceholder}
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        type="email"
-        autoComplete="email"
-      />
-      <button
-        onClick={sendLink}
-        className="rounded px-4 py-2 bg-[#3A6FF8] text-white"
-        disabled={!email}
-      >
-        {t.signInPage.sendButton}
-      </button>
-      {sent && <p className="text-green-700">{t.signInPage.successMessage}</p>}
-      {err && <p className="text-red-600">{err}</p>}
+      
+      <form onSubmit={handleSignIn} className="space-y-4">
+        <input
+          className="border rounded w-full p-2"
+          placeholder={t.signInPage.emailPlaceholder}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          type="email"
+          autoComplete="email"
+          required
+        />
+        <input
+          className="border rounded w-full p-2"
+          placeholder={t.signInPage.passwordPlaceholder}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          type="password"
+          autoComplete="current-password"
+          required
+        />
+        <button
+          type="submit"
+          className="rounded px-4 py-2 bg-[#3A6FF8] text-white w-full"
+          disabled={isLoading || !email || !password}
+        >
+          {isLoading ? t.loading : t.signInPage.signInButton}
+        </button>
+      </form>
+      
+      <div className="text-center">
+        <p className="text-gray-600">
+          {t.signInPage.signUpLink}{' '}
+          <Link href="/signup" className="text-[#3A6FF8] hover:underline">
+            {t.signInPage.signUpButton}
+          </Link>
+        </p>
+      </div>
+      
+      {err && <p className="text-red-600 text-center">{err}</p>}
     </main>
   );
 }

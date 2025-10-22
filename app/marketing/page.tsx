@@ -18,7 +18,7 @@ export default function MarketingPage() {
             </div>
             <div className="flex items-center space-x-4">
               <LanguageSwitcher />
-              <Link href="https://app.revimpact.nl/signin">
+              <Link href="https://app.revimpact.nl/signup">
                 <Button>{t.navSignIn}</Button>
               </Link>
             </div>
@@ -37,7 +37,7 @@ export default function MarketingPage() {
             {t.marketing.hero.subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="https://app.revimpact.nl/signin">
+            <Link href="https://app.revimpact.nl/signup">
               <Button size="lg" className="text-lg px-8 py-4">
                 {t.marketing.hero.ctaPrimary}
               </Button>
@@ -150,7 +150,7 @@ export default function MarketingPage() {
           <p className="text-xl mb-8 opacity-90">
             {t.marketing.cta.subtitle}
           </p>
-          <Link href="https://app.revimpact.nl/signin">
+          <Link href="https://app.revimpact.nl/signup">
             <Button size="lg" variant="secondary" className="text-lg px-8 py-4">
               {t.marketing.cta.button}
             </Button>

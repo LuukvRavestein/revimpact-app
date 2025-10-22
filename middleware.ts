@@ -27,7 +27,7 @@ export async function middleware(req: NextRequest) {
     }
     
     // If accessing signin/signup while already authenticated, redirect to dashboard
-    if ((req.nextUrl.pathname === '/signin' || req.nextUrl.pathname === '/') && session) {
+    if ((req.nextUrl.pathname === '/signin' || req.nextUrl.pathname === '/signup' || req.nextUrl.pathname === '/') && session) {
       const dashboardUrl = new URL('/dashboard', req.url);
       return NextResponse.redirect(dashboardUrl);
     }
@@ -44,6 +44,7 @@ export const config = {
     '/qbr/:path*',
     '/workspace/:path*',
     '/signin',
+    '/signup',
     '/marketing'
   ]
 };

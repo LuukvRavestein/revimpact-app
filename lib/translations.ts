@@ -263,11 +263,31 @@ export const translations: Record<Language, Translations> = {
     // Sign In Page
     signInPage: {
       title: 'Sign in to RevImpact',
-      subtitle: 'Receive a magic link via email.',
+      subtitle: 'Enter your email address and password.',
       emailPlaceholder: 'you@company.com',
-      sendButton: 'Send magic link',
-      successMessage: 'Check your email for the magic link ✉️',
-      errorMessage: 'Login error'
+      passwordPlaceholder: 'Your password',
+      signInButton: 'Sign In',
+      signUpLink: 'Don\'t have an account?',
+      signUpButton: 'Sign Up',
+      errorMessage: 'Invalid login credentials',
+      successMessage: 'Successfully signed in!'
+    },
+
+    // Sign Up Page
+    signUpPage: {
+      title: 'Create Account',
+      subtitle: 'Enter your details to create your RevImpact account',
+      confirmPasswordPlaceholder: 'Confirm password',
+      createButton: 'Create Account',
+      signInLink: 'Already have an account?',
+      signInButton: 'Sign In',
+      checkEmail: 'Check your email',
+      emailSent: 'We\'ve sent you a confirmation link at',
+      clickLink: 'Click the link in the email to complete your registration.',
+      backToSignIn: 'Back to Sign In',
+      passwordMismatch: 'Passwords do not match',
+      passwordTooShort: 'Password must be at least 6 characters',
+      signUpError: 'An error occurred during sign up'
     },
     
     // Dashboard

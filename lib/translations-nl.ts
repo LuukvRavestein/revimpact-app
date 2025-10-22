@@ -84,12 +84,32 @@ export const nlTranslations = {
   
   // Sign In Page
   signInPage: {
-    title: 'Sign in to RevImpact',
-    subtitle: 'Ontvang een magic link per e-mail.',
+    title: 'Inloggen bij RevImpact',
+    subtitle: 'Voer je e-mailadres en wachtwoord in.',
     emailPlaceholder: 'jij@bedrijf.com',
-    sendButton: 'Send magic link',
-    successMessage: 'Check je mail voor de magic link ✉️',
-    errorMessage: 'Login error'
+    passwordPlaceholder: 'Je wachtwoord',
+    signInButton: 'Inloggen',
+    signUpLink: 'Nog geen account?',
+    signUpButton: 'Registreren',
+    errorMessage: 'Ongeldige inloggegevens',
+    successMessage: 'Succesvol ingelogd!'
+  },
+
+  // Sign Up Page
+  signUpPage: {
+    title: 'Account Aanmaken',
+    subtitle: 'Voer je gegevens in om je RevImpact account aan te maken',
+    confirmPasswordPlaceholder: 'Bevestig wachtwoord',
+    createButton: 'Account Aanmaken',
+    signInLink: 'Al een account?',
+    signInButton: 'Inloggen',
+    checkEmail: 'Controleer je e-mail',
+    emailSent: 'We hebben je een bevestigingslink gestuurd naar',
+    clickLink: 'Klik op de link in de e-mail om je registratie te voltooien.',
+    backToSignIn: 'Terug naar Inloggen',
+    passwordMismatch: 'Wachtwoorden komen niet overeen',
+    passwordTooShort: 'Wachtwoord moet minimaal 6 karakters zijn',
+    signUpError: 'Er is een fout opgetreden tijdens het aanmaken'
   },
   
   // Dashboard
