@@ -54,10 +54,10 @@ export default function MarketingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-impact-dark mb-4">
-              Everything you need to measure customer impact
+              {t.marketing.features.title}
             </h2>
             <p className="text-xl text-impact-dark/70 max-w-2xl mx-auto">
-              From data upload to actionable insights, RevImpact helps you understand and improve customer success.
+              {t.marketing.features.subtitle}
             </p>
           </div>
 
@@ -66,9 +66,9 @@ export default function MarketingPage() {
               <div className="w-16 h-16 bg-impact-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">📊</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Smart Data Upload</h3>
+              <h3 className="text-xl font-semibold mb-3">{t.marketing.features.smartUpload.title}</h3>
               <p className="text-impact-dark/70">
-                Upload Excel or CSV files and let our AI automatically map your customer data fields.
+                {t.marketing.features.smartUpload.description}
               </p>
             </div>
 
@@ -76,9 +76,9 @@ export default function MarketingPage() {
               <div className="w-16 h-16 bg-impact-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🤖</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">AI-Powered QBRs</h3>
+              <h3 className="text-xl font-semibold mb-3">{t.marketing.features.aiQbr.title}</h3>
               <p className="text-impact-dark/70">
-                Generate comprehensive Quarterly Business Reviews automatically from your customer data.
+                {t.marketing.features.aiQbr.description}
               </p>
             </div>
 
@@ -86,9 +86,9 @@ export default function MarketingPage() {
               <div className="w-16 h-16 bg-impact-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">📈</span>
               </div>
-              <h3 className="text-xl font-semibold mb-3">Impact Analytics</h3>
+              <h3 className="text-xl font-semibold mb-3">{t.marketing.features.impactAnalytics.title}</h3>
               <p className="text-impact-dark/70">
-                Track customer success metrics and identify opportunities for growth and retention.
+                {t.marketing.features.impactAnalytics.description}
               </p>
             </div>
           </div>
@@ -100,10 +100,10 @@ export default function MarketingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-impact-dark mb-4">
-              How it works
+              {t.marketing.howItWorks.title}
             </h2>
             <p className="text-xl text-impact-dark/70">
-              Get started in minutes, not months
+              {t.marketing.howItWorks.subtitle}
             </p>
           </div>
 
@@ -112,9 +112,9 @@ export default function MarketingPage() {
               <div className="w-12 h-12 bg-impact-blue text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 1
               </div>
-              <h3 className="text-xl font-semibold mb-3">Upload Your Data</h3>
+              <h3 className="text-xl font-semibold mb-3">{t.marketing.howItWorks.step1.title}</h3>
               <p className="text-impact-dark/70">
-                Import your customer data from Excel or CSV files. Our system automatically detects and maps your data fields.
+                {t.marketing.howItWorks.step1.description}
               </p>
             </div>
 
@@ -122,9 +122,9 @@ export default function MarketingPage() {
               <div className="w-12 h-12 bg-impact-blue text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 2
               </div>
-              <h3 className="text-xl font-semibold mb-3">Generate QBRs</h3>
+              <h3 className="text-xl font-semibold mb-3">{t.marketing.howItWorks.step2.title}</h3>
               <p className="text-impact-dark/70">
-                Create comprehensive Quarterly Business Reviews with AI-powered insights and recommendations.
+                {t.marketing.howItWorks.step2.description}
               </p>
             </div>
 
@@ -132,9 +132,9 @@ export default function MarketingPage() {
               <div className="w-12 h-12 bg-impact-blue text-white rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                 3
               </div>
-              <h3 className="text-xl font-semibold mb-3">Track Impact</h3>
+              <h3 className="text-xl font-semibold mb-3">{t.marketing.howItWorks.step3.title}</h3>
               <p className="text-impact-dark/70">
-                Monitor customer success metrics and make data-driven decisions to improve retention and growth.
+                {t.marketing.howItWorks.step3.description}
               </p>
             </div>
           </div>
@@ -145,14 +145,14 @@ export default function MarketingPage() {
       <section className="py-20 bg-impact-blue text-white">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold mb-6">
-            Ready to make customer impact measurable?
+            {t.marketing.cta.title}
           </h2>
           <p className="text-xl mb-8 opacity-90">
-            Join forward-thinking companies that are already using RevImpact to drive customer success.
+            {t.marketing.cta.subtitle}
           </p>
           <Link href="https://app.revimpact.nl/signin">
             <Button size="lg" variant="secondary" className="text-lg px-8 py-4">
-              Get Started Free
+              {t.marketing.cta.button}
             </Button>
           </Link>
         </div>
@@ -169,32 +169,32 @@ export default function MarketingPage() {
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Product</h4>
+              <h4 className="font-semibold mb-4">{t.marketing.footer.product}</h4>
               <ul className="space-y-2 text-white/70">
-                <li><a href="#" className="hover:text-white">Features</a></li>
-                <li><a href="#" className="hover:text-white">Pricing</a></li>
-                <li><a href="#" className="hover:text-white">API</a></li>
+                <li><a href="#" className="hover:text-white">{t.marketing.footer.features}</a></li>
+                <li><a href="#" className="hover:text-white">{t.marketing.footer.pricing}</a></li>
+                <li><a href="#" className="hover:text-white">{t.marketing.footer.api}</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Company</h4>
+              <h4 className="font-semibold mb-4">{t.marketing.footer.company}</h4>
               <ul className="space-y-2 text-white/70">
-                <li><a href="#" className="hover:text-white">About</a></li>
-                <li><a href="#" className="hover:text-white">Blog</a></li>
-                <li><a href="#" className="hover:text-white">Careers</a></li>
+                <li><a href="#" className="hover:text-white">{t.marketing.footer.about}</a></li>
+                <li><a href="#" className="hover:text-white">{t.marketing.footer.blog}</a></li>
+                <li><a href="#" className="hover:text-white">{t.marketing.footer.careers}</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Support</h4>
+              <h4 className="font-semibold mb-4">{t.marketing.footer.support}</h4>
               <ul className="space-y-2 text-white/70">
-                <li><a href="#" className="hover:text-white">Help Center</a></li>
-                <li><a href="#" className="hover:text-white">Contact</a></li>
-                <li><a href="#" className="hover:text-white">Status</a></li>
+                <li><a href="#" className="hover:text-white">{t.marketing.footer.helpCenter}</a></li>
+                <li><a href="#" className="hover:text-white">{t.marketing.footer.contact}</a></li>
+                <li><a href="#" className="hover:text-white">{t.marketing.footer.status}</a></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-white/20 mt-8 pt-8 text-center text-white/70">
-            <p>&copy; 2024 RevImpact. All rights reserved.</p>
+            <p>{t.marketing.footer.copyright}</p>
           </div>
         </div>
       </footer>
