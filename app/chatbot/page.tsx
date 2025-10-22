@@ -174,10 +174,10 @@ export default function ChatbotPage() {
     let totalSatisfaction = 0;
     let satisfactionCount = 0;
 
-    conversationMap.forEach((messages, _conversationId) => {
+    conversationMap.forEach((messages) => {
         const sortedMessages = messages.sort((a, b) => {
-          const timestampA = a.Timestamp || a.timestamp;
-          const timestampB = b.Timestamp || b.timestamp;
+          const timestampA = a.Timestamp || a.timestamp || '';
+          const timestampB = b.Timestamp || b.timestamp || '';
           return new Date(timestampA).getTime() - new Date(timestampB).getTime();
         });
       
@@ -196,8 +196,8 @@ export default function ChatbotPage() {
         const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
         
         // Simple heuristic: if assistant responded after user's last message, consider it resolved
-        const lastUserTimestamp = lastUserMessage.Timestamp || lastUserMessage.timestamp;
-        const lastAssistantTimestamp = lastAssistantMessage.Timestamp || lastAssistantMessage.timestamp;
+        const lastUserTimestamp = lastUserMessage.Timestamp || lastUserMessage.timestamp || '';
+        const lastAssistantTimestamp = lastAssistantMessage.Timestamp || lastAssistantMessage.timestamp || '';
         if (lastAssistantMessage && 
             new Date(lastAssistantTimestamp) > new Date(lastUserTimestamp)) {
           selfResolvedCount++;
@@ -230,10 +230,12 @@ export default function ChatbotPage() {
     // Weekly trends
     const weeklyData = new Map<string, number>();
     userQuestions.forEach(q => {
-      const timestamp = q.Timestamp || q.timestamp;
-      const date = new Date(timestamp);
-      const week = `${date.getFullYear()}-W${Math.ceil(date.getDate() / 7)}`;
-      weeklyData.set(week, (weeklyData.get(week) || 0) + 1);
+      const timestamp = q.Timestamp || q.timestamp || '';
+      if (timestamp) {
+        const date = new Date(timestamp);
+        const week = `${date.getFullYear()}-W${Math.ceil(date.getDate() / 7)}`;
+        weeklyData.set(week, (weeklyData.get(week) || 0) + 1);
+      }
     });
 
     const weeklyTrends = Array.from(weeklyData.entries())
@@ -272,7 +274,7 @@ export default function ChatbotPage() {
     });
 
     // Calculate real stats per customer
-    customerStats.forEach((stats, _customer) => {
+    customerStats.forEach((stats) => {
       stats.conversations.forEach(convId => {
         const convMessages = conversationMap.get(convId) || [];
         const sortedMessages = convMessages.sort((a, b) => 
@@ -361,10 +363,10 @@ export default function ChatbotPage() {
       timestamp: string;
     }> = [];
 
-    conversationMap.forEach((messages, _conversationId) => {
+    conversationMap.forEach((messages) => {
         const sortedMessages = messages.sort((a, b) => {
-          const timestampA = a.Timestamp || a.timestamp;
-          const timestampB = b.Timestamp || b.timestamp;
+          const timestampA = a.Timestamp || a.timestamp || '';
+          const timestampB = b.Timestamp || b.timestamp || '';
           return new Date(timestampA).getTime() - new Date(timestampB).getTime();
         });
       
@@ -382,8 +384,8 @@ export default function ChatbotPage() {
         const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
         
         // If no assistant response after last user message, consider it forwarded
-        const lastUserTimestamp = lastUserMessage.Timestamp || lastUserMessage.timestamp;
-        const lastAssistantTimestamp = lastAssistantMessage.Timestamp || lastAssistantMessage.timestamp;
+        const lastUserTimestamp = lastUserMessage.Timestamp || lastUserMessage.timestamp || '';
+        const lastAssistantTimestamp = lastAssistantMessage.Timestamp || lastAssistantMessage.timestamp || '';
         if (!lastAssistantMessage || 
             new Date(lastAssistantTimestamp) <= new Date(lastUserTimestamp)) {
           const userId = lastUserMessage.usr_id || lastUserMessage.user_id;
