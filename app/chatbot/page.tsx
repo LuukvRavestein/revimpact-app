@@ -108,7 +108,7 @@ export default function ChatbotPage() {
         const username = row.Username || row.username;
         const userId = row.usr_id || row.user_id;
         
-        if (username && username !== '[username]') {
+        if (username && username !== '[username]' && userId) {
           const userInfo = JSON.parse(username);
           if (userInfo.clientName) {
             customerMap.set(userId, userInfo.clientName);
@@ -174,7 +174,7 @@ export default function ChatbotPage() {
     let totalSatisfaction = 0;
     let satisfactionCount = 0;
 
-    conversationMap.forEach((messages, conversationId) => {
+    conversationMap.forEach((messages, _conversationId) => {
         const sortedMessages = messages.sort((a, b) => {
           const timestampA = a.Timestamp || a.timestamp;
           const timestampB = b.Timestamp || b.timestamp;
@@ -272,7 +272,7 @@ export default function ChatbotPage() {
     });
 
     // Calculate real stats per customer
-    customerStats.forEach((stats, customer) => {
+    customerStats.forEach((stats, _customer) => {
       stats.conversations.forEach(convId => {
         const convMessages = conversationMap.get(convId) || [];
         const sortedMessages = convMessages.sort((a, b) => 
@@ -361,7 +361,7 @@ export default function ChatbotPage() {
       timestamp: string;
     }> = [];
 
-    conversationMap.forEach((messages, conversationId) => {
+    conversationMap.forEach((messages, _conversationId) => {
         const sortedMessages = messages.sort((a, b) => {
           const timestampA = a.Timestamp || a.timestamp;
           const timestampB = b.Timestamp || b.timestamp;
