@@ -13,7 +13,7 @@ export async function middleware(req: NextRequest) {
   const isAppDomain = req.nextUrl.hostname === 'app.revimpact.nl';
   
   // Define protected routes that require authentication (only for app domain)
-  const protectedRoutes = ['/dashboard', '/data', '/qbr', '/workspace'];
+  const protectedRoutes = ['/dashboard', '/data', '/qbr', '/workspace', '/chatbot'];
   const isProtectedRoute = protectedRoutes.some(route => 
     req.nextUrl.pathname.startsWith(route)
   );
@@ -43,6 +43,7 @@ export const config = {
     '/data/:path*', 
     '/qbr/:path*',
     '/workspace/:path*',
+    '/chatbot/:path*',
     '/signin',
     '/signup',
     '/marketing'

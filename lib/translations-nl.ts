@@ -186,5 +186,33 @@ export const nlTranslations = {
     ownerDesc: 'Full workspace access, manage team members, delete workspace, all admin permissions',
     adminDesc: 'Upload and manage data, generate QBR reports, invite new members, view all analytics',
     memberDesc: 'View data and reports, generate QBR reports, basic analytics access, limited permissions'
+  },
+
+  // Chatbot Analytics Page
+  chatbot: {
+    title: 'Chatbot Analytics',
+    subtitle: 'Upload chatbot data en krijg direct inzicht in prestaties',
+    uploadTitle: 'Upload Chatbot Data',
+    uploadSubtitle: 'Upload je Excel-bestand met chatbot conversaties om automatisch een dashboard te genereren',
+    dragDrop: 'Klik om te uploaden of sleep bestanden hierheen',
+    fileTypes: 'Excel (.xlsx, .xls) of CSV bestanden tot 10MB',
+    processing: 'Processing data...',
+    fileSelected: 'Bestand geselecteerd:',
+    errorProcessing: 'Error processing Excel file. Please check the format.',
+    totalQuestions: 'Totaal Vragen',
+    uniqueCustomers: 'Unieke Klanten',
+    selfResolved: 'Zelf Opgelost',
+    forwarded: 'Doorgestuurd',
+    satisfaction: 'Tevredenheid',
+    weeklyTrends: 'Trend over de Tijd',
+    topCustomers: 'Top Klanten',
+    customer: 'Klant',
+    questions: 'Vragen',
+    selfResolvedPct: 'Zelf Opgelost',
+    forwardedPct: 'Doorgestuurd',
+    satisfactionScore: 'Tevredenheid',
+    topTopics: 'Top Onderwerpen',
+    forwardedTickets: 'Doorgestuurde Tickets',
+    uploadNew: 'Nieuw Bestand Uploaden'
   }
 }

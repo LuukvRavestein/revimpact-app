@@ -384,6 +384,34 @@ export const translations: Record<Language, Translations> = {
       ownerDesc: 'Full workspace access, manage team members, delete workspace, all admin permissions',
       adminDesc: 'Upload and manage data, generate QBR reports, invite new members, view all analytics',
       memberDesc: 'View data and reports, generate QBR reports, basic analytics access, limited permissions'
+    },
+
+    // Chatbot Analytics Page
+    chatbot: {
+      title: 'Chatbot Analytics',
+      subtitle: 'Upload chatbot data and get instant performance insights',
+      uploadTitle: 'Upload Chatbot Data',
+      uploadSubtitle: 'Upload your Excel file with chatbot conversations to automatically generate a dashboard',
+      dragDrop: 'Click to upload or drag files here',
+      fileTypes: 'Excel (.xlsx, .xls) or CSV files up to 10MB',
+      processing: 'Processing data...',
+      fileSelected: 'File selected:',
+      errorProcessing: 'Error processing Excel file. Please check the format.',
+      totalQuestions: 'Total Questions',
+      uniqueCustomers: 'Unique Customers',
+      selfResolved: 'Self Resolved',
+      forwarded: 'Forwarded',
+      satisfaction: 'Satisfaction',
+      weeklyTrends: 'Trend Over Time',
+      topCustomers: 'Top Customers',
+      customer: 'Customer',
+      questions: 'Questions',
+      selfResolvedPct: 'Self Resolved',
+      forwardedPct: 'Forwarded',
+      satisfactionScore: 'Satisfaction',
+      topTopics: 'Top Topics',
+      forwardedTickets: 'Forwarded Tickets',
+      uploadNew: 'Upload New File'
     }
   }
 }
