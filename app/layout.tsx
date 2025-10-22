@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import "../styles/globals.css"
+import { LanguageProvider } from "@/contexts/LanguageContext"
 
 export const metadata: Metadata = {
   title: "RevImpact — Make Customer Impact measurable.",
@@ -13,7 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full bg-impact-light text-impact-dark">
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
+      </body>
     </html>
   )
 }

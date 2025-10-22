@@ -1,7 +1,12 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { LanguageSwitcher } from "@/components/LanguageSwitcher"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 export default function MarketingPage() {
+  const { t } = useLanguage()
   return (
     <main className="min-h-screen bg-gradient-to-br from-impact-light to-white">
       {/* Header */}
@@ -12,8 +17,9 @@ export default function MarketingPage() {
               <h1 className="text-2xl font-bold text-impact-dark">RevImpact</h1>
             </div>
             <div className="flex items-center space-x-4">
+              <LanguageSwitcher />
               <Link href="https://app.revimpact.nl/signin">
-                <Button>Inloggen</Button>
+                <Button>{t.signIn}</Button>
               </Link>
             </div>
           </div>
@@ -24,20 +30,20 @@ export default function MarketingPage() {
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-impact-dark mb-6">
-            Make Customer Impact
-            <span className="text-impact-blue block">measurable</span>
+            {t.marketing.hero.title.split(' ').slice(0, -1).join(' ')}
+            <span className="text-impact-blue block">{t.marketing.hero.title.split(' ').slice(-1)[0]}</span>
           </h1>
           <p className="text-xl md:text-2xl text-impact-dark/80 mb-8 max-w-3xl mx-auto">
-            AI that turns customer data into actionable insights and measurable impact for your business.
+            {t.marketing.hero.subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="https://app.revimpact.nl/signin">
               <Button size="lg" className="text-lg px-8 py-4">
-                Start Free Trial
+                {t.marketing.hero.ctaPrimary}
               </Button>
             </Link>
             <Button variant="secondary" size="lg" className="text-lg px-8 py-4">
-              Watch Demo
+              {t.marketing.hero.ctaSecondary}
             </Button>
           </div>
         </div>
