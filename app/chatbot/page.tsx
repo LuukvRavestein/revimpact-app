@@ -645,13 +645,16 @@ export default function ChatbotPage() {
                 {processedData.weeklyTrends.map((week, index) => (
                   <div key={index} className="flex-1 flex flex-col items-center">
                     <div
-                      className="bg-blue-500 rounded-t w-full"
+                      className="bg-blue-500 rounded-t w-full relative flex items-center justify-center"
                       style={{ height: `${(week.questions / Math.max(...processedData.weeklyTrends.map(w => w.questions))) * 200}px` }}
-                    ></div>
-                    <div className="text-xs text-gray-500 mt-2 transform -rotate-45 origin-left">
+                    >
+                      <span className="text-white font-semibold text-sm">
+                        {week.questions}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-2 text-center">
                       {week.week}
                     </div>
-                    <div className="text-xs text-gray-700 mt-1">{week.questions}</div>
                   </div>
                 ))}
               </div>
