@@ -58,8 +58,7 @@ export default function DashboardPage() {
 
       // Zo niet: maak workspace + membership
       if (!workspaceId) {
-        console.log("Creating new workspace for user:", session.user.id);
-        
+        // Try direct workspace creation first
         const { data: ws, error: wErr } = await supabase
           .from("workspaces")
           .insert({ 
@@ -70,34 +69,20 @@ export default function DashboardPage() {
           .single();
         
         if (wErr) {
-          console.error("Error creating workspace:", wErr);
-          console.error("Workspace creation details:", {
-            name: "My Workspace",
-            created_by: session.user.id,
-            error: wErr,
-            errorMessage: wErr.message,
-            errorCode: wErr.code,
-            errorDetails: wErr.details,
-            errorHint: wErr.hint
-          });
-          
-          // Try alternative method using RPC function
-          console.log("Trying alternative workspace creation method...");
+          // If direct creation fails due to RLS, use RPC function
           const { data: altWs, error: altErr } = await supabase.rpc('create_user_workspace', {
             workspace_name: "My Workspace"
           });
           
           if (altErr) {
-            console.error("Alternative method also failed:", altErr);
+            console.error("Workspace creation failed:", altErr);
             setLoading(false);
             return;
           }
           
-          console.log("Alternative method succeeded:", altWs);
           name = "My Workspace";
         } else {
           const workspace = ws as { id: string; name: string };
-          console.log("Workspace created successfully:", workspace);
           
           const { error: memErr } = await supabase
             .from("workspace_members")
@@ -109,17 +94,10 @@ export default function DashboardPage() {
           
           if (memErr) {
             console.error("Error creating membership:", memErr);
-            console.error("Membership creation details:", {
-              workspace_id: workspace.id,
-              user_id: session.user.id,
-              role: "owner",
-              error: memErr
-            });
             setLoading(false);
             return;
           }
 
-          console.log("Membership created successfully");
           name = workspace.name;
         }
       }
@@ -128,12 +106,6 @@ export default function DashboardPage() {
       
       // Detect client type based on workspace name
       const workspaceNameLower = (name || "").toLowerCase();
-      console.log('Client type check:', {
-        workspaceName: name,
-        workspaceNameLower,
-        includesTimewax: workspaceNameLower.includes('timewax')
-      });
-      
       if (workspaceNameLower.includes('timewax')) {
         setClientType('timewax');
       } else {
@@ -146,19 +118,10 @@ export default function DashboardPage() {
                          userEmail === 'luuk@revimpact.nl' || 
                          userEmail === 'admin@revimpact.nl';
       
-      console.log('Admin check:', {
-        userEmail,
-        isAdminUser,
-        includesAdmin: userEmail.includes('admin'),
-        isLuuk: userEmail === 'luuk@revimpact.nl',
-        isAdminEmail: userEmail === 'admin@revimpact.nl'
-      });
-      
       setIsAdmin(isAdminUser);
       
       // Special case: if user is admin but workspace creation failed, still allow access
       if (isAdminUser && !name) {
-        console.log('Admin user detected, allowing access despite workspace issues');
         setWorkspaceName("Admin Workspace");
         setClientType('admin');
       }
