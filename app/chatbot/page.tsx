@@ -514,16 +514,16 @@ export default function ChatbotPage() {
       stats.conversations.forEach(convId => {
         const convMessages = conversationMap.get(convId) || [];
         const sortedMessages = convMessages.sort((a, b) => 
-          new Date(a.timestamp || '').getTime() - new Date(b.timestamp || '').getTime()
+          new Date(a.Timestamp || a.timestamp || '').getTime() - new Date(b.Timestamp || b.timestamp || '').getTime()
         );
         
         const userMessages = sortedMessages.filter(m => 
-          m.label === 'USER' || m.type === 'USER' || 
-          m.label?.toLowerCase() === 'user' || m.type?.toLowerCase() === 'user'
+          m.Type === 'USER' || m.label === 'USER' || m.type === 'USER' || 
+          m.Type?.toLowerCase() === 'user' || m.label?.toLowerCase() === 'user' || m.type?.toLowerCase() === 'user'
         );
         const assistantMessages = sortedMessages.filter(m => 
-          m.label === 'ASSISTANT' || m.type === 'ASSISTANT' ||
-          m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
+          m.Type === 'ASSISTANT' || m.label === 'ASSISTANT' || m.type === 'ASSISTANT' ||
+          m.Type?.toLowerCase() === 'assistant' || m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
         );
         
         if (userMessages.length > 0) {
@@ -555,9 +555,7 @@ export default function ChatbotPage() {
     // Debug: Show customer forwarding details
     console.log('=== CUSTOMER FORWARDING DETAILS ===');
     customerStats.forEach((stats, customer) => {
-      if (stats.forwarded > 0) {
-        console.log(`📤 ${customer}: ${stats.forwarded} forwarded, ${stats.selfResolved} self-resolved (${stats.questions} total questions)`);
-      }
+      console.log(`📊 ${customer}: ${stats.forwarded} forwarded, ${stats.selfResolved} self-resolved (${stats.questions} total questions, ${stats.conversations.length} conversations)`);
     });
     console.log('===================================');
 
@@ -612,12 +610,12 @@ export default function ChatbotPage() {
         });
       
       const userMessages = sortedMessages.filter(m => 
-        m.label === 'USER' || m.type === 'USER' || 
-        m.label?.toLowerCase() === 'user' || m.type?.toLowerCase() === 'user'
+        m.Type === 'USER' || m.label === 'USER' || m.type === 'USER' || 
+        m.Type?.toLowerCase() === 'user' || m.label?.toLowerCase() === 'user' || m.type?.toLowerCase() === 'user'
       );
       const assistantMessages = sortedMessages.filter(m => 
-        m.label === 'ASSISTANT' || m.type === 'ASSISTANT' ||
-        m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
+        m.Type === 'ASSISTANT' || m.label === 'ASSISTANT' || m.type === 'ASSISTANT' ||
+        m.Type?.toLowerCase() === 'assistant' || m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
       );
       
       if (userMessages.length > 0) {
