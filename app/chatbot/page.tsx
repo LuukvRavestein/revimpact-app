@@ -304,7 +304,7 @@ export default function ChatbotPage() {
           }
           
           // Calculate satisfaction for this conversation
-          const allContent = convMessages.map(m => m.content.toLowerCase()).join(' ');
+          const allContent = convMessages.map(m => (m.content || '').toLowerCase()).join(' ');
           if (allContent.includes('thank') || allContent.includes('bedankt') || 
               allContent.includes('perfect') || allContent.includes('great') ||
               allContent.includes('helpful') || allContent.includes('nuttig')) {
