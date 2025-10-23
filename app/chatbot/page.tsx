@@ -226,7 +226,6 @@ export default function ChatbotPage() {
   const [selectedWeek, setSelectedWeek] = useState<string>('all');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [workspaceName, setWorkspaceName] = useState<string>("");
-  const [isTimewaxClient, setIsTimewaxClient] = useState<boolean>(false);
 
   // Check authentication and client type on component mount
   useEffect(() => {
@@ -272,7 +271,6 @@ export default function ChatbotPage() {
       // Check if this is a Timewax client
       const workspaceNameLower = (name || "").toLowerCase();
       const isTimewax = workspaceNameLower.includes('timewax');
-      setIsTimewaxClient(isTimewax);
       
       if (!isTimewax) {
         // Not a Timewax client, redirect to dashboard

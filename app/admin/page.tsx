@@ -8,7 +8,7 @@ import Link from "next/link";
 
 interface User {
   id: string;
-  email: string;
+  email: string | undefined;
   created_at: string;
   last_sign_in_at: string | null;
 }
@@ -41,6 +41,42 @@ export default function AdminPage() {
   const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
+    const loadUsers = async () => {
+      try {
+        const { data, error } = await supabase.auth.admin.listUsers();
+        if (error) {
+          console.error('Error loading users:', error);
+          return;
+        }
+        setUsers(data.users || []);
+      } catch (err) {
+        console.error('Error loading users:', err);
+      }
+    };
+
+    const loadWorkspaceMembers = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('workspace_members')
+          .select(`
+            id,
+            user_id,
+            workspace_id,
+            role,
+            users(email),
+            workspaces(name)
+          `);
+        
+        if (error) {
+          console.error('Error loading workspace members:', error);
+          return;
+        }
+        setWorkspaceMembers(data || []);
+      } catch (err) {
+        console.error('Error loading workspace members:', err);
+      }
+    };
+
     const checkAdminAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -175,8 +211,9 @@ export default function AdminPage() {
     }
   };
 
-  const deleteUser = async (userId: string, userEmail: string) => {
-    if (!confirm(`Weet je zeker dat je gebruiker ${userEmail} wilt verwijderen?`)) {
+  const deleteUser = async (userId: string, userEmail: string | undefined) => {
+    const email = userEmail || 'onbekende gebruiker';
+    if (!confirm(`Weet je zeker dat je gebruiker ${email} wilt verwijderen?`)) {
       return;
     }
 
@@ -187,7 +224,7 @@ export default function AdminPage() {
         return;
       }
 
-      setSuccess(`Gebruiker ${userEmail} succesvol verwijderd!`);
+      setSuccess(`Gebruiker ${email} succesvol verwijderd!`);
       await loadUsers();
       await loadWorkspaceMembers();
     } catch (err) {
@@ -352,7 +389,7 @@ export default function AdminPage() {
                 {users.map((user) => (
                   <tr key={user.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {user.email}
+                      {user.email || 'Geen e-mail'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {new Date(user.created_at).toLocaleDateString('nl-NL')}
