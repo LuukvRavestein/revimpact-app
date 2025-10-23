@@ -236,12 +236,12 @@ export default function ChatbotPage() {
           });
           console.log('All message types in first conversation:');
           sortedMessages.forEach((m, index) => {
-            console.log(`Message ${index + 1}:`, {
-              Type: m.Type,
-              type: m.type,
-              label: m.label,
-              Content: (m.Content || '').substring(0, 50)
-            });
+            console.log(`Message ${index + 1}:`);
+            console.log('  Type:', m.Type);
+            console.log('  type:', m.type);
+            console.log('  label:', m.label);
+            console.log('  Content:', (m.Content || '').substring(0, 50));
+            console.log('  All properties:', Object.keys(m));
           });
         }
 
