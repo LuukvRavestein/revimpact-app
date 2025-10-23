@@ -293,15 +293,6 @@ export default function ChatbotPage() {
     console.log('Self-resolved percentage:', selfResolvedPercentage + '%');
     console.log('Forwarded percentage:', forwardedPercentage + '%');
     console.log('=====================================');
-    
-    // Debug: Show customer forwarding details
-    console.log('=== CUSTOMER FORWARDING DETAILS ===');
-    customerStats.forEach((stats, customer) => {
-      if (stats.forwarded > 0) {
-        console.log(`📤 ${customer}: ${stats.forwarded} forwarded, ${stats.selfResolved} self-resolved (${stats.questions} total questions)`);
-      }
-    });
-    console.log('===================================');
 
     // Weekly trends - group by conversation_id to get unique conversations per week
     const weeklyData = new Map<string, Set<string>>();
@@ -410,6 +401,15 @@ export default function ChatbotPage() {
       });
     });
 
+    // Debug: Show customer forwarding details
+    console.log('=== CUSTOMER FORWARDING DETAILS ===');
+    customerStats.forEach((stats, customer) => {
+      if (stats.forwarded > 0) {
+        console.log(`📤 ${customer}: ${stats.forwarded} forwarded, ${stats.selfResolved} self-resolved (${stats.questions} total questions)`);
+      }
+    });
+    console.log('===================================');
+
     const topCustomers = Array.from(customerStats.entries())
       .map(([customer, stats]) => ({
         customer,
@@ -471,7 +471,6 @@ export default function ChatbotPage() {
       
       if (userMessages.length > 0) {
         const lastUserMessage = userMessages[userMessages.length - 1];
-        const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
         
         // Check if any assistant message contains support ticket creation text
         const hasSupportTicket = assistantMessages.some(msg => {
