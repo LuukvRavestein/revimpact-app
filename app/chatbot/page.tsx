@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import * as XLSX from 'xlsx';
@@ -58,6 +58,162 @@ interface ProcessedData {
   }>>;
 }
 
+// Utility function for detecting support ticket forwarding
+const isSupportTicketForwarding = (content: string): boolean => {
+  const normalizedContent = content.toLowerCase();
+  
+  // Comprehensive list of forwarding indicators
+  const forwardingKeywords = [
+    // English
+    'support ticket',
+    'created a support ticket',
+    'i\'ve created a support ticket',
+    'support ticket created',
+    'ticket has been created',
+    'escalated to support',
+    'forwarded to support',
+    'support team will',
+    'support will contact',
+    'escalating your request',
+    'escalated your request',
+    'support specialist',
+    'support agent',
+    'human support',
+    'live support',
+    'support representative',
+    
+    // Dutch
+    'ticket voor je aangemaakt',
+    'ticket aangemaakt',
+    'er is een support ticket',
+    'support ticket aangemaakt',
+    'doorgestuurd naar support',
+    'escaleren naar support',
+    'support team zal',
+    'support neemt contact op',
+    'support specialist',
+    'support medewerker',
+    'menselijke support',
+    'live support',
+    
+    // German
+    'ticket hinzugefügt',
+    'ich habe einen support ticket',
+    'ticket erstellt',
+    'support ticket erstellt',
+    'an support weitergeleitet',
+    'escaliert an support',
+    'support team wird',
+    'support wird sich melden',
+    'support spezialist',
+    'support mitarbeiter',
+    'menschliche unterstützung',
+    'live support',
+    
+    // French
+    'ticket de support créé',
+    'j\'ai créé un ticket',
+    'ticket créé',
+    'transféré au support',
+    'escaladé au support',
+    'équipe support',
+    'support vous contactera',
+    'spécialiste support',
+    'agent support',
+    'support humain',
+    'support en direct',
+    
+    // Spanish
+    'ticket de soporte creado',
+    'he creado un ticket',
+    'ticket creado',
+    'derivado a soporte',
+    'escalado a soporte',
+    'equipo de soporte',
+    'soporte se pondrá en contacto',
+    'especialista en soporte',
+    'agente de soporte',
+    'soporte humano',
+    'soporte en vivo'
+  ];
+  
+  // Check for any forwarding keywords
+  const hasForwardingKeyword = forwardingKeywords.some(keyword => 
+    normalizedContent.includes(keyword)
+  );
+  
+  // Additional patterns that indicate forwarding
+  const forwardingPatterns = [
+    /ticket.*(?:created|aangemaakt|erstellt|créé)/i,
+    /support.*(?:ticket|team|agent|specialist)/i,
+    /(?:escalat|forward|transfer).*support/i,
+    /human.*support/i,
+    /live.*support/i,
+    /support.*(?:will|zal|wird|va).*(?:contact|contact|kontakt|contacter)/i
+  ];
+  
+  const hasForwardingPattern = forwardingPatterns.some(pattern => 
+    pattern.test(normalizedContent)
+  );
+  
+  return hasForwardingKeyword || hasForwardingPattern;
+};
+
+// Test function to validate forwarding detection accuracy
+const testForwardingDetection = () => {
+  console.log('🧪 Testing forwarding detection accuracy...');
+  
+  const testCases = [
+    // Should be detected as forwarding
+    { message: "I've created a support ticket for you", expected: true },
+    { message: "Er is een support ticket aangemaakt", expected: true },
+    { message: "Ich habe einen support ticket erstellt", expected: true },
+    { message: "J'ai créé un ticket de support", expected: true },
+    { message: "He creado un ticket de soporte", expected: true },
+    { message: "Your request has been escalated to support", expected: true },
+    { message: "Support team will contact you shortly", expected: true },
+    { message: "I'm forwarding this to our support specialist", expected: true },
+    { message: "Human support will assist you", expected: true },
+    { message: "Live support is available", expected: true },
+    { message: "Support ticket created successfully", expected: true },
+    { message: "Doorgestuurd naar support", expected: true },
+    { message: "Escalated to support team", expected: true },
+    
+    // Should NOT be detected as forwarding
+    { message: "How can I help you today?", expected: false },
+    { message: "I understand your question", expected: false },
+    { message: "Here's the information you requested", expected: false },
+    { message: "Thank you for contacting us", expected: false },
+    { message: "I can assist you with that", expected: false },
+    { message: "Let me check that for you", expected: false },
+    { message: "Based on your question", expected: false },
+    { message: "Here are the steps to resolve this", expected: false },
+    { message: "I found the answer in our knowledge base", expected: false },
+    { message: "This is a common issue", expected: false },
+  ];
+  
+  let passed = 0;
+  let failed = 0;
+  
+  testCases.forEach((testCase, index) => {
+    const result = isSupportTicketForwarding(testCase.message);
+    const success = result === testCase.expected;
+    
+    if (success) {
+      passed++;
+      console.log(`✅ Test ${index + 1}: PASSED - "${testCase.message.substring(0, 50)}..."`);
+    } else {
+      failed++;
+      console.log(`❌ Test ${index + 1}: FAILED - "${testCase.message.substring(0, 50)}..." (Expected: ${testCase.expected}, Got: ${result})`);
+    }
+  });
+  
+  console.log(`\n📊 Test Results: ${passed} passed, ${failed} failed out of ${testCases.length} tests`);
+  console.log(`🎯 Accuracy: ${((passed / testCases.length) * 100).toFixed(1)}%`);
+  
+  return { passed, failed, total: testCases.length, accuracy: (passed / testCases.length) * 100 };
+};
+
 export default function ChatbotPage() {
   const { t } = useLanguage();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -65,6 +221,11 @@ export default function ChatbotPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<string>('all');
+
+  // Run forwarding detection test on component mount
+  useEffect(() => {
+    testForwardingDetection();
+  }, []);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -257,11 +418,8 @@ export default function ChatbotPage() {
         if (userMessages.length > 0) {
           // Check if any assistant message contains support ticket creation text
           const hasSupportTicket = assistantMessages.some(msg => {
-            const content = (msg.Content || msg.content || '').toLowerCase();
-            const isSupportTicket = content.includes('support ticket') || 
-                   content.includes('ticket voor je aangemaakt') ||
-                   content.includes('created a support ticket') ||
-                   content.includes('ticket hinzugefügt');
+            const content = (msg.Content || msg.content || '');
+            const isSupportTicket = isSupportTicketForwarding(content);
             
             if (isSupportTicket) {
               console.log('Found support ticket message:', content.substring(0, 100));
@@ -368,17 +526,8 @@ export default function ChatbotPage() {
         if (userMessages.length > 0) {
           // Check if any assistant message contains support ticket creation text
           const hasSupportTicket = assistantMessages.some(msg => {
-            const content = (msg.Content || msg.content || '').toLowerCase();
-            const isSupportTicket = content.includes('support ticket') || 
-                   content.includes('ticket voor je aangemaakt') ||
-                   content.includes('created a support ticket') ||
-                   content.includes('ticket hinzugefügt') ||
-                   content.includes('er is een support ticket') ||
-                   content.includes('i\'ve created a support ticket') ||
-                   content.includes('ich habe einen support ticket') ||
-                   content.includes('ticket aangemaakt') ||
-                   content.includes('support ticket created') ||
-                   content.includes('ticket erstellt');
+            const content = (msg.Content || msg.content || '');
+            const isSupportTicket = isSupportTicketForwarding(content);
             
             // Debug logging for main customer stats
             if (isSupportTicket) {
@@ -473,11 +622,8 @@ export default function ChatbotPage() {
         
         // Check if any assistant message contains support ticket creation text
         const hasSupportTicket = assistantMessages.some(msg => {
-          const content = (msg.Content || msg.content || '').toLowerCase();
-          return content.includes('support ticket') || 
-                 content.includes('ticket voor je aangemaakt') ||
-                 content.includes('created a support ticket') ||
-                 content.includes('ticket hinzugefügt');
+          const content = (msg.Content || msg.content || '');
+          return isSupportTicketForwarding(content);
         });
         
         if (hasSupportTicket) {
@@ -572,17 +718,8 @@ export default function ChatbotPage() {
         );
         
         const hasSupportTicket = assistantMessages.some(msg => {
-          const content = (msg.Content || msg.content || '').toLowerCase();
-          const isSupportTicket = content.includes('support ticket') || 
-                 content.includes('ticket voor je aangemaakt') ||
-                 content.includes('created a support ticket') ||
-                 content.includes('ticket hinzugefügt') ||
-                 content.includes('er is een support ticket') ||
-                 content.includes('i\'ve created a support ticket') ||
-                 content.includes('ich habe einen support ticket') ||
-                 content.includes('ticket aangemaakt') ||
-                 content.includes('support ticket created') ||
-                 content.includes('ticket erstellt');
+          const content = (msg.Content || msg.content || '');
+          const isSupportTicket = isSupportTicketForwarding(content);
           
           // Debug logging for forwarding detection
           if (isSupportTicket) {
