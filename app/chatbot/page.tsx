@@ -193,7 +193,13 @@ export default function ChatbotPage() {
     let selfResolvedCount = 0;
     let forwardedCount = 0;
 
-    conversationMap.forEach((messages) => {
+    let totalMessages = 0;
+    let totalUserMessages = 0;
+    let totalAssistantMessages = 0;
+    
+    conversationMap.forEach((messages, conversationId) => {
+        totalMessages += messages.length;
+        
         const sortedMessages = messages.sort((a, b) => {
           const timestampA = a.Timestamp || a.timestamp || '';
           const timestampB = b.Timestamp || b.timestamp || '';
@@ -209,16 +215,25 @@ export default function ChatbotPage() {
           m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
         );
         
+        totalUserMessages += userMessages.length;
+        totalAssistantMessages += assistantMessages.length;
+        
         // Debug: log some assistant messages to see what we're working with
         if (assistantMessages.length > 0) {
-          console.log('Conversation has', assistantMessages.length, 'assistant messages');
+          console.log('Conversation', conversationId, 'has', assistantMessages.length, 'assistant messages');
           console.log('Sample assistant message:', {
             type: assistantMessages[0].Type || assistantMessages[0].type,
             label: assistantMessages[0].label,
             content: (assistantMessages[0].Content || assistantMessages[0].content || '').substring(0, 100)
           });
-        } else {
-          console.log('Conversation has NO assistant messages');
+        } else if (conversationId === Array.from(conversationMap.keys())[0]) {
+          // Only log for first conversation to avoid spam
+          console.log('First conversation has NO assistant messages');
+          console.log('Sample message from first conversation:', {
+            type: sortedMessages[0]?.Type || sortedMessages[0]?.type,
+            label: sortedMessages[0]?.label,
+            content: (sortedMessages[0]?.Content || sortedMessages[0]?.content || '').substring(0, 100)
+          });
         }
 
         if (userMessages.length > 0) {
@@ -252,6 +267,9 @@ export default function ChatbotPage() {
     
     console.log('=== FORWARDING ANALYSIS RESULTS ===');
     console.log('Total conversations analyzed:', uniqueConversations);
+    console.log('Total messages in all conversations:', totalMessages);
+    console.log('Total user messages found:', totalUserMessages);
+    console.log('Total assistant messages found:', totalAssistantMessages);
     console.log('Self-resolved conversations:', selfResolvedCount);
     console.log('Forwarded conversations:', forwardedCount);
     console.log('Self-resolved percentage:', selfResolvedPercentage + '%');
