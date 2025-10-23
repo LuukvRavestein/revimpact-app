@@ -280,7 +280,7 @@ export default function ChatbotPage() {
       stats.conversations.forEach(convId => {
         const convMessages = conversationMap.get(convId) || [];
         const sortedMessages = convMessages.sort((a, b) => 
-          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          new Date(a.timestamp || '').getTime() - new Date(b.timestamp || '').getTime()
         );
         
         const userMessages = sortedMessages.filter(m => 
@@ -297,7 +297,7 @@ export default function ChatbotPage() {
           const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
           
           if (lastAssistantMessage && 
-              new Date(lastAssistantMessage.timestamp) > new Date(lastUserMessage.timestamp)) {
+              new Date(lastAssistantMessage.timestamp || '') > new Date(lastUserMessage.timestamp || '')) {
             stats.selfResolved++;
           } else {
             stats.forwarded++;
@@ -714,7 +714,7 @@ export default function ChatbotPage() {
                         <p className="text-sm text-gray-600 mt-1">{ticket.content}</p>
                       </div>
                       <span className="text-xs text-gray-500 ml-4">
-                        {new Date(ticket.timestamp).toLocaleDateString()}
+                        {new Date(ticket.timestamp || '').toLocaleDateString()}
                       </span>
                     </div>
                   </div>
