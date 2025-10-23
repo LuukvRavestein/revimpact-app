@@ -58,32 +58,52 @@ export default function DashboardPage() {
 
       // Zo niet: maak workspace + membership
       if (!workspaceId) {
+        console.log("Creating new workspace for user:", session.user.id);
+        
         const { data: ws, error: wErr } = await supabase
           .from("workspaces")
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .insert({ name: "My Workspace", created_by: session.user.id } as any)
+          .insert({ 
+            name: "My Workspace", 
+            created_by: session.user.id 
+          })
           .select("id, name")
           .single();
         
         if (wErr) {
           console.error("Error creating workspace:", wErr);
+          console.error("Workspace creation details:", {
+            name: "My Workspace",
+            created_by: session.user.id,
+            error: wErr
+          });
           setLoading(false);
           return;
         }
 
         const workspace = ws as { id: string; name: string };
+        console.log("Workspace created successfully:", workspace);
         
         const { error: memErr } = await supabase
           .from("workspace_members")
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .insert({ workspace_id: workspace.id, user_id: session.user.id, role: "owner" } as any);
+          .insert({ 
+            workspace_id: workspace.id, 
+            user_id: session.user.id, 
+            role: "owner" 
+          });
         
         if (memErr) {
           console.error("Error creating membership:", memErr);
+          console.error("Membership creation details:", {
+            workspace_id: workspace.id,
+            user_id: session.user.id,
+            role: "owner",
+            error: memErr
+          });
           setLoading(false);
           return;
         }
 
+        console.log("Membership created successfully");
         name = workspace.name;
       }
 
@@ -118,6 +138,13 @@ export default function DashboardPage() {
       });
       
       setIsAdmin(isAdminUser);
+      
+      // Special case: if user is admin but workspace creation failed, still allow access
+      if (isAdminUser && !name) {
+        console.log('Admin user detected, allowing access despite workspace issues');
+        setWorkspaceName("Admin Workspace");
+        setClientType('admin');
+      }
       
       setLoading(false);
     };
@@ -189,6 +216,16 @@ export default function DashboardPage() {
             </Link>
             <p className="text-sm text-gray-500 ml-6">
               Gebruikersbeheer en systeembeheer
+            </p>
+          </div>
+        )}
+        {clientType === 'admin' && (
+          <div>
+            <Link className="underline text-blue-600" href="/admin">
+              🔧 Admin Access (Workspace Issues)
+            </Link>
+            <p className="text-sm text-gray-500 ml-6">
+              Directe admin toegang ondanks workspace problemen
             </p>
           </div>
         )}
