@@ -37,12 +37,28 @@ export default function AdminPage() {
   useEffect(() => {
     const loadUsers = async () => {
       try {
-        const { data, error } = await supabase.auth.admin.listUsers();
+        // Instead of using admin API, get users from workspace_members
+        const { data, error } = await supabase
+          .from('workspace_members')
+          .select(`
+            user_id,
+            users!inner(email, created_at, last_sign_in_at)
+          `);
+        
         if (error) {
           console.error('Error loading users:', error);
           return;
         }
-        setUsers(data.users || []);
+        
+        // Transform the data to match User interface
+        const userList = data?.map(item => ({
+          id: item.user_id,
+          email: item.users.email,
+          created_at: item.users.created_at,
+          last_sign_in_at: item.users.last_sign_in_at
+        })) || [];
+        
+        setUsers(userList);
       } catch (err) {
         console.error('Error loading users:', err);
       }
@@ -143,54 +159,44 @@ export default function AdminPage() {
     setSuccess("");
 
     try {
-      // Create user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: newUserEmail,
-        password: newUserPassword,
-        email_confirm: true
-      });
-
-      if (authError) {
-        setError(`Fout bij aanmaken gebruiker: ${authError.message}`);
+      // Since we can't use admin API, we'll create a workspace and invite system
+      // For now, we'll just create the workspace and show instructions
+      
+      if (!newUserWorkspace) {
+        setError("Workspace naam is verplicht");
         setIsCreatingUser(false);
         return;
       }
 
-      // If workspace is specified, add user to workspace
-      if (newUserWorkspace && authData.user) {
-        // First, get or create the workspace
-        let workspaceId = newUserWorkspace;
+      // Create or get workspace
+      let workspaceId = newUserWorkspace;
+      
+      // If it's a new workspace name, create it
+      if (!newUserWorkspace.includes('-')) { // Assuming UUIDs contain dashes
+        const { data: workspaceData, error: workspaceError } = await supabase
+          .from('workspaces')
+          .insert({ name: newUserWorkspace })
+          .select('id')
+          .single();
+
+        if (workspaceError) {
+          setError(`Fout bij aanmaken workspace: ${workspaceError.message}`);
+          setIsCreatingUser(false);
+          return;
+        }
         
-        // If it's a new workspace name, create it
-        if (!newUserWorkspace.includes('-')) { // Assuming UUIDs contain dashes
-          const { data: workspaceData, error: workspaceError } = await supabase
-            .from('workspaces')
-            .insert({ name: newUserWorkspace })
-            .select('id')
-            .single();
-
-          if (workspaceError) {
-            console.error('Error creating workspace:', workspaceError);
-          } else {
-            workspaceId = workspaceData.id;
-          }
-        }
-
-        // Add user to workspace
-        const { error: memberError } = await supabase
-          .from('workspace_members')
-          .insert({
-            workspace_id: workspaceId,
-            user_id: authData.user.id,
-            role: 'member'
-          });
-
-        if (memberError) {
-          console.error('Error adding user to workspace:', memberError);
-        }
+        workspaceId = workspaceData.id;
       }
 
-      setSuccess(`Gebruiker ${newUserEmail} succesvol aangemaakt!`);
+      setSuccess(`Workspace "${newUserWorkspace}" is aangemaakt! 
+      
+Om een nieuwe gebruiker aan te maken:
+1. Ga naar Supabase Dashboard → Authentication → Users
+2. Klik op "Add user" 
+3. Voer email in: ${newUserEmail}
+4. Voer wachtwoord in: ${newUserPassword}
+5. Na aanmaken, voeg de gebruiker toe aan workspace "${newUserWorkspace}"`);
+      
       setNewUserEmail("");
       setNewUserPassword("");
       setNewUserWorkspace("");
@@ -212,17 +218,28 @@ export default function AdminPage() {
     }
 
     try {
-      const { error } = await supabase.auth.admin.deleteUser(userId);
+      // Since we can't use admin API, we'll remove from workspace instead
+      const { error } = await supabase
+        .from('workspace_members')
+        .delete()
+        .eq('user_id', userId);
+        
       if (error) {
-        setError(`Fout bij verwijderen gebruiker: ${error.message}`);
+        setError(`Fout bij verwijderen uit workspace: ${error.message}`);
         return;
       }
 
-      setSuccess(`Gebruiker ${email} succesvol verwijderd!`);
+      setSuccess(`Gebruiker ${email} verwijderd uit workspace! 
+      
+Om de gebruiker volledig te verwijderen:
+1. Ga naar Supabase Dashboard → Authentication → Users
+2. Zoek de gebruiker en klik op "Delete"`);
+      
+      // Reload data
       await loadUsers();
       await loadWorkspaceMembers();
     } catch (err) {
-      setError(`Onverwachte fout: ${err}`);
+      setError(`Onverwachte fout bij verwijderen: ${err}`);
     }
   };
 
@@ -286,7 +303,7 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Create User Form */}
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Nieuwe Gebruiker Aanmaken</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Workspace Aanmaken + Gebruiker Instructies</h2>
           
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
@@ -352,7 +369,7 @@ export default function AdminPage() {
               disabled={isCreatingUser}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isCreatingUser ? "Aanmaken..." : "Gebruiker Aanmaken"}
+              {isCreatingUser ? "Aanmaken..." : "Workspace Aanmaken + Instructies"}
             </button>
           </form>
         </div>
