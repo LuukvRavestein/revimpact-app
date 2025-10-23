@@ -245,6 +245,17 @@ export default function ChatbotPage() {
           });
         }
 
+        // Debug: Log all unique message types across all conversations
+        const allTypes = new Set<string>();
+        conversationMap.forEach((messages) => {
+          messages.forEach((m) => {
+            if (m.Type) allTypes.add(m.Type);
+            if (m.type) allTypes.add(m.type);
+            if (m.label) allTypes.add(m.label);
+          });
+        });
+        console.log('All unique message types found:', Array.from(allTypes));
+
         if (userMessages.length > 0) {
           // Check if any assistant message contains support ticket creation text
           const hasSupportTicket = assistantMessages.some(msg => {
