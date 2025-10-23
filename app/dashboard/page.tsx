@@ -12,6 +12,7 @@ export default function DashboardPage() {
   const [workspaceName, setWorkspaceName] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [clientType, setClientType] = useState<string>("generic");
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
   const { t } = useLanguage();
@@ -96,6 +97,13 @@ export default function DashboardPage() {
         setClientType('generic');
       }
       
+      // Check if user is admin
+      const userEmail = session.user.email?.toLowerCase() || '';
+      const isAdminUser = userEmail.includes('admin') || 
+                         userEmail === 'luuk@revimpact.nl' || 
+                         userEmail === 'admin@revimpact.nl';
+      setIsAdmin(isAdminUser);
+      
       setLoading(false);
     };
 
@@ -156,6 +164,16 @@ export default function DashboardPage() {
             </Link>
             <p className="text-sm text-gray-500 ml-6">
               Analyseer chatbot gesprekken en verbeter customer support
+            </p>
+          </div>
+        )}
+        {isAdmin && (
+          <div>
+            <Link className="underline text-blue-600" href="/admin">
+              👑 Admin Panel
+            </Link>
+            <p className="text-sm text-gray-500 ml-6">
+              Gebruikersbeheer en systeembeheer
             </p>
           </div>
         )}
