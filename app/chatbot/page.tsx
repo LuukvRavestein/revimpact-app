@@ -267,7 +267,9 @@ export default function ChatbotPage() {
       }
       const stats = customerStats.get(customer)!;
       stats.questions++;
-      stats.customers.add(userId);
+      if (userId) {
+        stats.customers.add(userId);
+      }
       if (!stats.conversations.includes(q.conversation_id)) {
         stats.conversations.push(q.conversation_id);
       }
