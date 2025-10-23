@@ -208,27 +208,52 @@ export default function ChatbotPage() {
           m.label === 'ASSISTANT' || m.type === 'ASSISTANT' || 
           m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
         );
+        
+        // Debug: log some assistant messages to see what we're working with
+        if (assistantMessages.length > 0) {
+          console.log('Sample assistant message:', {
+            type: assistantMessages[0].Type || assistantMessages[0].type,
+            label: assistantMessages[0].label,
+            content: (assistantMessages[0].Content || assistantMessages[0].content || '').substring(0, 100)
+          });
+        }
 
         if (userMessages.length > 0) {
           // Check if any assistant message contains support ticket creation text
           const hasSupportTicket = assistantMessages.some(msg => {
             const content = (msg.Content || msg.content || '').toLowerCase();
-            return content.includes('support ticket') || 
+            const isSupportTicket = content.includes('support ticket') || 
                    content.includes('ticket voor je aangemaakt') ||
                    content.includes('created a support ticket') ||
                    content.includes('ticket hinzugefügt');
+            
+            if (isSupportTicket) {
+              console.log('Found support ticket message:', content.substring(0, 100));
+            }
+            
+            return isSupportTicket;
           });
           
           if (hasSupportTicket) {
             forwardedCount++;
+            console.log('Conversation marked as forwarded');
           } else {
             selfResolvedCount++;
+            console.log('Conversation marked as self-resolved');
           }
         }
       });
 
     const selfResolvedPercentage = uniqueConversations > 0 ? Math.round((selfResolvedCount / uniqueConversations) * 100) : 0;
     const forwardedPercentage = uniqueConversations > 0 ? Math.round((forwardedCount / uniqueConversations) * 100) : 0;
+    
+    console.log('Forwarding analysis results:', {
+      totalConversations: uniqueConversations,
+      selfResolvedCount,
+      forwardedCount,
+      selfResolvedPercentage,
+      forwardedPercentage
+    });
 
     // Weekly trends - group by conversation_id to get unique conversations per week
     const weeklyData = new Map<string, Set<string>>();
