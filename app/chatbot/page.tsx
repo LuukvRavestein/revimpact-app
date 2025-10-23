@@ -541,20 +541,6 @@ export default function ChatbotPage() {
         ) : (
           /* Dashboard Section */
           <div className="space-y-8">
-            {/* Debug Info */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="text-sm font-medium text-blue-900 mb-2">📊 Data Processing Info</h3>
-              <div className="text-sm text-blue-800 space-y-1">
-                <p><strong>File:</strong> {uploadedFile?.name}</p>
-                <p><strong>Total Rows:</strong> {processedData.totalQuestions + (processedData.totalQuestions * 2)} (estimated)</p>
-                <p><strong>User Questions:</strong> {processedData.totalQuestions}</p>
-                <p><strong>Unique Conversations:</strong> {processedData.uniqueConversations}</p>
-                <p><strong>Unique Customers:</strong> {processedData.uniqueCustomers}</p>
-                <p className="text-xs text-blue-600 mt-2">
-                  💡 Open browser console (F12) to see detailed processing logs
-                </p>
-              </div>
-            </div>
             {/* KPIs */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
               <div className="bg-white rounded-lg shadow-sm border p-6">
