@@ -4,6 +4,15 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import * as XLSX from 'xlsx';
 
+// Helper function to get ISO week number
+function getWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
 interface ChatbotData {
   conversation_id: string;
   usr_id: string;
@@ -241,19 +250,27 @@ export default function ChatbotPage() {
     const forwardedPercentage = uniqueConversations > 0 ? Math.round((forwardedCount / uniqueConversations) * 100) : 0;
     const averageSatisfaction = satisfactionCount > 0 ? totalSatisfaction / satisfactionCount : 3.5;
 
-    // Weekly trends
-    const weeklyData = new Map<string, number>();
+    // Weekly trends - group by conversation_id to get unique conversations per week
+    const weeklyData = new Map<string, Set<string>>();
     userQuestions.forEach(q => {
       const timestamp = q.Timestamp || q.timestamp || '';
       if (timestamp) {
         const date = new Date(timestamp);
-        const week = `${date.getFullYear()}-W${Math.ceil(date.getDate() / 7)}`;
-        weeklyData.set(week, (weeklyData.get(week) || 0) + 1);
+        // Get the week number using ISO week
+        const year = date.getFullYear();
+        const weekNumber = getWeekNumber(date);
+        const week = `${year}-W${weekNumber}`;
+        
+        if (!weeklyData.has(week)) {
+          weeklyData.set(week, new Set());
+        }
+        // Add conversation_id to the set (this ensures unique conversations)
+        weeklyData.get(week)!.add(q.conversation_id);
       }
     });
 
     const weeklyTrends = Array.from(weeklyData.entries())
-      .map(([week, questions]) => ({ week, questions }))
+      .map(([week, conversationSet]) => ({ week, questions: conversationSet.size }))
       .sort((a, b) => a.week.localeCompare(b.week));
 
     // Top customers with real data
@@ -640,7 +657,7 @@ export default function ChatbotPage() {
 
             {/* Weekly Trends */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.chatbot.weeklyTrends}</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Unieke gesprekken per week</h3>
               <div className="h-64 flex items-end space-x-2">
                 {processedData.weeklyTrends.map((week, index) => (
                   <div key={index} className="flex-1 flex flex-col items-center">
