@@ -564,26 +564,146 @@ export default function ChatbotPage() {
       .sort((a, b) => b.questions - a.questions)
       .slice(0, 10);
 
-    // Extract topics from actual content using keyword analysis
+    // Extract topics from actual content using multi-language keyword analysis
     const topicKeywords = {
-      'Planning & Scheduling': ['planning', 'schedule', 'agenda', 'tijd', 'rooster'],
-      'Facturatie': ['factuur', 'invoice', 'billing', 'betaling', 'payment'],
-      'Integratie': ['integratie', 'integration', 'api', 'connect', 'koppeling'],
-      'Rapportage': ['rapport', 'report', 'overzicht', 'dashboard', 'statistiek'],
-      'Gebruikersbeheer': ['user', 'gebruiker', 'account', 'login', 'permissie'],
-      'Technische Support': ['error', 'fout', 'bug', 'probleem', 'issue'],
-      'Training': ['training', 'uitleg', 'help', 'tutorial', 'gids']
+      'Planning & Scheduling': [
+        // Dutch
+        'planning', 'schedule', 'agenda', 'tijd', 'rooster', 'afspraak', 'afspraken', 'kalender',
+        'tijdschema', 'planning maken', 'inplannen', 'reserveren', 'boeken', 'booking',
+        // English
+        'scheduling', 'appointment', 'appointments', 'calendar', 'time', 'book', 'reserve',
+        'schedule', 'timetable', 'planning', 'booking', 'reservation',
+        // German
+        'planung', 'termin', 'termine', 'kalender', 'zeit', 'buchung', 'reservierung',
+        'zeitplan', 'planen', 'buchen', 'reservieren', 'terminplanung',
+        // French
+        'planification', 'rendez-vous', 'calendrier', 'temps', 'réservation', 'planifier',
+        'programmer', 'agenda', 'horaire', 'planning'
+      ],
+      'Facturatie': [
+        // Dutch
+        'factuur', 'facturen', 'billing', 'betaling', 'payment', 'rekening', 'rekeningen',
+        'facturatie', 'betalen', 'kosten', 'prijs', 'tarief', 'tarieven', 'geld',
+        // English
+        'invoice', 'invoices', 'billing', 'payment', 'pay', 'cost', 'costs', 'price',
+        'pricing', 'money', 'charge', 'charges', 'fee', 'fees',
+        // German
+        'rechnung', 'rechnungen', 'abrechnung', 'zahlung', 'bezahlung', 'kosten', 'preis',
+        'preise', 'geld', 'gebühr', 'gebühren', 'tarif', 'tarife',
+        // French
+        'facture', 'factures', 'facturation', 'paiement', 'payer', 'coût', 'coûts',
+        'prix', 'argent', 'frais', 'tarif', 'tarifs'
+      ],
+      'Integratie': [
+        // Dutch
+        'integratie', 'integration', 'api', 'connect', 'koppeling', 'verbinding', 'link',
+        'samenwerking', 'koppelen', 'verbinden', 'aansluiten', 'integratie', 'webhook',
+        // English
+        'integration', 'integrate', 'api', 'connect', 'connection', 'link', 'linking',
+        'webhook', 'sync', 'synchronization', 'connectivity', 'interface',
+        // German
+        'integration', 'integrieren', 'api', 'verbindung', 'verknüpfung', 'anbindung',
+        'verbinden', 'verknüpfen', 'webhook', 'synchronisation', 'schnittstelle',
+        // French
+        'intégration', 'intégrer', 'api', 'connexion', 'lien', 'connecter', 'webhook',
+        'synchronisation', 'interface'
+      ],
+      'Rapportage': [
+        // Dutch
+        'rapport', 'rapporten', 'report', 'reports', 'overzicht', 'overzichten', 'dashboard',
+        'statistiek', 'statistieken', 'cijfers', 'data', 'analyse', 'analyses', 'metrics',
+        'kpi', 'kpi\'s', 'prestatie', 'prestaties', 'resultaten', 'resultaat',
+        // English
+        'report', 'reports', 'reporting', 'dashboard', 'overview', 'statistics', 'stats',
+        'data', 'analysis', 'analytics', 'metrics', 'kpi', 'performance', 'results',
+        // German
+        'bericht', 'berichte', 'reporting', 'dashboard', 'übersicht', 'statistik',
+        'daten', 'analyse', 'analysen', 'metriken', 'kpi', 'leistung', 'ergebnisse',
+        // French
+        'rapport', 'rapports', 'reporting', 'tableau de bord', 'aperçu', 'statistiques',
+        'données', 'analyse', 'analyses', 'métriques', 'kpi', 'performance', 'résultats'
+      ],
+      'Gebruikersbeheer': [
+        // Dutch
+        'user', 'users', 'gebruiker', 'gebruikers', 'account', 'accounts', 'login',
+        'permissie', 'permissies', 'rechten', 'rol', 'rollen', 'beheer', 'beheren',
+        'toegang', 'access', 'profiel', 'profielen', 'instellingen', 'settings',
+        // English
+        'user', 'users', 'account', 'accounts', 'login', 'permission', 'permissions',
+        'rights', 'role', 'roles', 'management', 'manage', 'access', 'profile',
+        'profiles', 'settings', 'configuration', 'config',
+        // German
+        'benutzer', 'benutzer', 'konto', 'konten', 'anmeldung', 'berechtigung',
+        'berechtigungen', 'rechte', 'rolle', 'rollen', 'verwaltung', 'verwalten',
+        'zugang', 'profil', 'profile', 'einstellungen',
+        // French
+        'utilisateur', 'utilisateurs', 'compte', 'comptes', 'connexion', 'permission',
+        'permissions', 'droits', 'rôle', 'rôles', 'gestion', 'gérer', 'accès',
+        'profil', 'profils', 'paramètres'
+      ],
+      'Technische Support': [
+        // Dutch
+        'error', 'errors', 'fout', 'fouten', 'bug', 'bugs', 'probleem', 'problemen',
+        'issue', 'issues', 'technisch', 'technische', 'support', 'hulp', 'help',
+        'niet werkend', 'werkt niet', 'kapot', 'defect', 'mislukt', 'failed',
+        // English
+        'error', 'errors', 'bug', 'bugs', 'problem', 'problems', 'issue', 'issues',
+        'technical', 'support', 'help', 'not working', 'broken', 'failed', 'failure',
+        'troubleshoot', 'troubleshooting',
+        // German
+        'fehler', 'bug', 'bugs', 'problem', 'probleme', 'issue', 'issues', 'technisch',
+        'support', 'hilfe', 'funktioniert nicht', 'kaputt', 'defekt', 'fehlgeschlagen',
+        // French
+        'erreur', 'erreurs', 'bug', 'bugs', 'problème', 'problèmes', 'issue', 'issues',
+        'technique', 'support', 'aide', 'ne fonctionne pas', 'cassé', 'défaillant'
+      ],
+      'Training': [
+        // Dutch
+        'training', 'trainings', 'uitleg', 'uitleg', 'help', 'tutorial', 'tutorials',
+        'gids', 'gidsen', 'handleiding', 'handleidingen', 'instructie', 'instructies',
+        'leren', 'hoe werkt', 'hoe gebruik', 'hoe doe ik', 'stappen', 'stap voor stap',
+        // English
+        'training', 'tutorial', 'tutorials', 'guide', 'guides', 'manual', 'manuals',
+        'instruction', 'instructions', 'learn', 'learning', 'how to', 'how does',
+        'how do i', 'steps', 'step by step', 'help', 'documentation',
+        // German
+        'schulung', 'schulungen', 'tutorial', 'tutorials', 'anleitung', 'anleitungen',
+        'handbuch', 'handbücher', 'anweisung', 'anweisungen', 'lernen', 'wie funktioniert',
+        'wie verwende ich', 'schritte', 'schritt für schritt', 'hilfe',
+        // French
+        'formation', 'formations', 'tutoriel', 'tutoriels', 'guide', 'guides',
+        'manuel', 'manuels', 'instruction', 'instructions', 'apprendre', 'comment',
+        'comment utiliser', 'étapes', 'étape par étape', 'aide'
+      ]
     };
 
     const topicCounts = new Map<string, number>();
+    const topicMatches = new Map<string, string[]>(); // For debugging
+    
     userQuestions.forEach(q => {
       const content = (q.Content || q.content || '').toLowerCase();
       Object.entries(topicKeywords).forEach(([topic, keywords]) => {
-        if (keywords.some(keyword => content.includes(keyword))) {
+        const foundKeywords = keywords.filter(keyword => content.includes(keyword));
+        if (foundKeywords.length > 0) {
           topicCounts.set(topic, (topicCounts.get(topic) || 0) + 1);
+          
+          // Store matches for debugging
+          if (!topicMatches.has(topic)) {
+            topicMatches.set(topic, []);
+          }
+          topicMatches.get(topic)!.push(...foundKeywords);
         }
       });
     });
+    
+    // Debug: Log topic analysis results
+    console.log('=== TOPIC ANALYSIS RESULTS ===');
+    topicMatches.forEach((matches, topic) => {
+      const uniqueMatches = [...new Set(matches)];
+      console.log(`📊 ${topic}: ${topicCounts.get(topic)} matches`);
+      console.log(`   Keywords found: ${uniqueMatches.slice(0, 5).join(', ')}${uniqueMatches.length > 5 ? '...' : ''}`);
+    });
+    console.log('==============================');
 
     const topTopics = Array.from(topicCounts.entries())
       .map(([topic, count]) => ({ topic, count }))
