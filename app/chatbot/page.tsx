@@ -109,6 +109,8 @@ const isSupportTicketForwarding = (content: string): boolean => {
     'support mitarbeiter',
     'menschliche unterstützung',
     'live support',
+    'zum bestehenden ticket',
+    'bestehenden ticket hinzugefügt',
     
     // French
     'ticket de support créé',
@@ -178,6 +180,7 @@ const testForwardingDetection = () => {
     { message: "Support ticket created successfully", expected: true },
     { message: "Doorgestuurd naar support", expected: true },
     { message: "Escalated to support team", expected: true },
+    { message: "Er is een support ticket voor je aangemaakt / I've created a support ticket / Ich habe Ihren Vorschlag zum bestehenden Ticket hinzugefügt", expected: true },
     
     // Should NOT be detected as forwarding
     { message: "How can I help you today?", expected: false },
