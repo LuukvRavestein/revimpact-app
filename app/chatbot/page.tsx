@@ -37,14 +37,12 @@ interface ProcessedData {
   uniqueCustomers: number;
   selfResolvedPercentage: number;
   forwardedPercentage: number;
-  averageSatisfaction: number;
   weeklyTrends: Array<{ week: string; questions: number }>;
   topCustomers: Array<{
     customer: string;
     questions: number;
     selfResolved: number;
     forwarded: number;
-    satisfaction: number;
   }>;
   topTopics: Array<{ topic: string; count: number }>;
   forwardedTickets: Array<{
@@ -194,8 +192,6 @@ export default function ChatbotPage() {
     // Analyze each conversation to determine if it was self-resolved
     let selfResolvedCount = 0;
     let forwardedCount = 0;
-    let totalSatisfaction = 0;
-    let satisfactionCount = 0;
 
     conversationMap.forEach((messages) => {
         const sortedMessages = messages.sort((a, b) => {
@@ -228,27 +224,11 @@ export default function ChatbotPage() {
           forwardedCount++;
         }
         
-        // Look for satisfaction indicators in content (simple keyword matching)
-        const allContent = messages.map(m => (m.Content || m.content || '').toLowerCase()).join(' ');
-        if (allContent.includes('thank') || allContent.includes('bedankt') || 
-            allContent.includes('perfect') || allContent.includes('great') ||
-            allContent.includes('helpful') || allContent.includes('nuttig')) {
-          totalSatisfaction += 4.5;
-          satisfactionCount++;
-        } else if (allContent.includes('not helpful') || allContent.includes('niet nuttig') ||
-                   allContent.includes('wrong') || allContent.includes('fout')) {
-          totalSatisfaction += 2.0;
-          satisfactionCount++;
-        } else {
-          totalSatisfaction += 3.5; // Default neutral satisfaction
-          satisfactionCount++;
-        }
       }
     });
 
     const selfResolvedPercentage = uniqueConversations > 0 ? Math.round((selfResolvedCount / uniqueConversations) * 100) : 0;
     const forwardedPercentage = uniqueConversations > 0 ? Math.round((forwardedCount / uniqueConversations) * 100) : 0;
-    const averageSatisfaction = satisfactionCount > 0 ? totalSatisfaction / satisfactionCount : 3.5;
 
     // Weekly trends - group by conversation_id to get unique conversations per week
     const weeklyData = new Map<string, Set<string>>();
@@ -280,7 +260,6 @@ export default function ChatbotPage() {
       conversations: string[];
       selfResolved: number;
       forwarded: number;
-      satisfaction: number[];
     }>();
     
     userQuestions.forEach(q => {
@@ -293,7 +272,6 @@ export default function ChatbotPage() {
           conversations: [],
           selfResolved: 0,
           forwarded: 0,
-          satisfaction: []
         });
       }
       const stats = customerStats.get(customer)!;
@@ -334,18 +312,6 @@ export default function ChatbotPage() {
             stats.forwarded++;
           }
           
-          // Calculate satisfaction for this conversation
-          const allContent = convMessages.map(m => (m.content || '').toLowerCase()).join(' ');
-          if (allContent.includes('thank') || allContent.includes('bedankt') || 
-              allContent.includes('perfect') || allContent.includes('great') ||
-              allContent.includes('helpful') || allContent.includes('nuttig')) {
-            stats.satisfaction.push(4.5);
-          } else if (allContent.includes('not helpful') || allContent.includes('niet nuttig') ||
-                     allContent.includes('wrong') || allContent.includes('fout')) {
-            stats.satisfaction.push(2.0);
-          } else {
-            stats.satisfaction.push(3.5);
-          }
         }
       });
     });
@@ -356,9 +322,6 @@ export default function ChatbotPage() {
         questions: stats.questions,
         selfResolved: stats.selfResolved,
         forwarded: stats.forwarded,
-        satisfaction: stats.satisfaction.length > 0 
-          ? stats.satisfaction.reduce((a, b) => a + b, 0) / stats.satisfaction.length 
-          : 3.5
       }))
       .sort((a, b) => b.questions - a.questions)
       .slice(0, 10);
@@ -440,7 +403,6 @@ export default function ChatbotPage() {
       uniqueCustomers,
       selfResolvedPercentage,
       forwardedPercentage,
-      averageSatisfaction,
       topCustomers: topCustomers.length,
       topTopics: topTopics.length,
       forwardedTickets: forwardedTickets.length
@@ -452,7 +414,6 @@ export default function ChatbotPage() {
       uniqueCustomers,
       selfResolvedPercentage,
       forwardedPercentage,
-      averageSatisfaction,
       weeklyTrends,
       topCustomers,
       topTopics,
@@ -559,7 +520,7 @@ export default function ChatbotPage() {
           /* Dashboard Section */
           <div className="space-y-8">
             {/* KPIs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <div className="bg-white rounded-lg shadow-sm border p-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -638,21 +599,6 @@ export default function ChatbotPage() {
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    </div>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-500">{t.chatbot.satisfaction}</p>
-                    <p className="text-2xl font-semibold text-gray-900">{processedData.averageSatisfaction.toFixed(1)}/5</p>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Weekly Trends */}
@@ -688,7 +634,6 @@ export default function ChatbotPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.chatbot.questions}</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.chatbot.selfResolvedPct}</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.chatbot.forwardedPct}</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.chatbot.satisfactionScore}</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -705,9 +650,6 @@ export default function ChatbotPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {customer.forwarded} ({Math.round((customer.forwarded / customer.questions) * 100)}%)
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {customer.satisfaction.toFixed(1)}/5
                         </td>
                       </tr>
                     ))}
