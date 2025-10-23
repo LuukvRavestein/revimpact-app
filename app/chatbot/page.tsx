@@ -127,7 +127,7 @@ export default function ChatbotPage() {
     const uniqueCustomers = new Set(customerMap.values()).size;
     
     // Group user questions by conversation_id to get unique conversations
-    const conversationUserQuestions = new Map<string, any[]>();
+    const conversationUserQuestions = new Map<string, ChatbotData[]>();
     userQuestions.forEach(q => {
       const convId = q.conversation_id;
       if (!conversationUserQuestions.has(convId)) {
