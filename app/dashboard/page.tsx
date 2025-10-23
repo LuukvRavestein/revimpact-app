@@ -91,6 +91,12 @@ export default function DashboardPage() {
       
       // Detect client type based on workspace name
       const workspaceNameLower = (name || "").toLowerCase();
+      console.log('Client type check:', {
+        workspaceName: name,
+        workspaceNameLower,
+        includesTimewax: workspaceNameLower.includes('timewax')
+      });
+      
       if (workspaceNameLower.includes('timewax')) {
         setClientType('timewax');
       } else {
@@ -102,6 +108,15 @@ export default function DashboardPage() {
       const isAdminUser = userEmail.includes('admin') || 
                          userEmail === 'luuk@revimpact.nl' || 
                          userEmail === 'admin@revimpact.nl';
+      
+      console.log('Admin check:', {
+        userEmail,
+        isAdminUser,
+        includesAdmin: userEmail.includes('admin'),
+        isLuuk: userEmail === 'luuk@revimpact.nl',
+        isAdminEmail: userEmail === 'admin@revimpact.nl'
+      });
+      
       setIsAdmin(isAdminUser);
       
       setLoading(false);
