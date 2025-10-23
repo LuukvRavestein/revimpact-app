@@ -210,9 +210,12 @@ export const nlTranslations = {
     questions: 'Vragen',
     selfResolvedPct: 'Zelf Opgelost',
     forwardedPct: 'Doorgestuurd',
+    forwardedCount: 'Doorgestuurde Tickets',
     satisfactionScore: 'Tevredenheid',
     topTopics: 'Top Onderwerpen',
     forwardedTickets: 'Doorgestuurde Tickets',
-    uploadNew: 'Nieuw Bestand Uploaden'
+    uploadNew: 'Nieuw Bestand Uploaden',
+    weekSelection: 'Week selectie',
+    allWeeks: 'Alle weken'
   }
 }

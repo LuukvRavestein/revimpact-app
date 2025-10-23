@@ -136,10 +136,13 @@ export interface Translations {
     questions: string
     selfResolvedPct: string
     forwardedPct: string
+    forwardedCount: string
     satisfactionScore: string
     topTopics: string
     forwardedTickets: string
     uploadNew: string
+    weekSelection: string
+    allWeeks: string
   }
   
   // Dashboard
@@ -436,10 +439,13 @@ export const translations: Record<Language, Translations> = {
       questions: 'Questions',
       selfResolvedPct: 'Self Resolved',
       forwardedPct: 'Forwarded',
+      forwardedCount: 'Forwarded Tickets',
       satisfactionScore: 'Satisfaction',
       topTopics: 'Top Topics',
       forwardedTickets: 'Forwarded Tickets',
-      uploadNew: 'Upload New File'
+      uploadNew: 'Upload New File',
+      weekSelection: 'Week selection',
+      allWeeks: 'All weeks'
     }
   }
 }

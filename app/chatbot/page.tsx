@@ -50,6 +50,12 @@ interface ProcessedData {
     content: string;
     timestamp: string;
   }>;
+  weeklyCustomerData: Map<string, Array<{
+    customer: string;
+    questions: number;
+    selfResolved: number;
+    forwarded: number;
+  }>>;
 }
 
 export default function ChatbotPage() {
@@ -58,6 +64,7 @@ export default function ChatbotPage() {
   const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedWeek, setSelectedWeek] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -474,6 +481,101 @@ export default function ChatbotPage() {
       forwardedTickets: forwardedTickets.length
     });
 
+    // Calculate weekly customer data
+    const weeklyCustomerData = new Map<string, Array<{
+      customer: string;
+      questions: number;
+      selfResolved: number;
+      forwarded: number;
+    }>>();
+
+    // Group customer data by week
+    userQuestions.forEach(q => {
+      const timestamp = q.Timestamp || q.timestamp || '';
+      if (timestamp) {
+        const date = new Date(timestamp);
+        const year = date.getFullYear();
+        const weekNumber = getWeekNumber(date);
+        const week = `${year}-W${weekNumber}`;
+        
+        if (!weeklyCustomerData.has(week)) {
+          weeklyCustomerData.set(week, []);
+        }
+      }
+    });
+
+    // Calculate customer stats for each week
+    weeklyCustomerData.forEach((_, week) => {
+      const weekCustomerStats = new Map<string, { 
+        questions: number; 
+        selfResolved: number;
+        forwarded: number;
+      }>();
+
+      // Filter questions for this week
+      const weekQuestions = userQuestions.filter(q => {
+        const timestamp = q.Timestamp || q.timestamp || '';
+        if (timestamp) {
+          const date = new Date(timestamp);
+          const year = date.getFullYear();
+          const weekNumber = getWeekNumber(date);
+          const questionWeek = `${year}-W${weekNumber}`;
+          return questionWeek === week;
+        }
+        return false;
+      });
+
+      weekQuestions.forEach(q => {
+        const userId = q.usr_id || q.user_id;
+        const customer = userId ? customerMap.get(userId) || 'Unknown' : 'Unknown';
+        
+        if (!weekCustomerStats.has(customer)) {
+          weekCustomerStats.set(customer, { 
+            questions: 0, 
+            selfResolved: 0,
+            forwarded: 0,
+          });
+        }
+        
+        const stats = weekCustomerStats.get(customer)!;
+        stats.questions++;
+
+        // Check if this conversation was forwarded
+        const convMessages = conversationMap.get(q.conversation_id) || [];
+        const assistantMessages = convMessages.filter(m => 
+          m.Type === 'ASSISTANT' || m.label === 'ASSISTANT' || m.type === 'ASSISTANT' || 
+          m.Type?.toLowerCase() === 'assistant' || m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
+        );
+        
+        const hasSupportTicket = assistantMessages.some(msg => {
+          const content = (msg.Content || msg.content || '').toLowerCase();
+          return content.includes('support ticket') || 
+                 content.includes('ticket voor je aangemaakt') ||
+                 content.includes('created a support ticket') ||
+                 content.includes('ticket hinzugefügt');
+        });
+        
+        if (hasSupportTicket) {
+          stats.forwarded++;
+        } else {
+          stats.selfResolved++;
+        }
+      });
+
+      // Convert to array and sort by questions
+      const weekTopCustomers = Array.from(weekCustomerStats.entries())
+        .map(([customer, stats]) => ({
+          customer,
+          questions: stats.questions,
+          selfResolved: stats.selfResolved,
+          forwarded: stats.forwarded,
+        }))
+        .sort((a, b) => b.questions - a.questions)
+        .slice(0, 10);
+
+      weeklyCustomerData.set(week, weekTopCustomers);
+    });
+
     return {
       totalQuestions,
       uniqueConversations,
@@ -483,7 +585,8 @@ export default function ChatbotPage() {
       weeklyTrends,
       topCustomers,
       topTopics,
-      forwardedTickets
+      forwardedTickets,
+      weeklyCustomerData
     };
   };
 
@@ -691,7 +794,27 @@ export default function ChatbotPage() {
 
             {/* Top Customers */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.chatbot.topCustomers}</h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">{t.chatbot.topCustomers}</h3>
+                <div className="flex items-center space-x-2">
+                  <label htmlFor="week-select" className="text-sm font-medium text-gray-700">
+                    {t.chatbot.weekSelection}:
+                  </label>
+                  <select
+                    id="week-select"
+                    value={selectedWeek}
+                    onChange={(e) => setSelectedWeek(e.target.value)}
+                    className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="all">{t.chatbot.allWeeks}</option>
+                    {processedData.weeklyTrends.map((week) => (
+                      <option key={week.week} value={week.week}>
+                        {week.week}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -699,11 +822,11 @@ export default function ChatbotPage() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.chatbot.customer}</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.chatbot.questions}</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.chatbot.selfResolvedPct}</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.chatbot.forwardedPct}</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t.chatbot.forwardedCount}</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {processedData.topCustomers.map((customer, index) => (
+                    {(selectedWeek === 'all' ? processedData.topCustomers : (processedData.weeklyCustomerData.get(selectedWeek) || [])).map((customer, index) => (
                       <tr key={index}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {customer.customer}
@@ -715,7 +838,7 @@ export default function ChatbotPage() {
                           {customer.selfResolved} ({Math.round((customer.selfResolved / customer.questions) * 100)}%)
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {customer.forwarded} ({Math.round((customer.forwarded / customer.questions) * 100)}%)
+                          {customer.forwarded}
                         </td>
                       </tr>
                     ))}
