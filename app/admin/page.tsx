@@ -52,9 +52,9 @@ export default function AdminPage() {
       // Transform the data to match User interface
       const userList = data?.map(item => ({
         id: item.user_id,
-        email: item.users.email,
-        created_at: item.users.created_at,
-        last_sign_in_at: item.users.last_sign_in_at
+        email: (item.users as any).email,
+        created_at: (item.users as any).created_at,
+        last_sign_in_at: (item.users as any).last_sign_in_at
       })) || [];
       
       setUsers(userList);
@@ -87,7 +87,6 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-
     const checkAdminAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -115,7 +114,7 @@ export default function AdminPage() {
     };
 
     checkAdminAccess();
-  }, [supabase, router]);
+  }, [supabase, router, loadUsers, loadWorkspaceMembers]);
 
 
   const createUser = async (e: React.FormEvent) => {
@@ -135,8 +134,6 @@ export default function AdminPage() {
       }
 
       // Create or get workspace
-      let workspaceId = newUserWorkspace;
-      
       // If it's a new workspace name, create it
       if (!newUserWorkspace.includes('-')) { // Assuming UUIDs contain dashes
         const { data: workspaceData, error: workspaceError } = await supabase
@@ -150,8 +147,6 @@ export default function AdminPage() {
           setIsCreatingUser(false);
           return;
         }
-        
-        workspaceId = workspaceData.id;
       }
 
       setSuccess(`Workspace "${newUserWorkspace}" is aangemaakt! 

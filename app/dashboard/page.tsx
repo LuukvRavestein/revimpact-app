@@ -70,7 +70,7 @@ export default function DashboardPage() {
         
         if (wErr) {
           // If direct creation fails due to RLS, use RPC function
-          const { data: altWs, error: altErr } = await supabase.rpc('create_user_workspace', {
+          const { error: altErr } = await supabase.rpc('create_user_workspace', {
             workspace_name: "My Workspace"
           });
           
