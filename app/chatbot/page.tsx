@@ -254,7 +254,7 @@ export default function ChatbotPage() {
             if (m.label) allTypes.add(m.label);
           });
         });
-        console.log('All unique message types found:', Array.from(allTypes));
+        console.log('All unique message types found:', Array.from(allTypes).join(', '));
 
         if (userMessages.length > 0) {
           // Check if any assistant message contains support ticket creation text
