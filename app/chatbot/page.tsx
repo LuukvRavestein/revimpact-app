@@ -211,11 +211,14 @@ export default function ChatbotPage() {
         
         // Debug: log some assistant messages to see what we're working with
         if (assistantMessages.length > 0) {
+          console.log('Conversation has', assistantMessages.length, 'assistant messages');
           console.log('Sample assistant message:', {
             type: assistantMessages[0].Type || assistantMessages[0].type,
             label: assistantMessages[0].label,
             content: (assistantMessages[0].Content || assistantMessages[0].content || '').substring(0, 100)
           });
+        } else {
+          console.log('Conversation has NO assistant messages');
         }
 
         if (userMessages.length > 0) {
@@ -247,13 +250,13 @@ export default function ChatbotPage() {
     const selfResolvedPercentage = uniqueConversations > 0 ? Math.round((selfResolvedCount / uniqueConversations) * 100) : 0;
     const forwardedPercentage = uniqueConversations > 0 ? Math.round((forwardedCount / uniqueConversations) * 100) : 0;
     
-    console.log('Forwarding analysis results:', {
-      totalConversations: uniqueConversations,
-      selfResolvedCount,
-      forwardedCount,
-      selfResolvedPercentage,
-      forwardedPercentage
-    });
+    console.log('=== FORWARDING ANALYSIS RESULTS ===');
+    console.log('Total conversations analyzed:', uniqueConversations);
+    console.log('Self-resolved conversations:', selfResolvedCount);
+    console.log('Forwarded conversations:', forwardedCount);
+    console.log('Self-resolved percentage:', selfResolvedPercentage + '%');
+    console.log('Forwarded percentage:', forwardedPercentage + '%');
+    console.log('=====================================');
 
     // Weekly trends - group by conversation_id to get unique conversations per week
     const weeklyData = new Map<string, Set<string>>();
