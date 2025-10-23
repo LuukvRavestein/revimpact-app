@@ -189,7 +189,7 @@ export default function ChatbotPage() {
       conversationMap.get(row.conversation_id)!.push(row);
     });
 
-    // Analyze each conversation to determine if it was self-resolved
+    // Analyze each conversation to determine if it was self-resolved or forwarded
     let selfResolvedCount = 0;
     let forwardedCount = 0;
 
@@ -199,33 +199,33 @@ export default function ChatbotPage() {
           const timestampB = b.Timestamp || b.timestamp || '';
           return new Date(timestampA).getTime() - new Date(timestampB).getTime();
         });
-      
-      const userMessages = sortedMessages.filter(m => 
-        m.label === 'USER' || m.type === 'USER' || 
-        m.label?.toLowerCase() === 'user' || m.type?.toLowerCase() === 'user'
-      );
-      const assistantMessages = sortedMessages.filter(m => 
-        m.label === 'ASSISTANT' || m.type === 'ASSISTANT' ||
-        m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
-      );
-      
-      if (userMessages.length > 0) {
-        // Check if conversation seems resolved by looking at patterns
-        const lastUserMessage = userMessages[userMessages.length - 1];
-        const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
         
-        // Simple heuristic: if assistant responded after user's last message, consider it resolved
-        const lastUserTimestamp = lastUserMessage.Timestamp || lastUserMessage.timestamp || '';
-        const lastAssistantTimestamp = lastAssistantMessage.Timestamp || lastAssistantMessage.timestamp || '';
-        if (lastAssistantMessage && 
-            new Date(lastAssistantTimestamp) > new Date(lastUserTimestamp)) {
-          selfResolvedCount++;
-        } else {
-          forwardedCount++;
+        const userMessages = sortedMessages.filter(m => 
+          m.label === 'USER' || m.type === 'USER' || 
+          m.label?.toLowerCase() === 'user' || m.type?.toLowerCase() === 'user'
+        );
+        const assistantMessages = sortedMessages.filter(m => 
+          m.label === 'ASSISTANT' || m.type === 'ASSISTANT' || 
+          m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
+        );
+
+        if (userMessages.length > 0) {
+          // Check if any assistant message contains support ticket creation text
+          const hasSupportTicket = assistantMessages.some(msg => {
+            const content = (msg.Content || msg.content || '').toLowerCase();
+            return content.includes('support ticket') || 
+                   content.includes('ticket voor je aangemaakt') ||
+                   content.includes('created a support ticket') ||
+                   content.includes('ticket hinzugefügt');
+          });
+          
+          if (hasSupportTicket) {
+            forwardedCount++;
+          } else {
+            selfResolvedCount++;
+          }
         }
-        
-      }
-    });
+      });
 
     const selfResolvedPercentage = uniqueConversations > 0 ? Math.round((selfResolvedCount / uniqueConversations) * 100) : 0;
     const forwardedPercentage = uniqueConversations > 0 ? Math.round((forwardedCount / uniqueConversations) * 100) : 0;
@@ -302,16 +302,20 @@ export default function ChatbotPage() {
         );
         
         if (userMessages.length > 0) {
-          const lastUserMessage = userMessages[userMessages.length - 1];
-          const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
+          // Check if any assistant message contains support ticket creation text
+          const hasSupportTicket = assistantMessages.some(msg => {
+            const content = (msg.Content || msg.content || '').toLowerCase();
+            return content.includes('support ticket') || 
+                   content.includes('ticket voor je aangemaakt') ||
+                   content.includes('created a support ticket') ||
+                   content.includes('ticket hinzugefügt');
+          });
           
-          if (lastAssistantMessage && 
-              new Date(lastAssistantMessage.timestamp || '') > new Date(lastUserMessage.timestamp || '')) {
-            stats.selfResolved++;
-          } else {
+          if (hasSupportTicket) {
             stats.forwarded++;
+          } else {
+            stats.selfResolved++;
           }
-          
         }
       });
     });
@@ -379,11 +383,16 @@ export default function ChatbotPage() {
         const lastUserMessage = userMessages[userMessages.length - 1];
         const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
         
-        // If no assistant response after last user message, consider it forwarded
-        const lastUserTimestamp = lastUserMessage.Timestamp || lastUserMessage.timestamp || '';
-        const lastAssistantTimestamp = lastAssistantMessage.Timestamp || lastAssistantMessage.timestamp || '';
-        if (!lastAssistantMessage || 
-            new Date(lastAssistantTimestamp) <= new Date(lastUserTimestamp)) {
+        // Check if any assistant message contains support ticket creation text
+        const hasSupportTicket = assistantMessages.some(msg => {
+          const content = (msg.Content || msg.content || '').toLowerCase();
+          return content.includes('support ticket') || 
+                 content.includes('ticket voor je aangemaakt') ||
+                 content.includes('created a support ticket') ||
+                 content.includes('ticket hinzugefügt');
+        });
+        
+        if (hasSupportTicket) {
           const userId = lastUserMessage.usr_id || lastUserMessage.user_id;
           const customer = userId ? customerMap.get(userId) || 'Unknown' : 'Unknown';
           const content = lastUserMessage.Content || lastUserMessage.content || '';
@@ -392,7 +401,7 @@ export default function ChatbotPage() {
             content: content.length > 100 
               ? content.substring(0, 100) + '...' 
               : content,
-            timestamp: lastUserTimestamp
+            timestamp: lastUserMessage.Timestamp || lastUserMessage.timestamp || ''
           });
         }
       }
