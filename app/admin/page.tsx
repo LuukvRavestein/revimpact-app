@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -34,7 +34,7 @@ export default function AdminPage() {
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       // Instead of using admin API, get users from workspace_members
       const { data, error } = await supabase
@@ -52,18 +52,18 @@ export default function AdminPage() {
       // Transform the data to match User interface
       const userList = data?.map(item => ({
         id: item.user_id,
-        email: (item.users as any).email,
-        created_at: (item.users as any).created_at,
-        last_sign_in_at: (item.users as any).last_sign_in_at
+        email: (item.users as { email: string; created_at: string; last_sign_in_at: string | null }).email,
+        created_at: (item.users as { email: string; created_at: string; last_sign_in_at: string | null }).created_at,
+        last_sign_in_at: (item.users as { email: string; created_at: string; last_sign_in_at: string | null }).last_sign_in_at
       })) || [];
       
       setUsers(userList);
     } catch (err) {
       console.error('Error loading users:', err);
     }
-  };
+  }, [supabase]);
 
-  const loadWorkspaceMembers = async () => {
+  const loadWorkspaceMembers = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('workspace_members')
@@ -84,7 +84,7 @@ export default function AdminPage() {
     } catch (err) {
       console.error('Error loading workspace members:', err);
     }
-  };
+  }, [supabase]);
 
   useEffect(() => {
     const checkAdminAccess = async () => {
@@ -136,7 +136,7 @@ export default function AdminPage() {
       // Create or get workspace
       // If it's a new workspace name, create it
       if (!newUserWorkspace.includes('-')) { // Assuming UUIDs contain dashes
-        const { data: workspaceData, error: workspaceError } = await supabase
+        const { error: workspaceError } = await supabase
           .from('workspaces')
           .insert({ name: newUserWorkspace })
           .select('id')
