@@ -1,6 +1,8 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import * as XLSX from 'xlsx';
@@ -216,35 +218,65 @@ const testForwardingDetection = () => {
 export default function ChatbotPage() {
   const { t } = useLanguage();
   const router = useRouter();
+  const supabase = createSupabaseBrowserClient();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<string>('all');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [workspaceName, setWorkspaceName] = useState<string>("");
+  const [isTimewaxClient, setIsTimewaxClient] = useState<boolean>(false);
 
-  // Check authentication on component mount
+  // Check authentication and client type on component mount
   useEffect(() => {
-    const checkAuthentication = () => {
-      const isAuth = sessionStorage.getItem('timewax_authenticated') === 'true';
-      const loginTime = sessionStorage.getItem('timewax_login_time');
+    const checkAuthentication = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!isAuth || !loginTime) {
+      if (!session?.user) {
+        router.push("/signin");
+        return;
+      }
+
+      // Get workspace information
+      const { data: memberships, error: mErr } = await supabase
+        .from("workspace_members")
+        .select("workspace_id, role, workspaces(name)")
+        .eq("user_id", session.user.id)
+        .limit(1);
+      
+      if (mErr) {
+        console.error("Error loading memberships:", mErr);
         setIsAuthenticated(false);
         return;
       }
+
+      const membership = memberships?.[0] as { 
+        workspace_id: string; 
+        role: string; 
+        workspaces: { name: string }[] | { name: string }
+      } | undefined;
       
-      // Check if session is still valid (24 hours)
-      const loginDate = new Date(loginTime);
-      const now = new Date();
-      const hoursDiff = (now.getTime() - loginDate.getTime()) / (1000 * 60 * 60);
+      let name: string | undefined;
       
-      if (hoursDiff > 24) {
-        // Session expired
-        sessionStorage.removeItem('timewax_authenticated');
-        sessionStorage.removeItem('timewax_user');
-        sessionStorage.removeItem('timewax_login_time');
-        setIsAuthenticated(false);
+      if (membership?.workspaces) {
+        if (Array.isArray(membership.workspaces)) {
+          name = membership.workspaces[0]?.name;
+        } else {
+          name = membership.workspaces.name;
+        }
+      }
+
+      setWorkspaceName(name || "My Workspace");
+      
+      // Check if this is a Timewax client
+      const workspaceNameLower = (name || "").toLowerCase();
+      const isTimewax = workspaceNameLower.includes('timewax');
+      setIsTimewaxClient(isTimewax);
+      
+      if (!isTimewax) {
+        // Not a Timewax client, redirect to dashboard
+        router.push("/dashboard");
         return;
       }
       
@@ -252,7 +284,7 @@ export default function ChatbotPage() {
     };
     
     checkAuthentication();
-  }, []);
+  }, [supabase, router]);
 
   // Run forwarding detection test on component mount
   useEffect(() => {
@@ -967,12 +999,9 @@ export default function ChatbotPage() {
     e.preventDefault();
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('timewax_authenticated');
-    sessionStorage.removeItem('timewax_user');
-    sessionStorage.removeItem('timewax_login_time');
-    setIsAuthenticated(false);
-    router.push('/chatbot/login');
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/signin');
   };
 
   // Show loading state while checking authentication
@@ -987,7 +1016,7 @@ export default function ChatbotPage() {
     );
   }
 
-  // Show login redirect if not authenticated
+  // Show access denied if not authenticated or not Timewax client
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -999,13 +1028,13 @@ export default function ChatbotPage() {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Toegang Geweigerd</h2>
           <p className="text-gray-600 mb-6">
-            Alleen Timewax medewerkers hebben toegang tot deze functie.
+            Deze functie is alleen beschikbaar voor Timewax klanten.
           </p>
           <button
-            onClick={() => router.push('/chatbot/login')}
+            onClick={() => router.push('/dashboard')}
             className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Inloggen
+            Terug naar Dashboard
           </button>
         </div>
       </div>
@@ -1019,13 +1048,16 @@ export default function ChatbotPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Timewax Chatbot Analytics</h1>
-              <p className="text-gray-600">Analyse van chatbot gesprekken voor Timewax</p>
+              <h1 className="text-2xl font-bold text-gray-900">Chatbot Analytics</h1>
+              <p className="text-gray-600">Analyse van chatbot gesprekken voor {workspaceName}</p>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="text-sm text-gray-500">
-                Ingelogd als: {sessionStorage.getItem('timewax_user')}
-              </div>
+              <Link 
+                href="/dashboard"
+                className="text-blue-600 hover:text-blue-800 text-sm"
+              >
+                ← Terug naar Dashboard
+              </Link>
               <button
                 onClick={handleLogout}
                 className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm"

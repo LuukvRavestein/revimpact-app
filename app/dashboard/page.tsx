@@ -11,6 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 export default function DashboardPage() {
   const [workspaceName, setWorkspaceName] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const [clientType, setClientType] = useState<string>("generic");
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
   const { t } = useLanguage();
@@ -86,6 +87,15 @@ export default function DashboardPage() {
       }
 
       setWorkspaceName(name || "My Workspace");
+      
+      // Detect client type based on workspace name
+      const workspaceNameLower = (name || "").toLowerCase();
+      if (workspaceNameLower.includes('timewax')) {
+        setClientType('timewax');
+      } else {
+        setClientType('generic');
+      }
+      
       setLoading(false);
     };
 
@@ -139,6 +149,16 @@ export default function DashboardPage() {
             📋 {t.dashboard.qbrGenerator}
           </Link>
         </div>
+        {clientType === 'timewax' && (
+          <div>
+            <Link className="underline text-blue-600" href="/chatbot">
+              🤖 Chatbot Analytics
+            </Link>
+            <p className="text-sm text-gray-500 ml-6">
+              Analyseer chatbot gesprekken en verbeter customer support
+            </p>
+          </div>
+        )}
         <div>
           <Link className="underline text-blue-600" href="/workspace">
             ⚙️ {t.dashboard.workspaceSettings}
