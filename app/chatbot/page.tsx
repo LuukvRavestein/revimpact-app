@@ -94,18 +94,9 @@ export default function ChatbotPage() {
     console.log('Processing data:', data.length, 'rows');
     console.log('Sample data structure:', data.slice(0, 3));
     
-    // Filter user questions - check multiple possible field values
+    // Filter user questions (messages from users)
     const userQuestions = data.filter(row => {
-      const isUser = row.Type === 'USER' || 
-                    row.type === 'USER' || 
-                    row.label === 'USER' ||
-                    row.Type?.toLowerCase() === 'user' ||
-                    row.type?.toLowerCase() === 'user' ||
-                    row.label?.toLowerCase() === 'user';
-      if (isUser) {
-        console.log('Found user question:', row);
-      }
-      return isUser;
+      return row.Type === 'USER';
     });
     console.log('User questions found:', userQuestions.length);
 
@@ -207,12 +198,12 @@ export default function ChatbotPage() {
         });
         
         const userMessages = sortedMessages.filter(m => 
-          m.label === 'USER' || m.type === 'USER' || 
-          m.label?.toLowerCase() === 'user' || m.type?.toLowerCase() === 'user'
+          m.Type === 'USER' || m.label === 'USER' || m.type === 'USER' || 
+          m.Type?.toLowerCase() === 'user' || m.label?.toLowerCase() === 'user' || m.type?.toLowerCase() === 'user'
         );
         const assistantMessages = sortedMessages.filter(m => 
-          m.label === 'ASSISTANT' || m.type === 'ASSISTANT' || 
-          m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
+          m.Type === 'ASSISTANT' || m.label === 'ASSISTANT' || m.type === 'ASSISTANT' || 
+          m.Type?.toLowerCase() === 'assistant' || m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
         );
         
         totalUserMessages += userMessages.length;
