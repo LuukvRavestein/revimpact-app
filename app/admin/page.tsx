@@ -34,58 +34,59 @@ export default function AdminPage() {
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
 
-  useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        // Instead of using admin API, get users from workspace_members
-        const { data, error } = await supabase
-          .from('workspace_members')
-          .select(`
-            user_id,
-            users!inner(email, created_at, last_sign_in_at)
-          `);
-        
-        if (error) {
-          console.error('Error loading users:', error);
-          return;
-        }
-        
-        // Transform the data to match User interface
-        const userList = data?.map(item => ({
-          id: item.user_id,
-          email: item.users.email,
-          created_at: item.users.created_at,
-          last_sign_in_at: item.users.last_sign_in_at
-        })) || [];
-        
-        setUsers(userList);
-      } catch (err) {
-        console.error('Error loading users:', err);
+  const loadUsers = async () => {
+    try {
+      // Instead of using admin API, get users from workspace_members
+      const { data, error } = await supabase
+        .from('workspace_members')
+        .select(`
+          user_id,
+          users!inner(email, created_at, last_sign_in_at)
+        `);
+      
+      if (error) {
+        console.error('Error loading users:', error);
+        return;
       }
-    };
+      
+      // Transform the data to match User interface
+      const userList = data?.map(item => ({
+        id: item.user_id,
+        email: item.users.email,
+        created_at: item.users.created_at,
+        last_sign_in_at: item.users.last_sign_in_at
+      })) || [];
+      
+      setUsers(userList);
+    } catch (err) {
+      console.error('Error loading users:', err);
+    }
+  };
 
-    const loadWorkspaceMembers = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('workspace_members')
-          .select(`
-            id,
-            user_id,
-            workspace_id,
-            role,
-            users(email),
-            workspaces(name)
-          `);
-        
-        if (error) {
-          console.error('Error loading workspace members:', error);
-          return;
-        }
-        setWorkspaceMembers(data || []);
-      } catch (err) {
-        console.error('Error loading workspace members:', err);
+  const loadWorkspaceMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('workspace_members')
+        .select(`
+          id,
+          user_id,
+          workspace_id,
+          role,
+          users(email),
+          workspaces(name)
+        `);
+      
+      if (error) {
+        console.error('Error loading workspace members:', error);
+        return;
       }
-    };
+      setWorkspaceMembers(data || []);
+    } catch (err) {
+      console.error('Error loading workspace members:', err);
+    }
+  };
+
+  useEffect(() => {
 
     const checkAdminAccess = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -116,41 +117,6 @@ export default function AdminPage() {
     checkAdminAccess();
   }, [supabase, router]);
 
-  const loadUsers = async () => {
-    try {
-      const { data, error } = await supabase.auth.admin.listUsers();
-      if (error) {
-        console.error('Error loading users:', error);
-        return;
-      }
-      setUsers(data.users || []);
-    } catch (err) {
-      console.error('Error loading users:', err);
-    }
-  };
-
-  const loadWorkspaceMembers = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('workspace_members')
-        .select(`
-          id,
-          user_id,
-          workspace_id,
-          role,
-          users(email),
-          workspaces(name)
-        `);
-      
-      if (error) {
-        console.error('Error loading workspace members:', error);
-        return;
-      }
-      setWorkspaceMembers(data || []);
-    } catch (err) {
-      console.error('Error loading workspace members:', err);
-    }
-  };
 
   const createUser = async (e: React.FormEvent) => {
     e.preventDefault();
