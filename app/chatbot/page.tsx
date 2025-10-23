@@ -254,7 +254,7 @@ export default function ChatbotPage() {
     
     userQuestions.forEach(q => {
       const userId = q.usr_id || q.user_id;
-      const customer = customerMap.get(userId) || 'Unknown';
+      const customer = userId ? customerMap.get(userId) || 'Unknown' : 'Unknown';
       if (!customerStats.has(customer)) {
         customerStats.set(customer, { 
           questions: 0, 
@@ -389,7 +389,7 @@ export default function ChatbotPage() {
         if (!lastAssistantMessage || 
             new Date(lastAssistantTimestamp) <= new Date(lastUserTimestamp)) {
           const userId = lastUserMessage.usr_id || lastUserMessage.user_id;
-          const customer = customerMap.get(userId) || 'Unknown';
+          const customer = userId ? customerMap.get(userId) || 'Unknown' : 'Unknown';
           const content = lastUserMessage.Content || lastUserMessage.content || '';
           forwardedTickets.push({
             customer,
