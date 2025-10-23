@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import * as XLSX from 'xlsx';
@@ -214,16 +215,51 @@ const testForwardingDetection = () => {
 
 export default function ChatbotPage() {
   const { t } = useLanguage();
+  const router = useRouter();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<string>('all');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuthentication = () => {
+      const isAuth = sessionStorage.getItem('timewax_authenticated') === 'true';
+      const loginTime = sessionStorage.getItem('timewax_login_time');
+      
+      if (!isAuth || !loginTime) {
+        setIsAuthenticated(false);
+        return;
+      }
+      
+      // Check if session is still valid (24 hours)
+      const loginDate = new Date(loginTime);
+      const now = new Date();
+      const hoursDiff = (now.getTime() - loginDate.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursDiff > 24) {
+        // Session expired
+        sessionStorage.removeItem('timewax_authenticated');
+        sessionStorage.removeItem('timewax_user');
+        sessionStorage.removeItem('timewax_login_time');
+        setIsAuthenticated(false);
+        return;
+      }
+      
+      setIsAuthenticated(true);
+    };
+    
+    checkAuthentication();
+  }, []);
 
   // Run forwarding detection test on component mount
   useEffect(() => {
-    testForwardingDetection();
-  }, []);
+    if (isAuthenticated) {
+      testForwardingDetection();
+    }
+  }, [isAuthenticated]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -931,6 +967,51 @@ export default function ChatbotPage() {
     e.preventDefault();
   };
 
+  const handleLogout = () => {
+    sessionStorage.removeItem('timewax_authenticated');
+    sessionStorage.removeItem('timewax_user');
+    sessionStorage.removeItem('timewax_login_time');
+    setIsAuthenticated(false);
+    router.push('/chatbot/login');
+  };
+
+  // Show loading state while checking authentication
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Controleren toegang...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login redirect if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Toegang Geweigerd</h2>
+          <p className="text-gray-600 mb-6">
+            Alleen Timewax medewerkers hebben toegang tot deze functie.
+          </p>
+          <button
+            onClick={() => router.push('/chatbot/login')}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Inloggen
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -938,10 +1019,21 @@ export default function ChatbotPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{t.chatbot.title}</h1>
-              <p className="text-gray-600">{t.chatbot.subtitle}</p>
+              <h1 className="text-2xl font-bold text-gray-900">Timewax Chatbot Analytics</h1>
+              <p className="text-gray-600">Analyse van chatbot gesprekken voor Timewax</p>
             </div>
-            <LanguageSwitcher />
+            <div className="flex items-center space-x-4">
+              <div className="text-sm text-gray-500">
+                Ingelogd als: {sessionStorage.getItem('timewax_user')}
+              </div>
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors text-sm"
+              >
+                Uitloggen
+              </button>
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       </div>
