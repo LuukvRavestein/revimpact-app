@@ -382,11 +382,10 @@ export default function ChatbotPage() {
             
             // Debug logging for main customer stats
             if (isSupportTicket) {
-              console.log('🔍 MAIN FORWARDING DETECTED:', {
-                customer: Array.from(customerStats.keys()).find(c => customerStats.get(c) === stats),
-                conversationId: convId,
-                assistantMessage: content.substring(0, 200)
-              });
+              console.log('🔍 MAIN FORWARDING DETECTED:');
+              console.log('  Customer:', Array.from(customerStats.keys()).find(c => customerStats.get(c) === stats));
+              console.log('  Conversation ID:', convId);
+              console.log('  Assistant Message:', content.substring(0, 200));
             }
             
             return isSupportTicket;
@@ -587,12 +586,11 @@ export default function ChatbotPage() {
           
           // Debug logging for forwarding detection
           if (isSupportTicket) {
-            console.log('🔍 FORWARDING DETECTED:', {
-              customer: customer,
-              conversationId: q.conversation_id,
-              assistantMessage: content.substring(0, 200),
-              fullContent: content
-            });
+            console.log('🔍 FORWARDING DETECTED:');
+            console.log('  Customer:', customer);
+            console.log('  Conversation ID:', q.conversation_id);
+            console.log('  Assistant Message:', content.substring(0, 200));
+            console.log('  Full Content:', content);
           }
           
           return isSupportTicket;
