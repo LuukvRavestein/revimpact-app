@@ -565,48 +565,81 @@ export default function ChatbotPage() {
       .slice(0, 10);
 
     // Extract topics from actual content using multi-language keyword analysis
+    // Enhanced with Timewax-specific terminology and knowledge base categories
     const topicKeywords = {
       'Planning & Scheduling': [
-        // Dutch
+        // Dutch - Timewax specific
         'planning', 'schedule', 'agenda', 'tijd', 'rooster', 'afspraak', 'afspraken', 'kalender',
         'tijdschema', 'planning maken', 'inplannen', 'reserveren', 'boeken', 'booking',
-        // English
+        'resource planning', 'resourceplanning', 'capaciteit', 'capaciteitsplanning', 'projectplanning',
+        'project planning', 'tijdregistratie', 'time tracking', 'uren registreren', 'urenregistratie',
+        'roostering', 'shift planning', 'shiftplanning', 'werkrooster', 'diensten', 'dienstrooster',
+        // English - Timewax specific
         'scheduling', 'appointment', 'appointments', 'calendar', 'time', 'book', 'reserve',
-        'schedule', 'timetable', 'planning', 'booking', 'reservation',
-        // German
+        'schedule', 'timetable', 'planning', 'booking', 'reservation', 'resource planning',
+        'capacity planning', 'project planning', 'time tracking', 'time registration', 'hours',
+        'shift planning', 'work schedule', 'roster', 'duty roster', 'resource allocation',
+        // German - Timewax specific
         'planung', 'termin', 'termine', 'kalender', 'zeit', 'buchung', 'reservierung',
-        'zeitplan', 'planen', 'buchen', 'reservieren', 'terminplanung',
-        // French
+        'zeitplan', 'planen', 'buchen', 'reservieren', 'terminplanung', 'ressourcenplanung',
+        'kapazitätsplanung', 'projektplanung', 'zeiterfassung', 'stundenerfassung', 'schichtplanung',
+        'arbeitsplan', 'dienstplan', 'ressourcenzuweisung',
+        // French - Timewax specific
         'planification', 'rendez-vous', 'calendrier', 'temps', 'réservation', 'planifier',
-        'programmer', 'agenda', 'horaire', 'planning'
+        'programmer', 'agenda', 'horaire', 'planning', 'planification des ressources',
+        'planification de capacité', 'planification de projet', 'suivi du temps', 'enregistrement du temps',
+        'planification des équipes', 'plan de travail', 'plan de service'
       ],
-      'Facturatie': [
-        // Dutch
+      'Facturatie & Projecten': [
+        // Dutch - Timewax specific
         'factuur', 'facturen', 'billing', 'betaling', 'payment', 'rekening', 'rekeningen',
         'facturatie', 'betalen', 'kosten', 'prijs', 'tarief', 'tarieven', 'geld',
-        // English
+        'project', 'projecten', 'project management', 'projectbeheer', 'projectoverzicht',
+        'project status', 'projectstatus', 'project voortgang', 'projectvoortgang',
+        'project budget', 'projectbudget', 'project kosten', 'projectkosten',
+        'project rapport', 'projectrapport', 'project rapportage', 'projectrapportage',
+        // English - Timewax specific
         'invoice', 'invoices', 'billing', 'payment', 'pay', 'cost', 'costs', 'price',
-        'pricing', 'money', 'charge', 'charges', 'fee', 'fees',
-        // German
+        'pricing', 'money', 'charge', 'charges', 'fee', 'fees', 'project', 'projects',
+        'project management', 'project overview', 'project status', 'project progress',
+        'project budget', 'project costs', 'project report', 'project reporting',
+        'project profitability', 'project revenue', 'project expenses',
+        // German - Timewax specific
         'rechnung', 'rechnungen', 'abrechnung', 'zahlung', 'bezahlung', 'kosten', 'preis',
-        'preise', 'geld', 'gebühr', 'gebühren', 'tarif', 'tarife',
-        // French
+        'preise', 'geld', 'gebühr', 'gebühren', 'tarif', 'tarife', 'projekt', 'projekte',
+        'projektmanagement', 'projektübersicht', 'projektstatus', 'projektfortschritt',
+        'projektbudget', 'projektkosten', 'projektbericht', 'projektberichterstattung',
+        // French - Timewax specific
         'facture', 'factures', 'facturation', 'paiement', 'payer', 'coût', 'coûts',
-        'prix', 'argent', 'frais', 'tarif', 'tarifs'
+        'prix', 'argent', 'frais', 'tarif', 'tarifs', 'projet', 'projets',
+        'gestion de projet', 'aperçu du projet', 'statut du projet', 'progrès du projet',
+        'budget du projet', 'coûts du projet', 'rapport de projet', 'rapportage de projet'
       ],
-      'Integratie': [
-        // Dutch
+      'Integratie & API': [
+        // Dutch - Timewax specific
         'integratie', 'integration', 'api', 'connect', 'koppeling', 'verbinding', 'link',
         'samenwerking', 'koppelen', 'verbinden', 'aansluiten', 'integratie', 'webhook',
-        // English
+        'excel export', 'excelexport', 'csv export', 'csvexport', 'data export', 'dataexport',
+        'import', 'data import', 'dataimport', 'synchronisatie', 'synchronization',
+        'single sign on', 'sso', 'active directory', 'ldap', 'oauth', 'authentication',
+        'authenticatie', 'login integratie', 'loginintegratie', 'third party', 'thirdparty',
+        // English - Timewax specific
         'integration', 'integrate', 'api', 'connect', 'connection', 'link', 'linking',
-        'webhook', 'sync', 'synchronization', 'connectivity', 'interface',
-        // German
+        'webhook', 'sync', 'synchronization', 'connectivity', 'interface', 'excel export',
+        'csv export', 'data export', 'import', 'data import', 'single sign on', 'sso',
+        'active directory', 'ldap', 'oauth', 'authentication', 'third party integration',
+        'external system', 'system integration', 'data sync', 'data synchronization',
+        // German - Timewax specific
         'integration', 'integrieren', 'api', 'verbindung', 'verknüpfung', 'anbindung',
         'verbinden', 'verknüpfen', 'webhook', 'synchronisation', 'schnittstelle',
-        // French
+        'excel export', 'csv export', 'datenexport', 'import', 'datenimport',
+        'single sign on', 'sso', 'active directory', 'ldap', 'oauth', 'authentifizierung',
+        'drittanbieter', 'systemintegration', 'datensynchronisation',
+        // French - Timewax specific
         'intégration', 'intégrer', 'api', 'connexion', 'lien', 'connecter', 'webhook',
-        'synchronisation', 'interface'
+        'synchronisation', 'interface', 'export excel', 'export csv', 'export de données',
+        'import', 'import de données', 'single sign on', 'sso', 'active directory',
+        'ldap', 'oauth', 'authentification', 'intégration tierce partie', 'système externe'
       ],
       'Rapportage': [
         // Dutch
@@ -657,23 +690,69 @@ export default function ChatbotPage() {
         'erreur', 'erreurs', 'bug', 'bugs', 'problème', 'problèmes', 'issue', 'issues',
         'technique', 'support', 'aide', 'ne fonctionne pas', 'cassé', 'défaillant'
       ],
-      'Training': [
-        // Dutch
+      'Training & Documentatie': [
+        // Dutch - Timewax specific
         'training', 'trainings', 'uitleg', 'uitleg', 'help', 'tutorial', 'tutorials',
         'gids', 'gidsen', 'handleiding', 'handleidingen', 'instructie', 'instructies',
         'leren', 'hoe werkt', 'hoe gebruik', 'hoe doe ik', 'stappen', 'stap voor stap',
-        // English
+        'documentatie', 'documentation', 'knowledge base', 'kennisbank', 'help center',
+        'support center', 'supportcentrum', 'faq', 'veelgestelde vragen', 'vraag en antwoord',
+        'user guide', 'gebruikersgids', 'user manual', 'gebruikershandleiding',
+        // English - Timewax specific
         'training', 'tutorial', 'tutorials', 'guide', 'guides', 'manual', 'manuals',
         'instruction', 'instructions', 'learn', 'learning', 'how to', 'how does',
-        'how do i', 'steps', 'step by step', 'help', 'documentation',
-        // German
+        'how do i', 'steps', 'step by step', 'help', 'documentation', 'knowledge base',
+        'help center', 'support center', 'faq', 'frequently asked questions', 'q&a',
+        'user guide', 'user manual', 'getting started', 'quick start', 'onboarding',
+        // German - Timewax specific
         'schulung', 'schulungen', 'tutorial', 'tutorials', 'anleitung', 'anleitungen',
         'handbuch', 'handbücher', 'anweisung', 'anweisungen', 'lernen', 'wie funktioniert',
-        'wie verwende ich', 'schritte', 'schritt für schritt', 'hilfe',
-        // French
+        'wie verwende ich', 'schritte', 'schritt für schritt', 'hilfe', 'dokumentation',
+        'wissensdatenbank', 'hilfezentrum', 'support-zentrum', 'faq', 'häufig gestellte fragen',
+        'benutzerhandbuch', 'benutzeranleitung', 'einstieg', 'schnellstart',
+        // French - Timewax specific
         'formation', 'formations', 'tutoriel', 'tutoriels', 'guide', 'guides',
         'manuel', 'manuels', 'instruction', 'instructions', 'apprendre', 'comment',
-        'comment utiliser', 'étapes', 'étape par étape', 'aide'
+        'comment utiliser', 'étapes', 'étape par étape', 'aide', 'documentation',
+        'base de connaissances', 'centre d\'aide', 'centre de support', 'faq',
+        'questions fréquemment posées', 'guide utilisateur', 'manuel utilisateur',
+        'démarrage rapide', 'intégration'
+      ],
+      'Timewax Specifiek': [
+        // Dutch - Timewax product specific
+        'timewax', 'time wax', 'timewax software', 'timewax systeem', 'timewax platform',
+        'resource planning', 'resourceplanning', 'project planning', 'projectplanning',
+        'time tracking', 'timetracking', 'tijdregistratie', 'urenregistratie',
+        'capacity planning', 'capaciteitsplanning', 'shift planning', 'shiftplanning',
+        'roostering', 'werkrooster', 'dienstrooster', 'projectbeheer', 'project management',
+        'projectoverzicht', 'project status', 'projectstatus', 'project voortgang',
+        'project budget', 'projectbudget', 'project kosten', 'projectkosten',
+        'project rapport', 'projectrapport', 'project rapportage', 'projectrapportage',
+        'excel export', 'excelexport', 'csv export', 'csvexport', 'data export',
+        'data import', 'dataimport', 'synchronisatie', 'synchronization',
+        'single sign on', 'sso', 'active directory', 'ldap', 'oauth', 'authentication',
+        'authenticatie', 'login integratie', 'loginintegratie', 'third party',
+        'thirdparty', 'integratie', 'integration', 'api', 'webhook', 'connect',
+        'koppeling', 'verbinding', 'link', 'samenwerking', 'koppelen', 'verbinden',
+        'aansluiten', 'rapport', 'rapporten', 'report', 'reports', 'overzicht',
+        'overzichten', 'dashboard', 'statistiek', 'statistieken', 'cijfers', 'data',
+        'analyse', 'analyses', 'metrics', 'kpi', 'kpi\'s', 'prestatie', 'prestaties',
+        'resultaten', 'resultaat', 'factuur', 'facturen', 'billing', 'betaling',
+        'payment', 'rekening', 'rekeningen', 'facturatie', 'betalen', 'kosten',
+        'prijs', 'tarief', 'tarieven', 'geld', 'project', 'projecten',
+        'user', 'users', 'gebruiker', 'gebruikers', 'account', 'accounts', 'login',
+        'permissie', 'permissies', 'rechten', 'rol', 'rollen', 'beheer', 'beheren',
+        'toegang', 'access', 'profiel', 'profielen', 'instellingen', 'settings',
+        'error', 'errors', 'fout', 'fouten', 'bug', 'bugs', 'probleem', 'problemen',
+        'issue', 'issues', 'technisch', 'technische', 'support', 'hulp', 'help',
+        'niet werkend', 'werkt niet', 'kapot', 'defect', 'mislukt', 'failed',
+        'training', 'trainings', 'uitleg', 'tutorial', 'tutorials', 'gids', 'gidsen',
+        'handleiding', 'handleidingen', 'instructie', 'instructies', 'leren',
+        'hoe werkt', 'hoe gebruik', 'hoe doe ik', 'stappen', 'stap voor stap',
+        'documentatie', 'documentation', 'knowledge base', 'kennisbank', 'help center',
+        'support center', 'supportcentrum', 'faq', 'veelgestelde vragen',
+        'vraag en antwoord', 'user guide', 'gebruikersgids', 'user manual',
+        'gebruikershandleiding'
       ]
     };
 
