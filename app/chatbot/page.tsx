@@ -293,6 +293,15 @@ export default function ChatbotPage() {
     console.log('Self-resolved percentage:', selfResolvedPercentage + '%');
     console.log('Forwarded percentage:', forwardedPercentage + '%');
     console.log('=====================================');
+    
+    // Debug: Show customer forwarding details
+    console.log('=== CUSTOMER FORWARDING DETAILS ===');
+    customerStats.forEach((stats, customer) => {
+      if (stats.forwarded > 0) {
+        console.log(`📤 ${customer}: ${stats.forwarded} forwarded, ${stats.selfResolved} self-resolved (${stats.questions} total questions)`);
+      }
+    });
+    console.log('===================================');
 
     // Weekly trends - group by conversation_id to get unique conversations per week
     const weeklyData = new Map<string, Set<string>>();
@@ -369,10 +378,27 @@ export default function ChatbotPage() {
           // Check if any assistant message contains support ticket creation text
           const hasSupportTicket = assistantMessages.some(msg => {
             const content = (msg.Content || msg.content || '').toLowerCase();
-            return content.includes('support ticket') || 
+            const isSupportTicket = content.includes('support ticket') || 
                    content.includes('ticket voor je aangemaakt') ||
                    content.includes('created a support ticket') ||
-                   content.includes('ticket hinzugefügt');
+                   content.includes('ticket hinzugefügt') ||
+                   content.includes('er is een support ticket') ||
+                   content.includes('i\'ve created a support ticket') ||
+                   content.includes('ich habe einen support ticket') ||
+                   content.includes('ticket aangemaakt') ||
+                   content.includes('support ticket created') ||
+                   content.includes('ticket erstellt');
+            
+            // Debug logging for main customer stats
+            if (isSupportTicket) {
+              console.log('🔍 MAIN FORWARDING DETECTED:', {
+                customer: Array.from(customerStats.keys()).find(c => customerStats.get(c) === stats),
+                conversationId: convId,
+                assistantMessage: content.substring(0, 200)
+              });
+            }
+            
+            return isSupportTicket;
           });
           
           if (hasSupportTicket) {
@@ -549,16 +575,36 @@ export default function ChatbotPage() {
         
         const hasSupportTicket = assistantMessages.some(msg => {
           const content = (msg.Content || msg.content || '').toLowerCase();
-          return content.includes('support ticket') || 
+          const isSupportTicket = content.includes('support ticket') || 
                  content.includes('ticket voor je aangemaakt') ||
                  content.includes('created a support ticket') ||
-                 content.includes('ticket hinzugefügt');
+                 content.includes('ticket hinzugefügt') ||
+                 content.includes('er is een support ticket') ||
+                 content.includes('i\'ve created a support ticket') ||
+                 content.includes('ich habe einen support ticket') ||
+                 content.includes('ticket aangemaakt') ||
+                 content.includes('support ticket created') ||
+                 content.includes('ticket erstellt');
+          
+          // Debug logging for forwarding detection
+          if (isSupportTicket) {
+            console.log('🔍 FORWARDING DETECTED:', {
+              customer: customer,
+              conversationId: q.conversation_id,
+              assistantMessage: content.substring(0, 200),
+              fullContent: content
+            });
+          }
+          
+          return isSupportTicket;
         });
         
         if (hasSupportTicket) {
           stats.forwarded++;
+          console.log(`📤 Forwarded: ${customer} - Conversation ${q.conversation_id}`);
         } else {
           stats.selfResolved++;
+          console.log(`✅ Self-resolved: ${customer} - Conversation ${q.conversation_id}`);
         }
       });
 
