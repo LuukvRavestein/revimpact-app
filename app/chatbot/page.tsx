@@ -234,6 +234,14 @@ export default function ChatbotPage() {
             label: sortedMessages[0]?.label,
             content: (sortedMessages[0]?.Content || sortedMessages[0]?.content || '').substring(0, 100)
           });
+          console.log('All message types in first conversation:', 
+            sortedMessages.map(m => ({
+              Type: m.Type,
+              type: m.type,
+              label: m.label,
+              Content: (m.Content || '').substring(0, 50)
+            }))
+          );
         }
 
         if (userMessages.length > 0) {
