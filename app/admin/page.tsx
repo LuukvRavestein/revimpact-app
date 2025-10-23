@@ -43,29 +43,26 @@ export default function AdminPage() {
 
   const loadUsers = useCallback(async () => {
     try {
-      // Instead of using admin API, get users from workspace_members
-      const { data, error } = await supabase
+      // Get workspace members and then fetch user data separately
+      const { data: members, error: membersError } = await supabase
         .from('workspace_members')
-        .select(`
-          user_id,
-          users!inner(email, created_at, last_sign_in_at)
-        `);
+        .select('user_id');
       
-      if (error) {
-        console.error('Error loading users:', error);
+      if (membersError) {
+        console.error('Error loading workspace members:', membersError);
         return;
       }
       
-      // Transform the data to match User interface
-      const userList = data?.map(item => {
-        const user = Array.isArray(item.users) ? item.users[0] : item.users;
-        return {
-          id: item.user_id,
-          email: (user as { email: string; created_at: string; last_sign_in_at: string | null }).email,
-          created_at: (user as { email: string; created_at: string; last_sign_in_at: string | null }).created_at,
-          last_sign_in_at: (user as { email: string; created_at: string; last_sign_in_at: string | null }).last_sign_in_at
-        };
-      }) || [];
+      // Get unique user IDs
+      const userIds = [...new Set(members?.map(m => m.user_id) || [])];
+      
+      // For now, we'll just show the user IDs since we can't access auth.users directly
+      const userList = userIds.map(userId => ({
+        id: userId,
+        email: 'User data not accessible',
+        created_at: 'N/A',
+        last_sign_in_at: null
+      }));
       
       setUsers(userList);
     } catch (err) {
@@ -82,7 +79,6 @@ export default function AdminPage() {
           user_id,
           workspace_id,
           role,
-          users(email),
           workspaces(name)
         `);
       
@@ -90,7 +86,15 @@ export default function AdminPage() {
         console.error('Error loading workspace members:', error);
         return;
       }
-      setWorkspaceMembers(data || []);
+      
+      // Transform data to match expected structure
+      const transformedData = data?.map(item => ({
+        ...item,
+        users: [{ email: 'User data not accessible' }],
+        workspaces: Array.isArray(item.workspaces) ? item.workspaces : [item.workspaces]
+      })) || [];
+      
+      setWorkspaceMembers(transformedData);
     } catch (err) {
       console.error('Error loading workspace members:', err);
     }
