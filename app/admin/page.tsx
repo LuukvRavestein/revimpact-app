@@ -20,10 +20,17 @@ interface WorkspaceMember {
   }[];
 }
 
+interface UserData {
+  id: string;
+  email: string;
+  created_at: string;
+  last_sign_in_at: string | null;
+}
+
 export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
+  const [users, setUsers] = useState<UserData[]>([]);
   const [workspaceMembers, setWorkspaceMembers] = useState<WorkspaceMember[]>([]);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
@@ -175,7 +182,7 @@ Om een nieuwe gebruiker aan te maken:
     }
   };
 
-  const deleteUser = async (userId: string, user: User) => {
+  const deleteUser = async (userId: string, user: UserData) => {
     const email = user.email || 'onbekende gebruiker';
     if (!confirm(`Weet je zeker dat je gebruiker ${email} wilt verwijderen?`)) {
       return;
