@@ -45,11 +45,6 @@ interface ProcessedData {
     forwarded: number;
   }>;
   topTopics: Array<{ topic: string; count: number }>;
-  forwardedTickets: Array<{
-    customer: string;
-    content: string;
-    timestamp: string;
-  }>;
   weeklyCustomerData: Map<string, Array<{
     customer: string;
     questions: number;
@@ -595,52 +590,6 @@ export default function ChatbotPage() {
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-    // Real forwarded tickets from conversations that weren't resolved
-    const forwardedTickets: Array<{
-      customer: string;
-      content: string;
-      timestamp: string;
-    }> = [];
-
-    conversationMap.forEach((messages) => {
-        const sortedMessages = messages.sort((a, b) => {
-          const timestampA = a.Timestamp || a.timestamp || '';
-          const timestampB = b.Timestamp || b.timestamp || '';
-          return new Date(timestampA).getTime() - new Date(timestampB).getTime();
-        });
-      
-      const userMessages = sortedMessages.filter(m => 
-        m.Type === 'USER' || m.label === 'USER' || m.type === 'USER' || 
-        m.Type?.toLowerCase() === 'user' || m.label?.toLowerCase() === 'user' || m.type?.toLowerCase() === 'user'
-      );
-      const assistantMessages = sortedMessages.filter(m => 
-        m.Type === 'ASSISTANT' || m.label === 'ASSISTANT' || m.type === 'ASSISTANT' ||
-        m.Type?.toLowerCase() === 'assistant' || m.label?.toLowerCase() === 'assistant' || m.type?.toLowerCase() === 'assistant'
-      );
-      
-      if (userMessages.length > 0) {
-        const lastUserMessage = userMessages[userMessages.length - 1];
-        
-        // Check if any assistant message contains support ticket creation text
-        const hasSupportTicket = assistantMessages.some(msg => {
-          const content = (msg.Content || msg.content || '');
-          return isSupportTicketForwarding(content);
-        });
-        
-        if (hasSupportTicket) {
-          const userId = lastUserMessage.usr_id || lastUserMessage.user_id;
-          const customer = userId ? customerMap.get(userId) || 'Unknown' : 'Unknown';
-          const content = lastUserMessage.Content || lastUserMessage.content || '';
-          forwardedTickets.push({
-            customer,
-            content: content.length > 100 
-              ? content.substring(0, 100) + '...' 
-              : content,
-            timestamp: lastUserMessage.Timestamp || lastUserMessage.timestamp || ''
-          });
-        }
-      }
-    });
 
     console.log('Processed data:', {
       totalQuestions,
@@ -648,8 +597,7 @@ export default function ChatbotPage() {
       selfResolvedPercentage,
       forwardedPercentage,
       topCustomers: topCustomers.length,
-      topTopics: topTopics.length,
-      forwardedTickets: forwardedTickets.length
+      topTopics: topTopics.length
     });
 
     // Calculate weekly customer data
@@ -766,7 +714,6 @@ export default function ChatbotPage() {
       weeklyTrends,
       topCustomers,
       topTopics,
-      forwardedTickets,
       weeklyCustomerData
     };
   };
@@ -1049,25 +996,6 @@ export default function ChatbotPage() {
               </div>
             </div>
 
-            {/* Forwarded Tickets */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t.chatbot.forwardedTickets}</h3>
-              <div className="space-y-4">
-                {processedData.forwardedTickets.map((ticket, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{ticket.customer}</p>
-                        <p className="text-sm text-gray-600 mt-1">{ticket.content}</p>
-                      </div>
-                      <span className="text-xs text-gray-500 ml-4">
-                        {new Date(ticket.timestamp || '').toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* Upload New File Button */}
             <div className="text-center">
