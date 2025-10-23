@@ -50,12 +50,15 @@ export default function AdminPage() {
       }
       
       // Transform the data to match User interface
-      const userList = data?.map(item => ({
-        id: item.user_id,
-        email: (item.users as { email: string; created_at: string; last_sign_in_at: string | null }).email,
-        created_at: (item.users as { email: string; created_at: string; last_sign_in_at: string | null }).created_at,
-        last_sign_in_at: (item.users as { email: string; created_at: string; last_sign_in_at: string | null }).last_sign_in_at
-      })) || [];
+      const userList = data?.map(item => {
+        const user = Array.isArray(item.users) ? item.users[0] : item.users;
+        return {
+          id: item.user_id,
+          email: (user as { email: string; created_at: string; last_sign_in_at: string | null }).email,
+          created_at: (user as { email: string; created_at: string; last_sign_in_at: string | null }).created_at,
+          last_sign_in_at: (user as { email: string; created_at: string; last_sign_in_at: string | null }).last_sign_in_at
+        };
+      }) || [];
       
       setUsers(userList);
     } catch (err) {
