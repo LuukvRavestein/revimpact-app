@@ -5,13 +5,7 @@ import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import Link from "next/link";
-
-interface User {
-  id: string;
-  email: string | undefined;
-  created_at: string;
-  last_sign_in_at: string | null;
-}
+import { User } from "@supabase/supabase-js";
 
 interface WorkspaceMember {
   id: string;
@@ -211,8 +205,8 @@ export default function AdminPage() {
     }
   };
 
-  const deleteUser = async (userId: string, userEmail: string | undefined) => {
-    const email = userEmail || 'onbekende gebruiker';
+  const deleteUser = async (userId: string, user: User) => {
+    const email = user.email || 'onbekende gebruiker';
     if (!confirm(`Weet je zeker dat je gebruiker ${email} wilt verwijderen?`)) {
       return;
     }
@@ -402,7 +396,7 @@ export default function AdminPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <button
-                        onClick={() => deleteUser(user.id, user.email)}
+                        onClick={() => deleteUser(user.id, user)}
                         className="text-red-600 hover:text-red-900"
                       >
                         Verwijderen
