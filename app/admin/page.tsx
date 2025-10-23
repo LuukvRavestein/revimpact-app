@@ -14,10 +14,10 @@ interface WorkspaceMember {
   role: string;
   users: {
     email: string;
-  };
+  }[];
   workspaces: {
     name: string;
-  };
+  }[];
 }
 
 export default function AdminPage() {
@@ -432,10 +432,10 @@ export default function AdminPage() {
                 {workspaceMembers.map((member) => (
                   <tr key={member.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {member.users?.email || 'Onbekend'}
+                      {member.users?.[0]?.email || 'Onbekend'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {member.workspaces?.name || 'Onbekend'}
+                      {member.workspaces?.[0]?.name || 'Onbekend'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <span className={`px-2 py-1 text-xs rounded-full ${
