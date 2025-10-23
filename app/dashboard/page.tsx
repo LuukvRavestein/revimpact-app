@@ -74,37 +74,54 @@ export default function DashboardPage() {
           console.error("Workspace creation details:", {
             name: "My Workspace",
             created_by: session.user.id,
-            error: wErr
+            error: wErr,
+            errorMessage: wErr.message,
+            errorCode: wErr.code,
+            errorDetails: wErr.details,
+            errorHint: wErr.hint
           });
-          setLoading(false);
-          return;
-        }
+          
+          // Try alternative method using RPC function
+          console.log("Trying alternative workspace creation method...");
+          const { data: altWs, error: altErr } = await supabase.rpc('create_user_workspace', {
+            workspace_name: "My Workspace"
+          });
+          
+          if (altErr) {
+            console.error("Alternative method also failed:", altErr);
+            setLoading(false);
+            return;
+          }
+          
+          console.log("Alternative method succeeded:", altWs);
+          name = "My Workspace";
+        } else {
+          const workspace = ws as { id: string; name: string };
+          console.log("Workspace created successfully:", workspace);
+          
+          const { error: memErr } = await supabase
+            .from("workspace_members")
+            .insert({ 
+              workspace_id: workspace.id, 
+              user_id: session.user.id, 
+              role: "owner" 
+            });
+          
+          if (memErr) {
+            console.error("Error creating membership:", memErr);
+            console.error("Membership creation details:", {
+              workspace_id: workspace.id,
+              user_id: session.user.id,
+              role: "owner",
+              error: memErr
+            });
+            setLoading(false);
+            return;
+          }
 
-        const workspace = ws as { id: string; name: string };
-        console.log("Workspace created successfully:", workspace);
-        
-        const { error: memErr } = await supabase
-          .from("workspace_members")
-          .insert({ 
-            workspace_id: workspace.id, 
-            user_id: session.user.id, 
-            role: "owner" 
-          });
-        
-        if (memErr) {
-          console.error("Error creating membership:", memErr);
-          console.error("Membership creation details:", {
-            workspace_id: workspace.id,
-            user_id: session.user.id,
-            role: "owner",
-            error: memErr
-          });
-          setLoading(false);
-          return;
+          console.log("Membership created successfully");
+          name = workspace.name;
         }
-
-        console.log("Membership created successfully");
-        name = workspace.name;
       }
 
       setWorkspaceName(name || "My Workspace");
