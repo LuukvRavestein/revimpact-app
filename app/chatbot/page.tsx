@@ -24,6 +24,7 @@ interface ChatbotData {
 
 interface ProcessedData {
   totalQuestions: number;
+  uniqueConversations: number;
   uniqueCustomers: number;
   selfResolvedPercentage: number;
   forwardedPercentage: number;
@@ -124,6 +125,19 @@ export default function ChatbotPage() {
     // Calculate basic metrics
     const totalQuestions = userQuestions.length;
     const uniqueCustomers = new Set(customerMap.values()).size;
+    
+    // Group user questions by conversation_id to get unique conversations
+    const conversationUserQuestions = new Map<string, any[]>();
+    userQuestions.forEach(q => {
+      const convId = q.conversation_id;
+      if (!conversationUserQuestions.has(convId)) {
+        conversationUserQuestions.set(convId, []);
+      }
+      conversationUserQuestions.get(convId)!.push(q);
+    });
+    
+    const uniqueConversations = conversationUserQuestions.size;
+    console.log('Unique conversations found:', uniqueConversations);
 
     // If no user questions found, try alternative approach
     if (totalQuestions === 0) {
@@ -223,8 +237,8 @@ export default function ChatbotPage() {
       }
     });
 
-    const selfResolvedPercentage = totalQuestions > 0 ? Math.round((selfResolvedCount / totalQuestions) * 100) : 0;
-    const forwardedPercentage = totalQuestions > 0 ? Math.round((forwardedCount / totalQuestions) * 100) : 0;
+    const selfResolvedPercentage = uniqueConversations > 0 ? Math.round((selfResolvedCount / uniqueConversations) * 100) : 0;
+    const forwardedPercentage = uniqueConversations > 0 ? Math.round((forwardedCount / uniqueConversations) * 100) : 0;
     const averageSatisfaction = satisfactionCount > 0 ? totalSatisfaction / satisfactionCount : 3.5;
 
     // Weekly trends
@@ -417,6 +431,7 @@ export default function ChatbotPage() {
 
     return {
       totalQuestions,
+      uniqueConversations,
       uniqueCustomers,
       selfResolvedPercentage,
       forwardedPercentage,
@@ -533,15 +548,15 @@ export default function ChatbotPage() {
                 <p><strong>File:</strong> {uploadedFile?.name}</p>
                 <p><strong>Total Rows:</strong> {processedData.totalQuestions + (processedData.totalQuestions * 2)} (estimated)</p>
                 <p><strong>User Questions:</strong> {processedData.totalQuestions}</p>
+                <p><strong>Unique Conversations:</strong> {processedData.uniqueConversations}</p>
                 <p><strong>Unique Customers:</strong> {processedData.uniqueCustomers}</p>
-                <p><strong>Conversations Analyzed:</strong> {Math.round(processedData.totalQuestions / 3)} (estimated)</p>
                 <p className="text-xs text-blue-600 mt-2">
                   💡 Open browser console (F12) to see detailed processing logs
                 </p>
               </div>
             </div>
             {/* KPIs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
               <div className="bg-white rounded-lg shadow-sm border p-6">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
@@ -554,6 +569,20 @@ export default function ChatbotPage() {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-500">{t.chatbot.totalQuestions}</p>
                     <p className="text-2xl font-semibold text-gray-900">{processedData.totalQuestions}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                      <span className="text-purple-600 text-lg">💬</span>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">Unieke Gesprekken</p>
+                    <p className="text-2xl font-semibold text-gray-900">{processedData.uniqueConversations}</p>
                   </div>
                 </div>
               </div>
