@@ -3,6 +3,10 @@ import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Email configuration
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'RevImpact <noreply@revimpact.nl>';
+const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'support@revimpact.nl';
+
 export async function POST(request: NextRequest) {
   try {
     const { email, invitationUrl, workspaceName, role, userName } = await request.json();
@@ -12,7 +16,7 @@ export async function POST(request: NextRequest) {
     
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: 'RevImpact <noreply@revimpact.nl>',
+      from: FROM_EMAIL,
       to: [email],
       subject: `Uitnodiging voor RevImpact Workspace: ${workspaceName}`,
       html: `
@@ -52,7 +56,17 @@ export async function POST(request: NextRequest) {
             <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
             
             <p style="color: #999; font-size: 12px; text-align: center;">
-              Als je deze uitnodiging niet verwachtte, kun je deze e-mail negeren.
+              Als je deze uitnodiging niet verwachtte, kun je deze e-mail negeren.<br>
+              Voor vragen kun je contact opnemen met <a href="mailto:${SUPPORT_EMAIL}" style="color: #3A6FF8;">${SUPPORT_EMAIL}</a>
+            </p>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background: #f8f9fa; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; margin-top: 10px;">
+            <p style="color: #666; font-size: 12px; margin: 0;">
+              <strong>RevImpact</strong> - Maximize your revenue impact<br>
+              <a href="https://revimpact.nl" style="color: #3A6FF8; text-decoration: none;">revimpact.nl</a> | 
+              <a href="mailto:${SUPPORT_EMAIL}" style="color: #3A6FF8; text-decoration: none;">${SUPPORT_EMAIL}</a>
             </p>
           </div>
         </div>
