@@ -72,6 +72,12 @@ export default function InvitePage() {
     setSuccess("");
 
     try {
+      if (!invitation) {
+        setError("Uitnodiging niet gevonden");
+        setIsAccepting(false);
+        return;
+      }
+
       if (password !== confirmPassword) {
         setError("Wachtwoorden komen niet overeen");
         setIsAccepting(false);
