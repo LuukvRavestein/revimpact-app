@@ -385,7 +385,7 @@ E-mail kon niet worden verstuurd. Deel deze link handmatig met de gebruiker.`);
     }
   };
 
-  const startEditUser = (member: any) => {
+  const startEditUser = (member: { id: string; user_id: string; role: string; users: { email: string; name?: string } | null }) => {
     setEditingUser(member.id);
     setEditUserName(member.users?.name || '');
     setEditUserEmail(member.users?.email || '');
