@@ -58,13 +58,50 @@ export default function SignOutButton() {
   };
 
   return (
-    <button
-      onClick={handleSignOut}
-      disabled={isSigningOut}
-      className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-      style={{ cursor: isSigningOut ? 'not-allowed' : 'pointer' }}
-    >
-      {isSigningOut ? "Uitloggen..." : "Sign out"}
-    </button>
+    <div>
+      {/* Test button with inline styles */}
+      <button
+        onClick={handleSignOut}
+        disabled={isSigningOut}
+        style={{ 
+          padding: '8px 16px',
+          fontSize: '14px',
+          backgroundColor: '#dc2626',
+          color: 'white',
+          borderRadius: '4px',
+          border: 'none',
+          cursor: isSigningOut ? 'not-allowed' : 'pointer',
+          position: 'relative',
+          zIndex: 9999,
+          pointerEvents: 'auto'
+        }}
+        onMouseDown={(e) => {
+          console.log("Mouse down on sign out button");
+        }}
+        onMouseUp={(e) => {
+          console.log("Mouse up on sign out button");
+        }}
+      >
+        {isSigningOut ? "Uitloggen..." : "Sign out"}
+      </button>
+      
+      {/* Alternative: Form-based approach */}
+      <form action="/signout" method="post" style={{ display: 'inline', marginLeft: '10px' }}>
+        <button
+          type="submit"
+          style={{ 
+            padding: '8px 16px',
+            fontSize: '14px',
+            backgroundColor: '#059669',
+            color: 'white',
+            borderRadius: '4px',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          Sign out (Form)
+        </button>
+      </form>
+    </div>
   );
 }
