@@ -1,202 +1,283 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { createSupabaseBrowserClient } from "@/lib/supabaseClient"
-
-interface Invitation {
-  id: string
-  workspace_id: string
-  email: string
-  role: string
-  status: string
-  expires_at: string
-  workspaces: {
-    name: string
-  }
-}
+import { useEffect, useState } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 export default function InvitePage() {
-  const params = useParams()
-  const router = useRouter()
-  const [invitation, setInvitation] = useState<Invitation | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isAccepting, setIsAccepting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const supabase = createSupabaseBrowserClient()
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [invitation, setInvitation] = useState<any>(null);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isAccepting, setIsAccepting] = useState(false);
+  const router = useRouter();
+  const params = useParams();
+  const token = params.token as string;
+  const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
-    if (params.token) {
-      loadInvitation(params.token as string)
-    }
-  }, [params.token])
+    const loadInvitation = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('workspace_invitations')
+          .select(`
+            *,
+            workspaces(name)
+          `)
+          .eq('token', token)
+          .eq('status', 'pending')
+          .single();
 
-  const loadInvitation = async (token: string) => {
-    // Token will be used in real implementation
-    console.log('Loading invitation for token:', token)
-    try {
-      // In a real implementation, you would fetch the invitation from the database
-      // For now, we'll simulate this
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Mock invitation data
-      const mockInvitation: Invitation = {
-        id: "mock-id",
-        workspace_id: "mock-workspace-id",
-        email: "user@example.com",
-        role: "member",
-        status: "pending",
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        workspaces: {
-          name: "Acme Corporation"
+        if (error) {
+          console.error('Error loading invitation:', error);
+          setError('Uitnodiging niet gevonden of verlopen');
+          setLoading(false);
+          return;
         }
+
+        // Check if invitation is expired
+        if (new Date(data.expires_at) < new Date()) {
+          setError('Deze uitnodiging is verlopen');
+          setLoading(false);
+          return;
+        }
+
+        setInvitation(data);
+        setLoading(false);
+      } catch (err) {
+        console.error('Error loading invitation:', err);
+        setError('Onverwachte fout bij laden van uitnodiging');
+        setLoading(false);
       }
-      
-      setInvitation(mockInvitation)
-    } catch (error) {
-      console.error("Error loading invitation:", error)
-      setError("Failed to load invitation")
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    };
 
-  const acceptInvitation = async () => {
-    if (!invitation) return
+    loadInvitation();
+  }, [supabase, token]);
 
-    setIsAccepting(true)
-    try {
-      // Check if user is logged in
-      const { data: { session } } = await supabase.auth.getSession()
-      
-      if (!session?.user) {
-        // Redirect to signin with return URL
-        router.push(`/signin?redirect=/invite/${params.token}`)
-        return
-      }
-
-      // In a real implementation, you would:
-      // 1. Verify the invitation token
-      // 2. Add the user to the workspace
-      // 3. Update the invitation status
-      // 4. Redirect to the workspace
-
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      // Redirect to dashboard
-      router.push('/dashboard')
-    } catch (error) {
-      console.error("Error accepting invitation:", error)
-      setError("Failed to accept invitation")
-    } finally {
-      setIsAccepting(false)
-    }
-  }
-
-  const declineInvitation = async () => {
-    if (!invitation) return
+  const acceptInvitation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsAccepting(true);
+    setError("");
+    setSuccess("");
 
     try {
-      // In a real implementation, you would update the invitation status to 'declined'
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      alert("Invitation declined")
-      router.push('/')
-    } catch (error) {
-      console.error("Error declining invitation:", error)
-      setError("Failed to decline invitation")
-    }
-  }
+      if (password !== confirmPassword) {
+        setError("Wachtwoorden komen niet overeen");
+        setIsAccepting(false);
+        return;
+      }
 
-  if (isLoading) {
+      if (password.length < 6) {
+        setError("Wachtwoord moet minimaal 6 karakters lang zijn");
+        setIsAccepting(false);
+        return;
+      }
+
+      // Create user account
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: invitation.email,
+        password: password,
+      });
+
+      if (authError) {
+        console.error('Error creating account:', authError);
+        setError(`Fout bij aanmaken account: ${authError.message}`);
+        setIsAccepting(false);
+        return;
+      }
+
+      if (!authData.user) {
+        setError("Account kon niet worden aangemaakt");
+        setIsAccepting(false);
+        return;
+      }
+
+      // Add user to workspace
+      const { error: memberError } = await supabase
+        .from('workspace_members')
+        .insert({
+          workspace_id: invitation.workspace_id,
+          user_id: authData.user.id,
+          role: invitation.role
+        });
+
+      if (memberError) {
+        console.error('Error adding to workspace:', memberError);
+        setError("Account aangemaakt, maar kon niet worden toegevoegd aan workspace");
+        setIsAccepting(false);
+        return;
+      }
+
+      // Update invitation status
+      const { error: updateError } = await supabase
+        .from('workspace_invitations')
+        .update({ 
+          status: 'accepted',
+          accepted_at: new Date().toISOString()
+        })
+        .eq('id', invitation.id);
+
+      if (updateError) {
+        console.error('Error updating invitation:', updateError);
+      }
+
+      setSuccess("Account succesvol aangemaakt! Je wordt doorgestuurd naar de inlogpagina.");
+      
+      // Redirect to signin after 2 seconds
+      setTimeout(() => {
+        router.push('/signin');
+      }, 2000);
+
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError(`Onverwachte fout: ${err}`);
+    } finally {
+      setIsAccepting(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-impact-light via-white to-impact-light flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold mb-4">Loading invitation...</h1>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-impact-blue mx-auto mb-4"></div>
+          <p className="text-gray-600">Laden...</p>
         </div>
-      </main>
-    )
+      </div>
+    );
   }
 
-  if (error || !invitation) {
+  if (error && !invitation) {
     return (
-      <main className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md w-full">
-          <CardContent className="p-6 text-center">
-            <div className="text-red-500 text-6xl mb-4">❌</div>
-            <h1 className="text-xl font-semibold mb-2">Invalid Invitation</h1>
-            <p className="text-gray-600 mb-4">
-              This invitation link is invalid or has expired.
-            </p>
-            <Button onClick={() => router.push('/')}>
-              Go to Homepage
-            </Button>
-          </CardContent>
-        </Card>
-      </main>
-    )
+      <div className="min-h-screen bg-gradient-to-br from-impact-light via-white to-impact-light flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Uitnodiging Niet Gevonden</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => router.push('/signin')}
+            className="bg-impact-blue text-white px-6 py-2 rounded-lg hover:bg-impact-blue/90 transition-colors"
+          >
+            Ga naar Inlogpagina
+          </button>
+        </div>
+      </div>
+    );
   }
-
-  const isExpired = new Date(invitation.expires_at) < new Date()
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="max-w-md w-full">
-        <CardHeader className="text-center">
-          <div className="text-6xl mb-4">🎉</div>
-          <h1 className="text-2xl font-semibold">You&apos;re Invited!</h1>
-          <p className="text-gray-600">
-            You&apos;ve been invited to join a workspace on RevImpact
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-2">Workspace Details</h3>
-            <p><strong>Workspace:</strong> {invitation.workspaces.name}</p>
-            <p><strong>Role:</strong> {invitation.role}</p>
-            <p><strong>Email:</strong> {invitation.email}</p>
-            {isExpired && (
-              <p className="text-red-600 text-sm mt-2">
-                ⚠️ This invitation has expired
-              </p>
-            )}
+    <div className="min-h-screen bg-gradient-to-br from-impact-light via-white to-impact-light">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm shadow-sm border-b border-white/20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div>
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-r from-impact-blue to-impact-lime rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">R</span>
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-impact-dark">RevImpact</h1>
+                  <p className="text-gray-600">Workspace Uitnodiging</p>
+                </div>
+              </div>
+            </div>
+            <LanguageSwitcher />
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-md mx-auto px-4 py-8">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-8">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Welkom bij RevImpact!</h2>
+            <p className="text-gray-600">
+              Je bent uitgenodigd voor workspace: <strong>{invitation?.workspaces?.name}</strong>
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Rol: {invitation?.role === 'owner' ? 'Eigenaar' : 'Lid'}
+            </p>
           </div>
 
-          {isExpired ? (
-            <div className="text-center">
-              <p className="text-gray-600 mb-4">
-                This invitation has expired. Please contact the workspace owner for a new invitation.
-              </p>
-              <Button onClick={() => router.push('/')}>
-                Go to Homepage
-              </Button>
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-red-800">{error}</p>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <Button 
-                onClick={acceptInvitation}
-                disabled={isAccepting}
-                className="w-full"
-              >
-                {isAccepting ? "Accepting..." : "Accept Invitation"}
-              </Button>
-              <Button 
-                variant="secondary"
-                onClick={declineInvitation}
-                className="w-full"
-              >
-                Decline
-              </Button>
+          )}
+          
+          {success && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-green-800">{success}</p>
             </div>
           )}
 
-          <div className="text-center text-sm text-gray-500">
-            <p>By accepting, you agree to join this workspace and follow its policies.</p>
+          <form onSubmit={acceptInvitation} className="space-y-4">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                E-mailadres
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={invitation?.email || ''}
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Wachtwoord
+              </label>
+              <input
+                type="password"
+                id="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue transition-colors"
+                placeholder="Minimaal 6 karakters"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                Bevestig Wachtwoord
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                required
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue transition-colors"
+                placeholder="Herhaal wachtwoord"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={isAccepting}
+              className="w-full bg-gradient-to-r from-impact-blue to-impact-blue/90 hover:from-impact-blue/90 hover:to-impact-blue text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isAccepting ? "Account Aanmaken..." : "Accepteer Uitnodiging"}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-500">
+              Al een account? <button
+                onClick={() => router.push('/signin')}
+                className="text-impact-blue hover:text-impact-blue/80 font-medium"
+              >
+                Log in
+              </button>
+            </p>
           </div>
-        </CardContent>
-      </Card>
-    </main>
-  )
+        </div>
+      </div>
+    </div>
+  );
 }

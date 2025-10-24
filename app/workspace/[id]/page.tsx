@@ -110,8 +110,7 @@ export default function WorkspaceManagementPage() {
         .select(`
           id,
           user_id,
-          role,
-          users(email)
+          role
         `)
         .eq('workspace_id', workspaceId);
 
@@ -124,9 +123,7 @@ export default function WorkspaceManagementPage() {
         member_count: members?.length || 0,
         members: (members || []).map(member => ({
           ...member,
-          users: member.users && Array.isArray(member.users) && member.users.length > 0 
-            ? { email: member.users[0].email } 
-            : null
+          users: { email: `User ${member.user_id.slice(0, 8)}...` }
         }))
       });
     } catch (err) {
@@ -260,7 +257,14 @@ export default function WorkspaceManagementPage() {
         return;
       }
 
-      setSuccess(`Uitnodiging verstuurd naar ${newInviteEmail}!`);
+      // Generate invitation URL
+      const invitationUrl = `${window.location.origin}/invite/${token}`;
+      
+      setSuccess(`Uitnodiging aangemaakt voor ${newInviteEmail}! 
+      
+Uitnodigingslink: ${invitationUrl}
+
+Deel deze link met de gebruiker om de uitnodiging te accepteren.`);
       setNewInviteEmail("");
       setNewInviteRole("member");
       setShowInviteForm(false);
