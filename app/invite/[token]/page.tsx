@@ -9,7 +9,15 @@ export default function InvitePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [invitation, setInvitation] = useState<any>(null);
+  const [invitation, setInvitation] = useState<{
+    id: string;
+    email: string;
+    role: string;
+    workspace_id: string;
+    workspaces: {
+      name: string;
+    } | null;
+  } | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isAccepting, setIsAccepting] = useState(false);
