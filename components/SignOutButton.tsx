@@ -8,10 +8,7 @@ export default function SignOutButton() {
   const supabase = createSupabaseBrowserClient();
   const router = useRouter();
 
-  const handleSignOut = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  const handleSignOut = () => {
     console.log("Sign out button clicked!"); // This should appear in console
     
     if (isSigningOut) {
@@ -22,39 +19,15 @@ export default function SignOutButton() {
     setIsSigningOut(true);
     console.log("Starting sign out process...");
     
-    // Simple test - just redirect immediately to see if button works
-    console.log("Testing immediate redirect...");
-    window.location.href = "/signin";
+    // Clear any local storage or session data
+    console.log("Clearing storage...");
+    localStorage.clear();
+    sessionStorage.clear();
+    console.log("Cleared local storage and session storage");
     
-    // Comment out the rest for now to test basic functionality
-    /*
-    try {
-      // Sign out from Supabase
-      console.log("Calling supabase.auth.signOut()...");
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("Supabase sign out error:", error);
-      } else {
-        console.log("Successfully signed out from Supabase");
-      }
-      
-      // Clear any local storage or session data
-      console.log("Clearing storage...");
-      localStorage.clear();
-      sessionStorage.clear();
-      console.log("Cleared local storage and session storage");
-      
-      // Force redirect to signin page
-      console.log("Redirecting to signin page...");
-      window.location.href = "/signin";
-      
-    } catch (error) {
-      console.error("Sign out error:", error);
-      // Force redirect even if there's an error
-      window.location.href = "/signin";
-    }
-    */
+    // Force redirect to signin page
+    console.log("Redirecting to signin page...");
+    window.location.href = "/signin";
   };
 
   return (
