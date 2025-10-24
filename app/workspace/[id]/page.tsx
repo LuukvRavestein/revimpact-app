@@ -133,6 +133,8 @@ export default function WorkspaceManagementPage() {
         members: await Promise.all((members || []).map(async (member) => {
           // Get user details via API route
           try {
+            console.log('Fetching user details for:', member.user_id);
+            
             const response = await fetch('/api/get-user-details', {
               method: 'POST',
               headers: {
@@ -141,10 +143,13 @@ export default function WorkspaceManagementPage() {
               body: JSON.stringify({ userIds: [member.user_id] }),
             });
 
+            console.log('API response status:', response.status);
             const result = await response.json();
+            console.log('API response result:', result);
             
             if (result.success && result.users && result.users.length > 0) {
               const userData = result.users[0];
+              console.log('User data received:', userData);
               return {
                 ...member,
                 users: {
@@ -152,6 +157,8 @@ export default function WorkspaceManagementPage() {
                   name: userData.name
                 }
               };
+            } else {
+              console.log('API call failed or no user data:', result);
             }
           } catch (err) {
             console.error('Error fetching user details:', err);

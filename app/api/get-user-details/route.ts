@@ -5,8 +5,10 @@ import { cookies } from 'next/headers';
 export async function POST(request: NextRequest) {
   try {
     const { userIds } = await request.json();
+    console.log('get-user-details API called with userIds:', userIds);
     
     if (!userIds || !Array.isArray(userIds)) {
+      console.log('Invalid userIds provided');
       return NextResponse.json({ 
         success: false, 
         message: 'Invalid user IDs' 
@@ -31,7 +33,10 @@ export async function POST(request: NextRequest) {
                        userEmail === 'luuk@revimpact.nl' || 
                        userEmail === 'admin@revimpact.nl';
 
+    console.log('User email:', userEmail, 'Is admin:', isAdminUser);
+
     if (!isAdminUser) {
+      console.log('User not authorized');
       return NextResponse.json({ 
         success: false, 
         message: 'Not authorized' 
@@ -39,12 +44,17 @@ export async function POST(request: NextRequest) {
     }
 
     // Get user details using admin API
+    console.log('Fetching user details for userIds:', userIds);
     const userDetails = await Promise.all(
       userIds.map(async (userId: string) => {
         try {
+          console.log('Fetching user:', userId);
           const { data: userData, error } = await supabase.auth.admin.getUserById(userId);
           
+          console.log('User data for', userId, ':', userData, 'Error:', error);
+          
           if (error || !userData?.user) {
+            console.log('No user data found for:', userId);
             return {
               id: userId,
               email: 'Unknown User',
@@ -52,13 +62,16 @@ export async function POST(request: NextRequest) {
             };
           }
 
-          return {
+          const result = {
             id: userId,
             email: userData.user.email || 'Unknown User',
             name: userData.user.user_metadata?.full_name || 
                   userData.user.email?.split('@')[0] || 
                   'Unknown User'
           };
+          
+          console.log('Returning user data:', result);
+          return result;
         } catch (err) {
           console.error('Error fetching user:', userId, err);
           return {
