@@ -55,6 +55,38 @@ export async function POST(request: NextRequest) {
 
     console.log(`Found ${userWorkspaces?.length || 0} workspaces created by user`);
 
+    // Delete all QBR reports created by this user first
+    const { error: deleteQbrError } = await supabase
+      .from('qbr_reports')
+      .delete()
+      .eq('created_by', userId);
+
+    if (deleteQbrError) {
+      console.error('Error deleting QBR reports:', deleteQbrError);
+      return NextResponse.json({ 
+        success: false, 
+        message: `Fout bij verwijderen QBR reports: ${deleteQbrError.message}` 
+      }, { status: 500 });
+    }
+
+    console.log('Deleted QBR reports created by user');
+
+    // Delete all customer data uploads created by this user
+    const { error: deleteUploadsError } = await supabase
+      .from('customer_data_uploads')
+      .delete()
+      .eq('created_by', userId);
+
+    if (deleteUploadsError) {
+      console.error('Error deleting customer data uploads:', deleteUploadsError);
+      return NextResponse.json({ 
+        success: false, 
+        message: `Fout bij verwijderen data uploads: ${deleteUploadsError.message}` 
+      }, { status: 500 });
+    }
+
+    console.log('Deleted customer data uploads created by user');
+
     // Delete all workspaces created by this user (this will cascade delete workspace_members)
     if (userWorkspaces && userWorkspaces.length > 0) {
       const { error: deleteWorkspacesError } = await supabase

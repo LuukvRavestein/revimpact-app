@@ -186,7 +186,7 @@ Om een nieuwe gebruiker aan te maken:
 
   const deleteUser = async (userId: string, user: UserData) => {
     const email = user.email || 'onbekende gebruiker';
-    if (!confirm(`Weet je zeker dat je gebruiker ${email} volledig wilt verwijderen?\n\nDit zal:\n- Alle workspaces die door deze gebruiker zijn aangemaakt verwijderen\n- De gebruiker uit alle andere workspaces verwijderen\n- De gebruiker permanent uit het systeem verwijderen\n\nDeze actie kan niet ongedaan worden gemaakt!`)) {
+    if (!confirm(`Weet je zeker dat je gebruiker ${email} volledig wilt verwijderen?\n\nDit zal:\n- Alle QBR reports van deze gebruiker verwijderen\n- Alle data uploads van deze gebruiker verwijderen\n- Alle workspaces die door deze gebruiker zijn aangemaakt verwijderen\n- De gebruiker uit alle andere workspaces verwijderen\n- De gebruiker permanent uit het systeem verwijderen\n\nDeze actie kan niet ongedaan worden gemaakt!`)) {
       return;
     }
 
