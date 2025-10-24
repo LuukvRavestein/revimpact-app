@@ -260,11 +260,43 @@ export default function WorkspaceManagementPage() {
       // Generate invitation URL
       const invitationUrl = `${window.location.origin}/invite/${token}`;
       
-      setSuccess(`Uitnodiging aangemaakt voor ${newInviteEmail}! 
-      
+      // Send invitation email
+      try {
+        const emailResponse = await fetch('/api/send-invitation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: newInviteEmail,
+            invitationUrl: invitationUrl,
+            workspaceName: workspace?.name || 'Workspace',
+            role: newInviteRole
+          }),
+        });
+
+        const emailResult = await emailResponse.json();
+
+        if (emailResult.success) {
+          setSuccess(`Uitnodiging aangemaakt en per e-mail verstuurd naar ${newInviteEmail}! 
+          
+De gebruiker heeft een e-mail ontvangen met de uitnodigingslink.`);
+        } else {
+          setSuccess(`Uitnodiging aangemaakt voor ${newInviteEmail}! 
+          
 Uitnodigingslink: ${invitationUrl}
 
-Deel deze link met de gebruiker om de uitnodiging te accepteren.`);
+E-mail kon niet worden verstuurd. Deel deze link handmatig met de gebruiker.`);
+        }
+      } catch (emailError) {
+        console.error('Error sending email:', emailError);
+        setSuccess(`Uitnodiging aangemaakt voor ${newInviteEmail}! 
+        
+Uitnodigingslink: ${invitationUrl}
+
+E-mail kon niet worden verstuurd. Deel deze link handmatig met de gebruiker.`);
+      }
+      
       setNewInviteEmail("");
       setNewInviteRole("member");
       setShowInviteForm(false);
