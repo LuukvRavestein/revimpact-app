@@ -17,6 +17,5 @@
 CREATE POLICY "member_user_update_own" ON workspace_members
   FOR UPDATE USING (user_id = auth.uid());
 
--- Step 5: Regular users can delete their own memberships
-CREATE POLICY "member_user_delete_own" ON workspace_members
-  FOR DELETE USING (user_id = auth.uid());
+-- Step 5: Only admin users can delete memberships (more secure)
+-- No separate delete policy for regular users - only admins can delete
