@@ -117,7 +117,7 @@ export default function InvitePage() {
           user_id: authData.user.id,
           role: invitation.role,
           user_email: invitation.email,
-          user_name: name || invitation.email.split('@')[0]
+          user_name: invitation.email.split('@')[0]
         });
 
       if (memberError) {
