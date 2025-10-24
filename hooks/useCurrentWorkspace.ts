@@ -52,8 +52,9 @@ export function useCurrentWorkspace() {
           const { data: workspaceData, error: workspaceError } = await supabase
             .from('workspaces')
             .select('id, name')
-            .eq('id', firstMembership.workspace_id)
-            .single();
+            .eq('id', firstMembership.workspace_id);
+          
+          console.log('Workspace query result:', workspaceData, 'Error:', workspaceError);
           
           if (workspaceError) {
             console.error('Error loading workspace details:', workspaceError);
@@ -61,7 +62,7 @@ export function useCurrentWorkspace() {
           
           const workspace = {
             id: firstMembership.workspace_id,
-            name: workspaceData?.name || 'Unknown Workspace',
+            name: workspaceData && workspaceData.length > 0 ? workspaceData[0].name : 'Unknown Workspace',
             role: firstMembership.role
           };
           
