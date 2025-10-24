@@ -7,6 +7,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SignOutButton from "@/components/SignOutButton";
+import { useCurrentWorkspace } from "@/hooks/useCurrentWorkspace";
+import { useWorkspaceFeatures } from "@/hooks/useWorkspaceFeatures";
 
 export default function DashboardPage() {
   const [workspaceName, setWorkspaceName] = useState<string>("");
@@ -16,6 +18,10 @@ export default function DashboardPage() {
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
   const { t } = useLanguage();
+  
+  // Use workspace hooks
+  const { workspace: currentWorkspace } = useCurrentWorkspace();
+  const { isFeatureEnabled } = useWorkspaceFeatures(currentWorkspace?.id || null);
 
   useEffect(() => {
     const loadWorkspace = async () => {
@@ -161,17 +167,27 @@ export default function DashboardPage() {
       </p>
       
       <div className="mt-6 space-y-3">
-        <div>
-          <Link className="underline text-blue-600" href="/data">
-            📊 {t.dashboard.uploadData}
-          </Link>
-        </div>
-        <div>
-          <Link className="underline text-blue-600" href="/qbr">
-            📋 {t.dashboard.qbrGenerator}
-          </Link>
-        </div>
-        {clientType === 'timewax' && (
+        {isFeatureEnabled('Data Upload') && (
+          <div>
+            <Link className="underline text-blue-600" href="/data">
+              📊 {t.dashboard.uploadData}
+            </Link>
+            <p className="text-sm text-gray-500 ml-6">
+              Upload en analyseer klantdata
+            </p>
+          </div>
+        )}
+        {isFeatureEnabled('QBR Generator') && (
+          <div>
+            <Link className="underline text-blue-600" href="/qbr">
+              📋 {t.dashboard.qbrGenerator}
+            </Link>
+            <p className="text-sm text-gray-500 ml-6">
+              Genereer Quarterly Business Reviews
+            </p>
+          </div>
+        )}
+        {isFeatureEnabled('Chatbot Analytics') && (
           <div>
             <Link className="underline text-blue-600" href="/chatbot">
               🤖 Chatbot Analytics
@@ -181,13 +197,23 @@ export default function DashboardPage() {
             </p>
           </div>
         )}
-        {isAdmin && (
+        {isFeatureEnabled('Admin Panel') && (
           <div>
             <Link className="underline text-blue-600" href="/admin">
               👑 Admin Panel
             </Link>
             <p className="text-sm text-gray-500 ml-6">
               Gebruikersbeheer en systeembeheer
+            </p>
+          </div>
+        )}
+        {isFeatureEnabled('Workspace Instellingen') && (
+          <div>
+            <Link className="underline text-blue-600" href={`/workspace/${currentWorkspace?.id}`}>
+              ⚙️ Workspace Instellingen
+            </Link>
+            <p className="text-sm text-gray-500 ml-6">
+              Beheer workspace configuratie
             </p>
           </div>
         )}

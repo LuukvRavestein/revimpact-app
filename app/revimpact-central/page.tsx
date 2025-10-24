@@ -68,8 +68,7 @@ export default function RevImpactCentralPage() {
             .select(`
               id,
               user_id,
-              role,
-              users(email)
+              role
             `)
             .eq('workspace_id', workspace.id);
 
@@ -82,9 +81,7 @@ export default function RevImpactCentralPage() {
             member_count: members?.length || 0,
             members: (members || []).map(member => ({
               ...member,
-              users: member.users && Array.isArray(member.users) && member.users.length > 0 
-                ? { email: member.users[0].email } 
-                : null
+              users: { email: `User ${member.user_id.slice(0, 8)}...` }
             }))
           };
         })
