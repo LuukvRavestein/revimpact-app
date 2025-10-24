@@ -38,8 +38,17 @@ export default function RevImpactCentralPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showSuperAdminForm, setShowSuperAdminForm] = useState(false);
+  const [newSuperAdminEmail, setNewSuperAdminEmail] = useState("");
+  const [isAddingSuperAdmin, setIsAddingSuperAdmin] = useState(false);
   const router = useRouter();
   const supabase = createSupabaseBrowserClient();
+
+  // Super admin emails - in a real app, this would be stored in a database
+  const [superAdminEmails, setSuperAdminEmails] = useState<string[]>([
+    'luuk@revimpact.nl',
+    'admin@revimpact.nl'
+  ]);
 
   const loadWorkspaces = useCallback(async () => {
     try {
@@ -109,11 +118,9 @@ export default function RevImpactCentralPage() {
         return;
       }
 
-      // Check if user is admin
+      // Check if user is super admin (only specific emails)
       const userEmail = session.user.email?.toLowerCase() || '';
-      const isAdminUser = userEmail.includes('admin') || 
-                         userEmail === 'luuk@revimpact.nl' || 
-                         userEmail === 'admin@revimpact.nl';
+      const isAdminUser = superAdminEmails.includes(userEmail);
 
       if (!isAdminUser) {
         router.push("/dashboard");
@@ -126,7 +133,46 @@ export default function RevImpactCentralPage() {
     };
 
     checkAdminAccess();
-  }, [supabase, router, loadWorkspaces]);
+  }, [supabase, router, loadWorkspaces, superAdminEmails]);
+
+  const addSuperAdmin = async () => {
+    if (!newSuperAdminEmail.trim()) {
+      setError("Email adres is verplicht");
+      return;
+    }
+
+    const email = newSuperAdminEmail.toLowerCase().trim();
+    
+    if (superAdminEmails.includes(email)) {
+      setError("Deze email is al een super admin");
+      return;
+    }
+
+    setIsAddingSuperAdmin(true);
+    setError("");
+    
+    try {
+      // In a real app, this would save to a database
+      setSuperAdminEmails(prev => [...prev, email]);
+      setSuccess(`Super admin ${email} is toegevoegd`);
+      setNewSuperAdminEmail("");
+      setShowSuperAdminForm(false);
+    } catch (err) {
+      setError("Fout bij toevoegen van super admin");
+    } finally {
+      setIsAddingSuperAdmin(false);
+    }
+  };
+
+  const removeSuperAdmin = (emailToRemove: string) => {
+    if (emailToRemove === 'luuk@revimpact.nl' || emailToRemove === 'admin@revimpact.nl') {
+      setError("Deze super admin kan niet worden verwijderd");
+      return;
+    }
+
+    setSuperAdminEmails(prev => prev.filter(email => email !== emailToRemove));
+    setSuccess(`Super admin ${emailToRemove} is verwijderd`);
+  };
 
   const createWorkspace = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -418,6 +464,84 @@ export default function RevImpactCentralPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Super Admin Management */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6 mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">Super Admin Beheer</h2>
+            <button
+              onClick={() => setShowSuperAdminForm(!showSuperAdminForm)}
+              className="bg-gradient-to-r from-impact-lime to-impact-lime/90 hover:from-impact-lime/90 hover:to-impact-lime text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-impact-lime/20 focus:outline-none"
+            >
+              + Nieuwe Super Admin
+            </button>
+          </div>
+
+          {/* Current Super Admins */}
+          <div className="mb-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Huidige Super Admins:</h3>
+            <div className="space-y-2">
+              {superAdminEmails.map((email, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-gradient-to-br from-impact-blue to-impact-lime rounded-full flex items-center justify-center mr-3">
+                      <span className="text-white font-bold text-sm">
+                        {email.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="font-medium text-gray-900">{email}</span>
+                    {(email === 'luuk@revimpact.nl' || email === 'admin@revimpact.nl') && (
+                      <span className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">
+                        Permanent
+                      </span>
+                    )}
+                  </div>
+                  {(email !== 'luuk@revimpact.nl' && email !== 'admin@revimpact.nl') && (
+                    <button
+                      onClick={() => removeSuperAdmin(email)}
+                      className="text-red-600 hover:text-red-800 text-sm font-medium"
+                    >
+                      Verwijderen
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Add Super Admin Form */}
+          {showSuperAdminForm && (
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Nieuwe Super Admin Toevoegen:</h3>
+              <div className="flex gap-3">
+                <input
+                  type="email"
+                  value={newSuperAdminEmail}
+                  onChange={(e) => setNewSuperAdminEmail(e.target.value)}
+                  placeholder="admin@example.com"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue"
+                />
+                <button
+                  onClick={addSuperAdmin}
+                  disabled={isAddingSuperAdmin || !newSuperAdminEmail.trim()}
+                  className="bg-gradient-to-r from-impact-blue to-impact-blue/90 hover:from-impact-blue/90 hover:to-impact-blue disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200"
+                >
+                  {isAddingSuperAdmin ? 'Toevoegen...' : 'Toevoegen'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSuperAdminForm(false);
+                    setNewSuperAdminEmail("");
+                    setError("");
+                  }}
+                  className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200"
+                >
+                  Annuleren
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Actions Bar */}

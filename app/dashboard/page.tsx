@@ -118,10 +118,9 @@ export default function DashboardPage() {
         setClientType('generic');
       }
       
-      // Check if user is admin
+      // Check if user is super admin (only specific emails)
       const userEmail = session.user.email?.toLowerCase() || '';
-      const isAdminUser = userEmail.includes('admin') || 
-                         userEmail === 'luuk@revimpact.nl' || 
+      const isAdminUser = userEmail === 'luuk@revimpact.nl' || 
                          userEmail === 'admin@revimpact.nl';
       
       setIsAdmin(isAdminUser);
