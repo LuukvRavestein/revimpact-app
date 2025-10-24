@@ -157,11 +157,36 @@ export default function WorkspacePage() {
 
   if (!workspace) {
     return (
-      <main className="max-w-4xl mx-auto p-8">
+      <div className="min-h-screen bg-gradient-to-br from-impact-blue/5 via-white to-impact-lime/5 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold mb-4">{t.loading}</h1>
+          <div className="w-16 h-16 bg-gradient-to-br from-impact-blue to-impact-lime rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <span className="text-white font-bold text-2xl">R</span>
+          </div>
+          <h1 className="text-2xl font-semibold text-gray-900">{t.loading}</h1>
         </div>
-      </main>
+      </div>
+    )
+  }
+
+  // Check if user has permission to access workspace settings
+  if (currentUserRole !== 'owner' && currentUserRole !== 'admin') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-impact-blue/5 via-white to-impact-lime/5 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Toegang Geweigerd</h1>
+          <p className="text-gray-600 mb-6">Alleen workspace owners en admins hebben toegang tot workspace instellingen.</p>
+          <Link href="/dashboard">
+            <button className="bg-gradient-to-r from-impact-blue to-impact-lime text-white px-6 py-3 rounded-lg hover:from-impact-blue/90 hover:to-impact-lime/90 transition-all duration-200">
+              Terug naar Dashboard
+            </button>
+          </Link>
+        </div>
+      </div>
     )
   }
 

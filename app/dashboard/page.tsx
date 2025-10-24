@@ -271,7 +271,7 @@ export default function DashboardPage() {
             </Link>
           )}
           
-          {isFeatureEnabled('workspace_settings') && (
+          {isFeatureEnabled('workspace_settings') && (currentWorkspace?.role === 'owner' || currentWorkspace?.role === 'admin') && (
             <Link href={`/workspace/${currentWorkspace?.id}`} className="group">
               <div className="bg-white/70 backdrop-blur-sm border-0 shadow-xl shadow-impact-blue/5 rounded-2xl p-6 hover:shadow-2xl hover:shadow-impact-blue/10 transition-all duration-300 hover:-translate-y-1">
                 <div className="flex items-center mb-4">
