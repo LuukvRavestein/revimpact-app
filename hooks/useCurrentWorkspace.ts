@@ -32,8 +32,7 @@ export function useCurrentWorkspace() {
           .from('workspace_members')
           .select(`
             workspace_id,
-            role,
-            workspaces(id, name)
+            role
           `)
           .eq('user_id', session.user.id);
 
@@ -48,9 +47,17 @@ export function useCurrentWorkspace() {
         // For now, use the first workspace (you can implement workspace switching later)
         if (memberships && memberships.length > 0) {
           const firstMembership = memberships[0];
-          const workspaceData = Array.isArray(firstMembership.workspaces) 
-            ? firstMembership.workspaces[0] 
-            : firstMembership.workspaces;
+          
+          // Get workspace details separately
+          const { data: workspaceData, error: workspaceError } = await supabase
+            .from('workspaces')
+            .select('id, name')
+            .eq('id', firstMembership.workspace_id)
+            .single();
+          
+          if (workspaceError) {
+            console.error('Error loading workspace details:', workspaceError);
+          }
           
           const workspace = {
             id: firstMembership.workspace_id,
