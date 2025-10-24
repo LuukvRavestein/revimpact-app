@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(process.env.RESEND_API_KEY || '');
 
 // Email configuration
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'RevImpact <noreply@revimpact.nl>';
@@ -14,8 +14,16 @@ export async function POST(request: NextRequest) {
     // For now, we'll use a simple email service
     // You can integrate with SendGrid, Resend, or any other email service
     
+    // Check if API key is available
+    if (!process.env.RESEND_API_KEY) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Email service niet geconfigureerd' 
+      }, { status: 500 });
+    }
+
     // Send email using Resend
-    const { data, error } = await resend.emails.send({
+    const { error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: [email],
       subject: `Uitnodiging voor RevImpact Workspace: ${workspaceName}`,
