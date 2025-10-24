@@ -127,6 +127,12 @@ export default function WorkspaceManagementPage() {
 
       if (membersError) {
         console.error('Error loading members:', membersError);
+        console.error('Members error details:', {
+          message: membersError.message,
+          details: membersError.details,
+          hint: membersError.hint,
+          code: membersError.code
+        });
       }
 
       setWorkspace({
