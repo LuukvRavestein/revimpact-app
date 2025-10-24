@@ -115,7 +115,9 @@ export default function InvitePage() {
         .insert({
           workspace_id: invitation.workspace_id,
           user_id: authData.user.id,
-          role: invitation.role
+          role: invitation.role,
+          user_email: email,
+          user_name: name || email.split('@')[0]
         });
 
       if (memberError) {

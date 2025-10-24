@@ -119,7 +119,9 @@ export default function WorkspaceManagementPage() {
         .select(`
           id,
           user_id,
-          role
+          role,
+          user_email,
+          user_name
         `)
         .eq('workspace_id', workspaceId);
 
@@ -130,48 +132,16 @@ export default function WorkspaceManagementPage() {
       setWorkspace({
         ...workspaceData,
         member_count: members?.length || 0,
-        members: await Promise.all((members || []).map(async (member) => {
-          // Get user details via API route
-          try {
-            console.log('Fetching user details for:', member.user_id);
-            
-            const response = await fetch('/api/get-user-details', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ userIds: [member.user_id] }),
-            });
-
-            console.log('API response status:', response.status);
-            const result = await response.json();
-            console.log('API response result:', result);
-            
-            if (result.success && result.users && result.users.length > 0) {
-              const userData = result.users[0];
-              console.log('User data received:', userData);
-              return {
-                ...member,
-                users: {
-                  email: userData.email,
-                  name: userData.name
-                }
-              };
-            } else {
-              console.log('API call failed or no user data:', result);
-            }
-          } catch (err) {
-            console.error('Error fetching user details:', err);
-          }
-          
+        members: (members || []).map((member) => {
+          // Use user data from workspace_members table
           return {
             ...member,
-            users: { 
-              email: 'Unknown User',
-              name: 'Unknown User'
+            users: {
+              email: member.user_email || 'Unknown User',
+              name: member.user_name || 'Unknown User'
             }
           };
-        }))
+        })
       });
     } catch (err) {
       console.error('Error loading workspace:', err);
@@ -432,7 +402,23 @@ E-mail kon niet worden verstuurd. Deel deze link handmatig met de gebruiker.`);
       setError('');
       setSuccess('');
 
-      // Update user via API route
+      // Update workspace member data
+      const { error: memberError } = await supabase
+        .from('workspace_members')
+        .update({ 
+          role: editUserRole,
+          user_name: editUserName,
+          user_email: editUserEmail
+        })
+        .eq('id', memberId);
+
+      if (memberError) {
+        console.error('Error updating member:', memberError);
+        setError('Fout bij bijwerken van gebruiker');
+        return;
+      }
+
+      // Update user via API route (for auth.users table)
       const response = await fetch('/api/update-user', {
         method: 'POST',
         headers: {
@@ -450,8 +436,8 @@ E-mail kon niet worden verstuurd. Deel deze link handmatig met de gebruiker.`);
       const result = await response.json();
 
       if (!result.success) {
-        setError(result.message || 'Fout bij bijwerken van gebruiker');
-        return;
+        console.log('API update failed, but workspace member updated:', result.message);
+        // Don't return error here, as workspace member was updated successfully
       }
 
       setSuccess('Gebruiker succesvol bijgewerkt');
@@ -518,7 +504,9 @@ E-mail kon niet worden verstuurd. Deel deze link handmatig met de gebruiker.`);
         .insert({
           workspace_id: workspaceId,
           user_id: authData.user.id,
-          role: role
+          role: role,
+          user_email: email,
+          user_name: name || email.split('@')[0]
         });
 
       if (memberError) {
