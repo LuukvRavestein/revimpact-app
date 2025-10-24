@@ -43,6 +43,8 @@ export function useCurrentWorkspace() {
           return;
         }
 
+        console.log('Loaded workspace memberships:', memberships);
+        
         // For now, use the first workspace (you can implement workspace switching later)
         if (memberships && memberships.length > 0) {
           const firstMembership = memberships[0];
@@ -50,12 +52,16 @@ export function useCurrentWorkspace() {
             ? firstMembership.workspaces[0] 
             : firstMembership.workspaces;
           
-          setWorkspace({
+          const workspace = {
             id: firstMembership.workspace_id,
             name: workspaceData?.name || 'Unknown Workspace',
             role: firstMembership.role
-          });
+          };
+          
+          console.log('Setting current workspace:', workspace);
+          setWorkspace(workspace);
         } else {
+          console.log('No workspace memberships found');
           setWorkspace(null);
         }
       } catch (err) {
