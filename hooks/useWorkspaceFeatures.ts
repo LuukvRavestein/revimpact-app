@@ -37,7 +37,6 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
           return;
         }
 
-        console.log('Loaded workspace features:', data);
         setFeatures(data || []);
       } catch (err) {
         console.error('Error loading workspace features:', err);
@@ -51,11 +50,9 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
   }, [supabase, workspaceId]);
 
   const isFeatureEnabled = (featureName: string): boolean => {
-    const enabled = features.some(feature => 
+    return features.some(feature => 
       feature.feature_name === featureName && feature.enabled
     );
-    console.log(`Feature "${featureName}" enabled:`, enabled, 'Available features:', features.map(f => f.feature_name));
-    return enabled;
   };
 
   return {
