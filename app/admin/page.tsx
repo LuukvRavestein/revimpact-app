@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import Link from "next/link";
-import { User } from "@supabase/supabase-js";
 
 interface WorkspaceMember {
   id: string;

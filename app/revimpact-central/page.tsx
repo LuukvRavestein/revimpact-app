@@ -23,15 +23,6 @@ interface Workspace {
   }[];
 }
 
-interface WorkspaceMember {
-  id: string;
-  user_id: string;
-  workspace_id: string;
-  role: string;
-  users: {
-    email: string;
-  } | null;
-}
 
 export default function RevImpactCentralPage() {
   const [loading, setLoading] = useState(true);
@@ -89,7 +80,10 @@ export default function RevImpactCentralPage() {
           return {
             ...workspace,
             member_count: members?.length || 0,
-            members: members || []
+            members: (members || []).map(member => ({
+              ...member,
+              users: member.users ? { email: member.users.email } : null
+            }))
           };
         })
       );
@@ -412,7 +406,7 @@ export default function RevImpactCentralPage() {
                         <span className="text-sm text-gray-900">{workspace.member_count}</span>
                         {workspace.member_count > 0 && (
                           <div className="ml-2 flex -space-x-1">
-                            {workspace.members.slice(0, 3).map((member, index) => (
+                            {workspace.members.slice(0, 3).map((member) => (
                               <div
                                 key={member.id}
                                 className="w-6 h-6 bg-impact-blue rounded-full flex items-center justify-center text-xs text-white font-medium"
