@@ -191,6 +191,16 @@ export default function DashboardPage() {
             </p>
           </div>
         )}
+        {isAdmin && (
+          <div>
+            <Link className="underline text-blue-600" href="/revimpact-central">
+              🏢 RevImpact Central
+            </Link>
+            <p className="text-sm text-gray-500 ml-6">
+              Centraal workspace beheer - alle workspaces overzicht
+            </p>
+          </div>
+        )}
         {clientType === 'admin' && (
           <div>
             <Link className="underline text-blue-600" href="/admin">

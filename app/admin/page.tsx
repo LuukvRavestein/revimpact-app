@@ -258,6 +258,12 @@ Om de gebruiker volledig te verwijderen:
             </div>
             <div className="flex items-center space-x-4">
               <Link 
+                href="/revimpact-central"
+                className="text-blue-600 hover:text-blue-800 text-sm"
+              >
+                🏢 RevImpact Central
+              </Link>
+              <Link 
                 href="/dashboard"
                 className="text-blue-600 hover:text-blue-800 text-sm"
               >
