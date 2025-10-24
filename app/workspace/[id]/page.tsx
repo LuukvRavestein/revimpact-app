@@ -105,7 +105,7 @@ export default function WorkspaceManagementPage() {
         return;
       }
 
-      // Get members
+      // Get members with user details
       const { data: members, error: membersError } = await supabase
         .from('workspace_members')
         .select(`
@@ -122,9 +122,20 @@ export default function WorkspaceManagementPage() {
       setWorkspace({
         ...workspaceData,
         member_count: members?.length || 0,
-        members: (members || []).map(member => ({
-          ...member,
-          users: { email: `User ${member.user_id.slice(0, 8)}...` }
+        members: await Promise.all((members || []).map(async (member) => {
+          // Get user details from auth.users
+          const { data: userData, error: userError } = await supabase.auth.admin.getUserById(member.user_id);
+          
+          return {
+            ...member,
+            users: userData?.user ? { 
+              email: userData.user.email || 'Unknown User',
+              name: userData.user.user_metadata?.full_name || userData.user.email?.split('@')[0] || 'Unknown User'
+            } : { 
+              email: 'Unknown User',
+              name: 'Unknown User'
+            }
+          };
         }))
       });
     } catch (err) {
@@ -166,7 +177,36 @@ export default function WorkspaceManagementPage() {
         return;
       }
 
-      setInvitations(data || []);
+      // Filter out accepted invitations and clean up old ones
+      const activeInvitations = (data || []).filter(invitation => {
+        // Remove accepted invitations
+        if (invitation.status === 'accepted') {
+          return false;
+        }
+        
+        // Remove expired invitations
+        if (new Date(invitation.expires_at) < new Date()) {
+          return false;
+        }
+        
+        return true;
+      });
+
+      setInvitations(activeInvitations);
+
+      // Clean up old/accepted invitations in background
+      if (data && data.length > activeInvitations.length) {
+        const toDelete = data.filter(invitation => 
+          invitation.status === 'accepted' || new Date(invitation.expires_at) < new Date()
+        );
+        
+        for (const invitation of toDelete) {
+          await supabase
+            .from('workspace_invitations')
+            .delete()
+            .eq('id', invitation.id);
+        }
+      }
     } catch (err) {
       console.error('Error loading invitations:', err);
     }
@@ -518,7 +558,7 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
           {/* Members Management */}
           <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">Workspace Leden</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Gebruikers</h2>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setShowInviteForm(true)}
@@ -540,15 +580,15 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
                 <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className="w-8 h-8 bg-impact-blue rounded-full flex items-center justify-center text-sm text-white font-medium">
-                      {member.users?.email?.charAt(0).toUpperCase() || '?'}
+                      {(member.users?.name || member.users?.email || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">{member.users?.email || 'Onbekend'}</p>
-                      <p className="text-sm text-gray-500">{member.role}</p>
+                      <p className="font-medium text-gray-900">{member.users?.name || member.users?.email || 'Onbekend'}</p>
+                      <p className="text-sm text-gray-500">{member.users?.email} • Rol: {member.role}</p>
                     </div>
                   </div>
                   <button
-                    onClick={() => removeMember(member.id, member.users?.email || 'lid')}
+                    onClick={() => removeMember(member.id, member.users?.name || member.users?.email || 'lid')}
                     className="text-red-600 hover:text-red-800 text-sm font-medium transition-colors"
                   >
                     Verwijderen
