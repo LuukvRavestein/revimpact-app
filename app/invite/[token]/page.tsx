@@ -29,6 +29,8 @@ export default function InvitePage() {
   useEffect(() => {
     const loadInvitation = async () => {
       try {
+        console.log('Loading invitation with token:', token);
+        
         const { data, error } = await supabase
           .from('workspace_invitations')
           .select(`
@@ -38,6 +40,8 @@ export default function InvitePage() {
           .eq('token', token)
           .eq('status', 'pending')
           .single();
+
+        console.log('Invitation query result:', { data, error });
 
         if (error) {
           console.error('Error loading invitation:', error);
