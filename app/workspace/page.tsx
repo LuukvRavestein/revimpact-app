@@ -166,162 +166,243 @@ export default function WorkspacePage() {
   }
 
   return (
-    <main className="max-w-6xl mx-auto p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold">{t.workspace.title}</h1>
-          <p className="text-gray-600 mt-2">{t.workspace.subtitle}</p>
-        </div>
-        <div className="flex items-center space-x-4">
-          <LanguageSwitcher />
-          <Link href="/dashboard">
-            <Button variant="secondary">← {t.back} {t.navDashboard}</Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Workspace Info */}
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">{t.workspace.workspaceInfo}</h2>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">{t.workspace.workspaceName}</label>
-              <Input value={workspace.name} readOnly />
+    <div className="min-h-screen bg-gradient-to-br from-impact-blue/5 via-white to-impact-lime/5">
+      {/* Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-impact-blue to-impact-lime rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">R</span>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">RevImpact</h1>
+                <p className="text-sm text-gray-600">Workspace Management</p>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">{t.workspace.created}</label>
-              <Input value={new Date(workspace.created_at).toLocaleDateString()} readOnly />
+            <div className="flex items-center space-x-4">
+              <LanguageSwitcher />
+              <Link href="/dashboard">
+                <Button variant="outline" className="border-impact-blue/20 text-impact-blue hover:bg-impact-blue/5">
+                  ← {t.back} {t.navDashboard}
+                </Button>
+              </Link>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </header>
 
-      {/* Invite Users */}
-      {currentUserRole === "owner" && (
-        <Card>
-          <CardHeader>
-            <h2 className="text-xl font-semibold">{t.workspace.inviteTeam}</h2>
-            <p className="text-gray-600">{t.workspace.inviteSubtitle}</p>
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+        {/* Welcome Section */}
+        <div className="text-center py-12">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-impact-blue to-impact-lime rounded-2xl mb-6">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Welkom bij je workspace</h1>
+          <p className="text-xl text-gray-600 mb-2">Workspace: <span className="font-semibold text-impact-blue">{workspace.name}</span></p>
+          <p className="text-gray-500">Beheer je team en werk samen aan geweldige projecten</p>
+        </div>
+
+        {/* Workspace Info */}
+        <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl shadow-impact-blue/5">
+          <CardHeader className="bg-gradient-to-r from-impact-blue/5 to-impact-lime/5 border-b border-gray-200/50">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-impact-blue to-impact-lime rounded-lg flex items-center justify-center mr-3">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              {t.workspace.workspaceInfo}
+            </h2>
           </CardHeader>
-          <CardContent>
-            <div className="flex gap-3">
-              <Input
-                type="email"
-                placeholder={t.workspace.emailPlaceholder}
-                value={inviteEmail}
-                onChange={(e) => setInviteEmail(e.target.value)}
-                className="flex-1"
-              />
-              <Button 
-                onClick={inviteUser}
-                disabled={isInviting || !inviteEmail}
-              >
-                {isInviting ? t.workspace.sending : t.workspace.sendInvite}
-              </Button>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium mb-3 text-gray-700">{t.workspace.workspaceName}</label>
+                <div className="p-4 bg-gradient-to-r from-impact-blue/5 to-impact-lime/5 rounded-lg border border-impact-blue/10">
+                  <span className="text-lg font-semibold text-impact-blue">{workspace.name}</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-3 text-gray-700">{t.workspace.created}</label>
+                <div className="p-4 bg-gradient-to-r from-impact-blue/5 to-impact-lime/5 rounded-lg border border-impact-blue/10">
+                  <span className="text-lg font-semibold text-gray-700">{new Date(workspace.created_at).toLocaleDateString()}</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
-      )}
 
-      {/* Team Members */}
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">{t.workspace.teamMembers}</h2>
-          <p className="text-gray-600">{members.length} {t.workspace.membersCount}{members.length !== 1 ? 's' : ''}</p>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {members.map((member) => (
-              <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-impact-blue/10 rounded-full flex items-center justify-center">
-                    <span className="text-impact-blue font-semibold">
-                      {member.user_email?.charAt(0).toUpperCase() || "?"}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-medium">{member.user_email || "Unknown User"}</p>
-                    <p className="text-sm text-gray-500">
-                      Joined {new Date(member.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
+        {/* Invite Users */}
+        {currentUserRole === "owner" && (
+          <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl shadow-impact-blue/5">
+            <CardHeader className="bg-gradient-to-r from-impact-blue/5 to-impact-lime/5 border-b border-gray-200/50">
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-impact-blue to-impact-lime rounded-lg flex items-center justify-center mr-3">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  </svg>
                 </div>
-                <div className="flex items-center space-x-3">
-                  {currentUserRole === "owner" && member.role !== "owner" ? (
-                    <select
-                      value={member.role}
-                      onChange={(e) => updateMemberRole(member.id, e.target.value)}
-                      className="p-2 border rounded-md"
-                    >
-                      <option value="member">{t.workspace.member}</option>
-                      <option value="admin">{t.workspace.admin}</option>
-                    </select>
-                  ) : (
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                      member.role === "owner" ? "bg-yellow-100 text-yellow-800" :
-                      member.role === "admin" ? "bg-blue-100 text-blue-800" :
-                      "bg-gray-100 text-gray-800"
-                    }`}>
-                      {member.role}
-                    </span>
-                  )}
-                  {currentUserRole === "owner" && member.role !== "owner" && (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => removeMember(member.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      {t.delete}
-                    </Button>
-                  )}
-                </div>
+                {t.workspace.inviteTeam}
+              </h2>
+              <p className="text-gray-600 mt-2">{t.workspace.inviteSubtitle}</p>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="flex gap-4">
+                <Input
+                  type="email"
+                  placeholder={t.workspace.emailPlaceholder}
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="flex-1 border-impact-blue/20 focus:border-impact-blue focus:ring-impact-blue/20"
+                />
+                <Button 
+                  onClick={inviteUser}
+                  disabled={isInviting || !inviteEmail}
+                  className="bg-gradient-to-r from-impact-blue to-impact-lime hover:from-impact-blue/90 hover:to-impact-lime/90 text-white px-8"
+                >
+                  {isInviting ? t.workspace.sending : t.workspace.sendInvite}
+                </Button>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Role Permissions */}
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">{t.workspace.rolePermissions}</h2>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="p-4 border rounded-lg">
-              <h3 className="font-semibold mb-2">{t.workspace.owner}</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• {t.workspace.ownerDesc.split(', ')[0]}</li>
-                <li>• {t.workspace.ownerDesc.split(', ')[1]}</li>
-                <li>• {t.workspace.ownerDesc.split(', ')[2]}</li>
-                <li>• {t.workspace.ownerDesc.split(', ')[3]}</li>
-              </ul>
+        {/* Team Members */}
+        <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl shadow-impact-blue/5">
+          <CardHeader className="bg-gradient-to-r from-impact-blue/5 to-impact-lime/5 border-b border-gray-200/50">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-impact-blue to-impact-lime rounded-lg flex items-center justify-center mr-3">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </div>
+              {t.workspace.teamMembers}
+            </h2>
+            <p className="text-gray-600 mt-2">{members.length} {t.workspace.membersCount}{members.length !== 1 ? 's' : ''}</p>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              {members.map((member) => (
+                <div key={member.id} className="flex items-center justify-between p-6 bg-gradient-to-r from-white to-gray-50/50 border border-gray-200/50 rounded-xl hover:shadow-md transition-all duration-200">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-impact-blue to-impact-lime rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">
+                        {member.user_email?.charAt(0).toUpperCase() || "?"}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-900">{member.user_email || "Unknown User"}</p>
+                      <p className="text-sm text-gray-500">
+                        Joined {new Date(member.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    {currentUserRole === "owner" && member.role !== "owner" ? (
+                      <select
+                        value={member.role}
+                        onChange={(e) => updateMemberRole(member.id, e.target.value)}
+                        className="p-3 border border-impact-blue/20 rounded-lg focus:border-impact-blue focus:ring-impact-blue/20 bg-white"
+                      >
+                        <option value="member">{t.workspace.member}</option>
+                        <option value="admin">{t.workspace.admin}</option>
+                      </select>
+                    ) : (
+                      <span className={`px-4 py-2 rounded-full text-sm font-medium ${
+                        member.role === "owner" ? "bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800" :
+                        member.role === "admin" ? "bg-gradient-to-r from-impact-blue/10 to-impact-lime/10 text-impact-blue" :
+                        "bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800"
+                      }`}>
+                        {member.role}
+                      </span>
+                    )}
+                    {currentUserRole === "owner" && member.role !== "owner" && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeMember(member.id)}
+                        className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                      >
+                        {t.delete}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="p-4 border rounded-lg">
-              <h3 className="font-semibold mb-2">{t.workspace.admin}</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• {t.workspace.adminDesc.split(', ')[0]}</li>
-                <li>• {t.workspace.adminDesc.split(', ')[1]}</li>
-                <li>• {t.workspace.adminDesc.split(', ')[2]}</li>
-                <li>• {t.workspace.adminDesc.split(', ')[3]}</li>
-              </ul>
+          </CardContent>
+        </Card>
+
+        {/* Role Permissions */}
+        <Card className="bg-white/70 backdrop-blur-sm border-0 shadow-xl shadow-impact-blue/5">
+          <CardHeader className="bg-gradient-to-r from-impact-blue/5 to-impact-lime/5 border-b border-gray-200/50">
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-br from-impact-blue to-impact-lime rounded-lg flex items-center justify-center mr-3">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+              </div>
+              {t.workspace.rolePermissions}
+            </h2>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="p-6 bg-gradient-to-br from-yellow-50 to-yellow-100/50 border border-yellow-200/50 rounded-xl">
+                <div className="flex items-center mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center mr-3">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-gray-900">{t.workspace.owner}</h3>
+                </div>
+                <ul className="text-sm text-gray-700 space-y-2">
+                  <li className="flex items-center">• {t.workspace.ownerDesc.split(', ')[0]}</li>
+                  <li className="flex items-center">• {t.workspace.ownerDesc.split(', ')[1]}</li>
+                  <li className="flex items-center">• {t.workspace.ownerDesc.split(', ')[2]}</li>
+                  <li className="flex items-center">• {t.workspace.ownerDesc.split(', ')[3]}</li>
+                </ul>
+              </div>
+              <div className="p-6 bg-gradient-to-br from-impact-blue/5 to-impact-lime/5 border border-impact-blue/20 rounded-xl">
+                <div className="flex items-center mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-br from-impact-blue to-impact-lime rounded-lg flex items-center justify-center mr-3">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-gray-900">{t.workspace.admin}</h3>
+                </div>
+                <ul className="text-sm text-gray-700 space-y-2">
+                  <li className="flex items-center">• {t.workspace.adminDesc.split(', ')[0]}</li>
+                  <li className="flex items-center">• {t.workspace.adminDesc.split(', ')[1]}</li>
+                  <li className="flex items-center">• {t.workspace.adminDesc.split(', ')[2]}</li>
+                  <li className="flex items-center">• {t.workspace.adminDesc.split(', ')[3]}</li>
+                </ul>
+              </div>
+              <div className="p-6 bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200/50 rounded-xl">
+                <div className="flex items-center mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center mr-3">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="font-semibold text-gray-900">{t.workspace.member}</h3>
+                </div>
+                <ul className="text-sm text-gray-700 space-y-2">
+                  <li className="flex items-center">• {t.workspace.memberDesc.split(', ')[0]}</li>
+                  <li className="flex items-center">• {t.workspace.memberDesc.split(', ')[1]}</li>
+                  <li className="flex items-center">• {t.workspace.memberDesc.split(', ')[2]}</li>
+                  <li className="flex items-center">• {t.workspace.memberDesc.split(', ')[3]}</li>
+                </ul>
+              </div>
             </div>
-            <div className="p-4 border rounded-lg">
-              <h3 className="font-semibold mb-2">{t.workspace.member}</h3>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>• {t.workspace.memberDesc.split(', ')[0]}</li>
-                <li>• {t.workspace.memberDesc.split(', ')[1]}</li>
-                <li>• {t.workspace.memberDesc.split(', ')[2]}</li>
-                <li>• {t.workspace.memberDesc.split(', ')[3]}</li>
-              </ul>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </main>
+          </CardContent>
+        </Card>
+      </main>
+    </div>
   )
 }
