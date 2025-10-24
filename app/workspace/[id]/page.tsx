@@ -19,6 +19,7 @@ interface Workspace {
     role: string;
     users: {
       email: string;
+      name?: string;
     } | null;
   }[];
 }
@@ -124,7 +125,7 @@ export default function WorkspaceManagementPage() {
         member_count: members?.length || 0,
         members: await Promise.all((members || []).map(async (member) => {
           // Get user details from auth.users
-          const { data: userData, error: userError } = await supabase.auth.admin.getUserById(member.user_id);
+          const { data: userData } = await supabase.auth.admin.getUserById(member.user_id);
           
           return {
             ...member,
