@@ -485,6 +485,12 @@ export default function RevImpactCentralPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       <div className="flex space-x-2">
+                        <Link
+                          href={`/workspace/${workspace.id}`}
+                          className="text-impact-blue hover:text-impact-blue/80 font-medium transition-colors"
+                        >
+                          Beheren
+                        </Link>
                         <button
                           onClick={() => openEditForm(workspace)}
                           className="text-impact-blue hover:text-impact-blue/80 font-medium transition-colors"
