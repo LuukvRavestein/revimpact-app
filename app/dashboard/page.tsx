@@ -166,20 +166,6 @@ export default function DashboardPage() {
         {t.dashboard.workspace}: <strong>{workspaceName}</strong>
       </p>
       
-      {/* Debug info */}
-      <div className="bg-gray-100 p-4 rounded-lg text-sm">
-        <p><strong>Debug Info:</strong></p>
-        <p>Current Workspace ID: {currentWorkspace?.id || 'None'}</p>
-        <p>Current Workspace Name: {currentWorkspace?.name || 'None'}</p>
-        <p>Features enabled:</p>
-        <ul className="ml-4">
-          <li>Data Upload: {isFeatureEnabled('data_upload') ? 'Yes' : 'No'}</li>
-          <li>QBR Generator: {isFeatureEnabled('qbr_generator') ? 'Yes' : 'No'}</li>
-          <li>Chatbot Analytics: {isFeatureEnabled('chatbot_analytics') ? 'Yes' : 'No'}</li>
-          <li>Admin Panel: {isFeatureEnabled('admin_panel') ? 'Yes' : 'No'}</li>
-          <li>Workspace Instellingen: {isFeatureEnabled('workspace_settings') ? 'Yes' : 'No'}</li>
-        </ul>
-      </div>
       
       
       <div className="mt-6 space-y-3">
