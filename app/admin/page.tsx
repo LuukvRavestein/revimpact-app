@@ -111,8 +111,7 @@ export default function AdminPage() {
       // Check if user is admin (you can customize this logic)
       // For now, we'll check if the user's email contains 'admin' or is a specific admin email
       const userEmail = session.user.email?.toLowerCase() || '';
-      const isAdminUser = userEmail.includes('admin') || 
-                         userEmail === 'luuk@revimpact.nl' || 
+      const isAdminUser = userEmail === 'luuk@revimpact.nl' || 
                          userEmail === 'admin@revimpact.nl';
 
       if (!isAdminUser) {
@@ -187,32 +186,47 @@ Om een nieuwe gebruiker aan te maken:
 
   const deleteUser = async (userId: string, user: UserData) => {
     const email = user.email || 'onbekende gebruiker';
-    if (!confirm(`Weet je zeker dat je gebruiker ${email} wilt verwijderen?`)) {
+    if (!confirm(`Weet je zeker dat je gebruiker ${email} volledig wilt verwijderen?\n\nDit zal de gebruiker permanent verwijderen uit alle workspaces en uit het systeem.`)) {
       return;
     }
 
     try {
-      // Since we can't use admin API, we'll remove from workspace instead
-      const { error } = await supabase
+      // Find the workspace member record for this user
+      const { data: memberData } = await supabase
         .from('workspace_members')
-        .delete()
-        .eq('user_id', userId);
-        
-      if (error) {
-        setError(`Fout bij verwijderen uit workspace: ${error.message}`);
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1)
+        .single();
+
+      const memberId = memberData?.id || userId;
+
+      // Call the delete-user API route
+      const response = await fetch('/api/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          memberId: memberId
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        setError(result.message || 'Fout bij verwijderen gebruiker');
         return;
       }
 
-      setSuccess(`Gebruiker ${email} verwijderd uit workspace! 
-      
-Om de gebruiker volledig te verwijderen:
-1. Ga naar Supabase Dashboard → Authentication → Users
-2. Zoek de gebruiker en klik op "Delete"`);
+      setSuccess(result.message || `Gebruiker ${email} succesvol verwijderd!`);
       
       // Reload data
       await loadUsers();
       await loadWorkspaceMembers();
     } catch (err) {
+      console.error('Delete user error:', err);
       setError(`Onverwachte fout bij verwijderen: ${err}`);
     }
   };
