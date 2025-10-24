@@ -116,8 +116,8 @@ export default function InvitePage() {
           workspace_id: invitation.workspace_id,
           user_id: authData.user.id,
           role: invitation.role,
-          user_email: email,
-          user_name: name || email.split('@')[0]
+          user_email: invitation.email,
+          user_name: name || invitation.email.split('@')[0]
         });
 
       if (memberError) {
