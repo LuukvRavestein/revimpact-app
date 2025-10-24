@@ -131,15 +131,35 @@ export default function WorkspaceManagementPage() {
         ...workspaceData,
         member_count: members?.length || 0,
         members: await Promise.all((members || []).map(async (member) => {
-          // Get user details from auth.users
-          const { data: userData } = await supabase.auth.admin.getUserById(member.user_id);
+          // Get user details via API route
+          try {
+            const response = await fetch('/api/get-user-details', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ userIds: [member.user_id] }),
+            });
+
+            const result = await response.json();
+            
+            if (result.success && result.users && result.users.length > 0) {
+              const userData = result.users[0];
+              return {
+                ...member,
+                users: {
+                  email: userData.email,
+                  name: userData.name
+                }
+              };
+            }
+          } catch (err) {
+            console.error('Error fetching user details:', err);
+          }
           
           return {
             ...member,
-            users: userData?.user ? { 
-              email: userData.user.email || 'Unknown User',
-              name: userData.user.user_metadata?.full_name || userData.user.email?.split('@')[0] || 'Unknown User'
-            } : { 
+            users: { 
               email: 'Unknown User',
               name: 'Unknown User'
             }
@@ -405,41 +425,25 @@ E-mail kon niet worden verstuurd. Deel deze link handmatig met de gebruiker.`);
       setError('');
       setSuccess('');
 
-      // Update user metadata (name)
-      if (editUserName) {
-        const { error: userError } = await supabase.auth.admin.updateUserById(userId, {
-          user_metadata: { full_name: editUserName }
-        });
+      // Update user via API route
+      const response = await fetch('/api/update-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          memberId,
+          name: editUserName,
+          email: editUserEmail,
+          role: editUserRole
+        }),
+      });
 
-        if (userError) {
-          console.error('Error updating user metadata:', userError);
-          setError('Fout bij bijwerken van gebruikersnaam');
-          return;
-        }
-      }
+      const result = await response.json();
 
-      // Update user email
-      if (editUserEmail) {
-        const { error: emailError } = await supabase.auth.admin.updateUserById(userId, {
-          email: editUserEmail
-        });
-
-        if (emailError) {
-          console.error('Error updating user email:', emailError);
-          setError('Fout bij bijwerken van email adres');
-          return;
-        }
-      }
-
-      // Update workspace role
-      const { error: roleError } = await supabase
-        .from('workspace_members')
-        .update({ role: editUserRole })
-        .eq('id', memberId);
-
-      if (roleError) {
-        console.error('Error updating role:', roleError);
-        setError('Fout bij bijwerken van rol');
+      if (!result.success) {
+        setError(result.message || 'Fout bij bijwerken van gebruiker');
         return;
       }
 
