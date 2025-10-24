@@ -8,8 +8,8 @@ export default function SignOutButton() {
   const supabase = createSupabaseBrowserClient();
   const router = useRouter();
 
-  const handleSignOut = () => {
-    console.log("Sign out button clicked!"); // This should appear in console
+  const handleSignOut = async () => {
+    console.log("Sign out button clicked!");
     
     if (isSigningOut) {
       console.log("Already signing out, ignoring click");
@@ -19,26 +19,38 @@ export default function SignOutButton() {
     setIsSigningOut(true);
     console.log("Starting sign out process...");
     
-    // Clear any local storage or session data
-    console.log("Clearing storage...");
-    localStorage.clear();
-    sessionStorage.clear();
-    console.log("Cleared local storage and session storage");
-    
-    // Force redirect to signin page
-    console.log("Redirecting to signin page...");
-    window.location.href = "/signin";
+    try {
+      // Sign out from Supabase
+      console.log("Signing out from Supabase...");
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Supabase sign out error:", error);
+      } else {
+        console.log("Successfully signed out from Supabase");
+      }
+      
+      // Clear any local storage or session data
+      console.log("Clearing storage...");
+      localStorage.clear();
+      sessionStorage.clear();
+      console.log("Cleared local storage and session storage");
+      
+    } catch (error) {
+      console.error("Sign out error:", error);
+    } finally {
+      // Force redirect to signin page
+      console.log("Redirecting to signin page...");
+      window.location.href = "/signin";
+    }
   };
 
   return (
     <div>
-      {/* Test button with inline styles */}
+      {/* Main sign out button */}
       <button
-        onClick={() => {
-          console.log("Button clicked!");
-          alert("Button clicked!");
-          window.location.href = "/signin";
-        }}
+        onClick={handleSignOut}
+        disabled={isSigningOut}
         style={{ 
           padding: '8px 16px',
           fontSize: '14px',
@@ -46,13 +58,13 @@ export default function SignOutButton() {
           color: 'white',
           borderRadius: '4px',
           border: 'none',
-          cursor: 'pointer',
+          cursor: isSigningOut ? 'not-allowed' : 'pointer',
           position: 'relative',
           zIndex: 9999,
           pointerEvents: 'auto'
         }}
       >
-        Sign out (Test)
+        {isSigningOut ? "Uitloggen..." : "Sign out"}
       </button>
       
       {/* Alternative: Direct link approach */}

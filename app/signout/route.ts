@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("Sign out route called");
+    console.log("Sign out route called (POST)");
     
-    // Simple redirect - let the client handle the actual sign out
+    const supabase = createSupabaseServerClient();
+    await supabase.auth.signOut();
+    
     return NextResponse.redirect(new URL("/signin", request.url));
   } catch (error) {
     console.error("Sign out error:", error);
@@ -16,7 +19,9 @@ export async function GET(request: NextRequest) {
   try {
     console.log("Sign out route called (GET)");
     
-    // Simple redirect - let the client handle the actual sign out
+    const supabase = createSupabaseServerClient();
+    await supabase.auth.signOut();
+    
     return NextResponse.redirect(new URL("/signin", request.url));
   } catch (error) {
     console.error("Sign out error:", error);
