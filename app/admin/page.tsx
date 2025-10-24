@@ -42,62 +42,28 @@ export default function AdminPage() {
 
   const loadUsers = useCallback(async () => {
     try {
-      // Get workspace members and then fetch user data separately
-      const { data: members, error: membersError } = await supabase
-        .from('workspace_members')
-        .select('user_id');
-      
-      if (membersError) {
-        console.error('Error loading workspace members:', membersError);
+      // Call the get-all-users API route
+      const response = await fetch('/api/get-all-users');
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Error loading users:', result.message);
+        setError(result.message || 'Fout bij laden van gebruikers');
         return;
       }
-      
-      // Get unique user IDs
-      const userIds = [...new Set(members?.map(m => m.user_id) || [])];
-      
-      // For now, we'll just show the user IDs since we can't access auth.users directly
-      const userList = userIds.map(userId => ({
-        id: userId,
-        email: 'User data not accessible',
-        created_at: 'N/A',
-        last_sign_in_at: null
-      }));
-      
-      setUsers(userList);
+
+      if (result.success) {
+        setUsers(result.users || []);
+        setWorkspaceMembers(result.workspaceMembers || []);
+      } else {
+        setError(result.message || 'Onbekende fout bij laden van gebruikers');
+      }
     } catch (err) {
       console.error('Error loading users:', err);
+      setError('Fout bij laden van gebruikers');
     }
-  }, [supabase]);
+  }, []);
 
-  const loadWorkspaceMembers = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('workspace_members')
-        .select(`
-          id,
-          user_id,
-          workspace_id,
-          role,
-          workspaces(name)
-        `);
-      
-      if (error) {
-        console.error('Error loading workspace members:', error);
-        return;
-      }
-      
-      // Transform data to match expected structure
-      const transformedData = data?.map(item => ({
-        ...item,
-        users: [{ email: 'User data not accessible' }],
-        workspaces: Array.isArray(item.workspaces) ? item.workspaces : [item.workspaces]
-      })) || [];
-      
-      setWorkspaceMembers(transformedData);
-    } catch (err) {
-      console.error('Error loading workspace members:', err);
-    }
-  }, [supabase]);
 
   useEffect(() => {
     const checkAdminAccess = async () => {
@@ -121,12 +87,11 @@ export default function AdminPage() {
 
       setIsAdmin(true);
       await loadUsers();
-      await loadWorkspaceMembers();
       setLoading(false);
     };
 
     checkAdminAccess();
-  }, [supabase, router, loadUsers, loadWorkspaceMembers]);
+  }, [supabase, router, loadUsers]);
 
 
   const createUser = async (e: React.FormEvent) => {
@@ -176,7 +141,6 @@ Om een nieuwe gebruiker aan te maken:
       
       // Reload data
       await loadUsers();
-      await loadWorkspaceMembers();
     } catch (err) {
       setError(`Onverwachte fout: ${err}`);
     } finally {
@@ -224,7 +188,6 @@ Om een nieuwe gebruiker aan te maken:
       
       // Reload data
       await loadUsers();
-      await loadWorkspaceMembers();
     } catch (err) {
       console.error('Delete user error:', err);
       setError(`Onverwachte fout bij verwijderen: ${err}`);
