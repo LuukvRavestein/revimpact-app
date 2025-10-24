@@ -34,8 +34,11 @@ export default function SignOutButton() {
     <div>
       {/* Test button with inline styles */}
       <button
-        onClick={handleSignOut}
-        disabled={isSigningOut}
+        onClick={() => {
+          console.log("Button clicked!");
+          alert("Button clicked!");
+          window.location.href = "/signin";
+        }}
         style={{ 
           padding: '8px 16px',
           fontSize: '14px',
@@ -43,38 +46,33 @@ export default function SignOutButton() {
           color: 'white',
           borderRadius: '4px',
           border: 'none',
-          cursor: isSigningOut ? 'not-allowed' : 'pointer',
+          cursor: 'pointer',
           position: 'relative',
           zIndex: 9999,
           pointerEvents: 'auto'
         }}
-        onMouseDown={(e) => {
-          console.log("Mouse down on sign out button");
-        }}
-        onMouseUp={(e) => {
-          console.log("Mouse up on sign out button");
-        }}
       >
-        {isSigningOut ? "Uitloggen..." : "Sign out"}
+        Sign out (Test)
       </button>
       
-      {/* Alternative: Form-based approach */}
-      <form action="/signout" method="post" style={{ display: 'inline', marginLeft: '10px' }}>
-        <button
-          type="submit"
-          style={{ 
-            padding: '8px 16px',
-            fontSize: '14px',
-            backgroundColor: '#059669',
-            color: 'white',
-            borderRadius: '4px',
-            border: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          Sign out (Form)
-        </button>
-      </form>
+      {/* Alternative: Direct link approach */}
+      <a
+        href="/signout"
+        style={{ 
+          display: 'inline-block',
+          padding: '8px 16px',
+          fontSize: '14px',
+          backgroundColor: '#059669',
+          color: 'white',
+          borderRadius: '4px',
+          border: 'none',
+          cursor: 'pointer',
+          textDecoration: 'none',
+          marginLeft: '10px'
+        }}
+      >
+        Sign out (Link)
+      </a>
     </div>
   );
 }
