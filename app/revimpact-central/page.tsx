@@ -56,7 +56,13 @@ export default function RevImpactCentralPage() {
 
       if (workspacesError) {
         console.error('Error loading workspaces:', workspacesError);
-        setError('Fout bij laden van workspaces');
+        console.error('Workspaces error details:', {
+          message: workspacesError.message,
+          details: workspacesError.details,
+          hint: workspacesError.hint,
+          code: workspacesError.code
+        });
+        setError(`Fout bij laden van workspaces: ${workspacesError.message}`);
         return;
       }
 
