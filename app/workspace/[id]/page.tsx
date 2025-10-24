@@ -29,11 +29,6 @@ interface WorkspaceFeature {
   enabled: boolean;
 }
 
-interface WorkspaceSetting {
-  id: string;
-  setting_key: string;
-  setting_value: string;
-}
 
 interface WorkspaceInvitation {
   id: string;
@@ -77,7 +72,6 @@ export default function WorkspaceManagementPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [features, setFeatures] = useState<WorkspaceFeature[]>([]);
-  const [settings, setSettings] = useState<WorkspaceSetting[]>([]);
   const [invitations, setInvitations] = useState<WorkspaceInvitation[]>([]);
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [newInviteEmail, setNewInviteEmail] = useState("");
@@ -130,7 +124,9 @@ export default function WorkspaceManagementPage() {
         member_count: members?.length || 0,
         members: (members || []).map(member => ({
           ...member,
-          users: member.users ? { email: member.users.email } : null
+          users: member.users && Array.isArray(member.users) && member.users.length > 0 
+            ? { email: member.users[0].email } 
+            : null
         }))
       });
     } catch (err) {
@@ -158,24 +154,6 @@ export default function WorkspaceManagementPage() {
     }
   }, [supabase, workspaceId]);
 
-  const loadSettings = useCallback(async () => {
-    try {
-      const { data, error } = await supabase
-        .from('workspace_settings')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('setting_key');
-
-      if (error) {
-        console.error('Error loading settings:', error);
-        return;
-      }
-
-      setSettings(data || []);
-    } catch (err) {
-      console.error('Error loading settings:', err);
-    }
-  }, [supabase, workspaceId]);
 
   const loadInvitations = useCallback(async () => {
     try {
@@ -219,13 +197,12 @@ export default function WorkspaceManagementPage() {
       setIsAdmin(true);
       await loadWorkspace();
       await loadFeatures();
-      await loadSettings();
       await loadInvitations();
       setLoading(false);
     };
 
     checkAdminAccess();
-  }, [supabase, router, loadWorkspace, loadFeatures, loadSettings, loadInvitations]);
+  }, [supabase, router, loadWorkspace, loadFeatures, loadInvitations]);
 
   const toggleFeature = async (featureId: string, enabled: boolean) => {
     try {
