@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const cookieStore = cookies();
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
@@ -100,7 +100,9 @@ export async function GET(request: NextRequest) {
       created_at: member.created_at,
       user_email: member.user_email || 'No email',
       user_name: member.user_name || 'No name',
-      workspace: member.workspaces?.name || 'Unknown Workspace'
+      workspace: Array.isArray(member.workspaces) && member.workspaces.length > 0 
+        ? member.workspaces[0].name 
+        : 'Unknown Workspace'
     })) || [];
 
     return NextResponse.json({ 
