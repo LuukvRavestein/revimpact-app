@@ -8,7 +8,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-impact-blue text-white hover:opacity-95",
-        secondary: "bg-impact-light text-impact-dark ring-1 ring-impact-dark/10 hover:bg-white"
+        secondary: "bg-impact-light text-impact-dark ring-1 ring-impact-dark/10 hover:bg-white",
+        outline: "border border-impact-blue/20 text-impact-blue hover:bg-impact-blue/5 hover:border-impact-blue/30"
       },
       size: {
         sm: "h-9 px-3",
