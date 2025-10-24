@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 
 export async function GET() {
   try {
+    console.log('get-all-users API called');
     const cookieStore = cookies();
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
@@ -11,6 +12,7 @@ export async function GET() {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.user) {
+      console.log('No session found');
       return NextResponse.json({ 
         success: false, 
         message: 'Not authenticated' 
@@ -18,15 +20,19 @@ export async function GET() {
     }
 
     const userEmail = session.user.email?.toLowerCase() || '';
+    console.log('User email:', userEmail);
     const isAdminUser = userEmail === 'luuk@revimpact.nl' || 
                        userEmail === 'admin@revimpact.nl';
 
     if (!isAdminUser) {
+      console.log('User not authorized:', userEmail);
       return NextResponse.json({ 
         success: false, 
         message: 'Not authorized - only super admins can view all users' 
       }, { status: 403 });
     }
+
+    console.log('Admin user authenticated, fetching data...');
 
     // Get all workspace members with their user data
     const { data: members, error: membersError } = await supabase
@@ -104,6 +110,11 @@ export async function GET() {
         ? member.workspaces[0].name 
         : 'Unknown Workspace'
     })) || [];
+
+    console.log('Returning data:', { 
+      userCount: userDetails.length, 
+      memberCount: formattedMembers.length 
+    });
 
     return NextResponse.json({ 
       success: true, 

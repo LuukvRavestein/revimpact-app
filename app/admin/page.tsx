@@ -42,9 +42,12 @@ export default function AdminPage() {
 
   const loadUsers = useCallback(async () => {
     try {
+      console.log('Loading users...');
       // Call the get-all-users API route
       const response = await fetch('/api/get-all-users');
+      console.log('API response status:', response.status);
       const result = await response.json();
+      console.log('API response result:', result);
 
       if (!response.ok) {
         console.error('Error loading users:', result.message);
@@ -53,6 +56,8 @@ export default function AdminPage() {
       }
 
       if (result.success) {
+        console.log('Setting users:', result.users);
+        console.log('Setting workspace members:', result.workspaceMembers);
         setUsers(result.users || []);
         setWorkspaceMembers(result.workspaceMembers || []);
       } else {
