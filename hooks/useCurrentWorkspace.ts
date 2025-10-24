@@ -46,9 +46,13 @@ export function useCurrentWorkspace() {
         // For now, use the first workspace (you can implement workspace switching later)
         if (memberships && memberships.length > 0) {
           const firstMembership = memberships[0];
+          const workspaceData = Array.isArray(firstMembership.workspaces) 
+            ? firstMembership.workspaces[0] 
+            : firstMembership.workspaces;
+          
           setWorkspace({
             id: firstMembership.workspace_id,
-            name: firstMembership.workspaces?.name || 'Unknown Workspace',
+            name: workspaceData?.name || 'Unknown Workspace',
             role: firstMembership.role
           });
         } else {
