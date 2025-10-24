@@ -302,6 +302,80 @@ Deel deze link met de gebruiker om de uitnodiging te accepteren.`);
     }
   };
 
+  const deleteInvitation = async (invitationId: string, email: string) => {
+    if (!confirm(`Weet je zeker dat je de uitnodiging voor ${email} wilt verwijderen?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('workspace_invitations')
+        .delete()
+        .eq('id', invitationId);
+
+      if (error) {
+        console.error('Error deleting invitation:', error);
+        setError(`Fout bij verwijderen uitnodiging: ${error.message}`);
+        return;
+      }
+
+      setSuccess(`Uitnodiging voor ${email} verwijderd!`);
+      await loadInvitations();
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError(`Onverwachte fout: ${err}`);
+    }
+  };
+
+  const createUserDirectly = async (email: string, role: string) => {
+    try {
+      // Generate a temporary password
+      const tempPassword = Math.random().toString(36).slice(-8);
+      
+      // Create user account
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: email,
+        password: tempPassword,
+      });
+
+      if (authError) {
+        console.error('Error creating user:', authError);
+        setError(`Fout bij aanmaken gebruiker: ${authError.message}`);
+        return;
+      }
+
+      if (!authData.user) {
+        setError("Gebruiker kon niet worden aangemaakt");
+        return;
+      }
+
+      // Add user to workspace
+      const { error: memberError } = await supabase
+        .from('workspace_members')
+        .insert({
+          workspace_id: workspaceId,
+          user_id: authData.user.id,
+          role: role
+        });
+
+      if (memberError) {
+        console.error('Error adding to workspace:', memberError);
+        setError("Gebruiker aangemaakt, maar kon niet worden toegevoegd aan workspace");
+        return;
+      }
+
+      setSuccess(`Gebruiker ${email} succesvol aangemaakt en toegevoegd aan workspace!
+      
+Tijdelijk wachtwoord: ${tempPassword}
+
+De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
+      await loadWorkspace();
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError(`Onverwachte fout: ${err}`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-impact-light via-white to-impact-light flex items-center justify-center">
@@ -410,12 +484,20 @@ Deel deze link met de gebruiker om de uitnodiging te accepteren.`);
           <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-gray-900">Workspace Leden</h2>
-              <button
-                onClick={() => setShowInviteForm(true)}
-                className="bg-gradient-to-r from-impact-blue to-impact-blue/90 hover:from-impact-blue/90 hover:to-impact-blue text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-impact-blue/20 focus:outline-none"
-              >
-                + Uitnodigen
-              </button>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setShowInviteForm(true)}
+                  className="bg-gradient-to-r from-impact-blue to-impact-blue/90 hover:from-impact-blue/90 hover:to-impact-blue text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-impact-blue/20 focus:outline-none"
+                >
+                  + Uitnodigen
+                </button>
+                <button
+                  onClick={() => setShowInviteForm(true)}
+                  className="bg-gradient-to-r from-impact-lime to-impact-lime/90 hover:from-impact-lime/90 hover:to-impact-lime text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-impact-lime/20 focus:outline-none"
+                >
+                  + Direct Aanmaken
+                </button>
+              </div>
             </div>
             
             <div className="space-y-3">
@@ -456,15 +538,35 @@ Deel deze link met de gebruiker om de uitnodiging te accepteren.`);
                       Verloopt: {new Date(invitation.expires_at).toLocaleDateString('nl-NL')}
                     </p>
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded-full ${
-                    invitation.status === 'pending' 
-                      ? 'bg-yellow-100 text-yellow-800' 
-                      : invitation.status === 'accepted'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-red-100 text-red-800'
-                  }`}>
-                    {invitation.status}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      invitation.status === 'pending' 
+                        ? 'bg-yellow-100 text-yellow-800' 
+                        : invitation.status === 'accepted'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {invitation.status}
+                    </span>
+                    {invitation.status === 'pending' && (
+                      <div className="flex space-x-1">
+                        <button
+                          onClick={() => createUserDirectly(invitation.email, invitation.role)}
+                          className="text-green-600 hover:text-green-800 text-xs font-medium transition-colors"
+                          title="Maak gebruiker direct aan"
+                        >
+                          ✓ Aanmaken
+                        </button>
+                        <button
+                          onClick={() => deleteInvitation(invitation.id, invitation.email)}
+                          className="text-red-600 hover:text-red-800 text-xs font-medium transition-colors"
+                          title="Verwijder uitnodiging"
+                        >
+                          ✗ Verwijderen
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
