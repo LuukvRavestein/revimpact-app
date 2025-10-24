@@ -39,7 +39,41 @@ export async function POST(request: NextRequest) {
 
     console.log(`Admin ${userEmail} attempting to delete user ${userId}`);
 
-    // First, remove from all workspace memberships
+    // First, find all workspaces created by this user
+    const { data: userWorkspaces, error: workspacesError } = await supabase
+      .from('workspaces')
+      .select('id, name')
+      .eq('created_by', userId);
+
+    if (workspacesError) {
+      console.error('Error fetching user workspaces:', workspacesError);
+      return NextResponse.json({ 
+        success: false, 
+        message: `Fout bij ophalen workspaces: ${workspacesError.message}` 
+      }, { status: 500 });
+    }
+
+    console.log(`Found ${userWorkspaces?.length || 0} workspaces created by user`);
+
+    // Delete all workspaces created by this user (this will cascade delete workspace_members)
+    if (userWorkspaces && userWorkspaces.length > 0) {
+      const { error: deleteWorkspacesError } = await supabase
+        .from('workspaces')
+        .delete()
+        .eq('created_by', userId);
+
+      if (deleteWorkspacesError) {
+        console.error('Error deleting user workspaces:', deleteWorkspacesError);
+        return NextResponse.json({ 
+          success: false, 
+          message: `Fout bij verwijderen workspaces: ${deleteWorkspacesError.message}` 
+        }, { status: 500 });
+      }
+
+      console.log(`Deleted ${userWorkspaces.length} workspaces created by user`);
+    }
+
+    // Remove from any remaining workspace memberships (in case user was member of other workspaces)
     const { error: membersError } = await supabase
       .from('workspace_members')
       .delete()
