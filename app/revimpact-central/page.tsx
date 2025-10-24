@@ -138,6 +138,17 @@ export default function RevImpactCentralPage() {
         return;
       }
 
+      // Check if user is admin
+      const userEmail = session.user.email?.toLowerCase() || '';
+      const isAdminUser = userEmail.includes('admin') || 
+                         userEmail === 'luuk@revimpact.nl' || 
+                         userEmail === 'admin@revimpact.nl';
+
+      if (!isAdminUser) {
+        setError("Alleen administrators kunnen workspaces aanmaken");
+        return;
+      }
+
       const { data, error } = await supabase
         .from('workspaces')
         .insert({
@@ -148,6 +159,7 @@ export default function RevImpactCentralPage() {
         .single();
 
       if (error) {
+        console.error('Workspace creation error:', error);
         setError(`Fout bij aanmaken workspace: ${error.message}`);
         return;
       }
@@ -163,13 +175,17 @@ export default function RevImpactCentralPage() {
 
       if (memberError) {
         console.error('Error adding creator as member:', memberError);
+        // Don't fail the entire operation if member creation fails
+        setSuccess(`Workspace "${newWorkspaceName}" is aangemaakt, maar er was een probleem met het toevoegen van de eigenaar.`);
+      } else {
+        setSuccess(`Workspace "${newWorkspaceName}" is succesvol aangemaakt!`);
       }
 
-      setSuccess(`Workspace "${newWorkspaceName}" is succesvol aangemaakt!`);
       setNewWorkspaceName("");
       setShowCreateForm(false);
       await loadWorkspaces();
     } catch (err) {
+      console.error('Unexpected error:', err);
       setError(`Onverwachte fout: ${err}`);
     } finally {
       setIsCreating(false);
@@ -185,12 +201,30 @@ export default function RevImpactCentralPage() {
     setSuccess("");
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setError("Geen actieve sessie");
+        return;
+      }
+
+      // Check if user is admin
+      const userEmail = session.user.email?.toLowerCase() || '';
+      const isAdminUser = userEmail.includes('admin') || 
+                         userEmail === 'luuk@revimpact.nl' || 
+                         userEmail === 'admin@revimpact.nl';
+
+      if (!isAdminUser) {
+        setError("Alleen administrators kunnen workspaces bewerken");
+        return;
+      }
+
       const { error } = await supabase
         .from('workspaces')
         .update({ name: editWorkspaceName })
         .eq('id', selectedWorkspace.id);
 
       if (error) {
+        console.error('Workspace update error:', error);
         setError(`Fout bij bijwerken workspace: ${error.message}`);
         return;
       }
@@ -200,6 +234,7 @@ export default function RevImpactCentralPage() {
       setSelectedWorkspace(null);
       await loadWorkspaces();
     } catch (err) {
+      console.error('Unexpected error:', err);
       setError(`Onverwachte fout: ${err}`);
     } finally {
       setIsUpdating(false);
@@ -216,12 +251,30 @@ export default function RevImpactCentralPage() {
     setSuccess("");
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setError("Geen actieve sessie");
+        return;
+      }
+
+      // Check if user is admin
+      const userEmail = session.user.email?.toLowerCase() || '';
+      const isAdminUser = userEmail.includes('admin') || 
+                         userEmail === 'luuk@revimpact.nl' || 
+                         userEmail === 'admin@revimpact.nl';
+
+      if (!isAdminUser) {
+        setError("Alleen administrators kunnen workspaces verwijderen");
+        return;
+      }
+
       const { error } = await supabase
         .from('workspaces')
         .delete()
         .eq('id', workspace.id);
 
       if (error) {
+        console.error('Workspace delete error:', error);
         setError(`Fout bij verwijderen workspace: ${error.message}`);
         return;
       }
@@ -229,6 +282,7 @@ export default function RevImpactCentralPage() {
       setSuccess(`Workspace "${workspace.name}" is succesvol verwijderd!`);
       await loadWorkspaces();
     } catch (err) {
+      console.error('Unexpected error:', err);
       setError(`Onverwachte fout bij verwijderen: ${err}`);
     } finally {
       setIsDeleting(false);
