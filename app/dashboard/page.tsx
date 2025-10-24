@@ -173,17 +173,17 @@ export default function DashboardPage() {
         <p>Current Workspace Name: {currentWorkspace?.name || 'None'}</p>
         <p>Features enabled:</p>
         <ul className="ml-4">
-          <li>Data Upload: {isFeatureEnabled('Data Upload') ? 'Yes' : 'No'}</li>
-          <li>QBR Generator: {isFeatureEnabled('QBR Generator') ? 'Yes' : 'No'}</li>
-          <li>Chatbot Analytics: {isFeatureEnabled('Chatbot Analytics') ? 'Yes' : 'No'}</li>
-          <li>Admin Panel: {isFeatureEnabled('Admin Panel') ? 'Yes' : 'No'}</li>
-          <li>Workspace Instellingen: {isFeatureEnabled('Workspace Instellingen') ? 'Yes' : 'No'}</li>
+          <li>Data Upload: {isFeatureEnabled('data_upload') ? 'Yes' : 'No'}</li>
+          <li>QBR Generator: {isFeatureEnabled('qbr_generator') ? 'Yes' : 'No'}</li>
+          <li>Chatbot Analytics: {isFeatureEnabled('chatbot_analytics') ? 'Yes' : 'No'}</li>
+          <li>Admin Panel: {isFeatureEnabled('admin_panel') ? 'Yes' : 'No'}</li>
+          <li>Workspace Instellingen: {isFeatureEnabled('workspace_settings') ? 'Yes' : 'No'}</li>
         </ul>
       </div>
       
       
       <div className="mt-6 space-y-3">
-        {isFeatureEnabled('Data Upload') && (
+        {isFeatureEnabled('data_upload') && (
           <div>
             <Link className="underline text-blue-600" href="/data">
               📊 {t.dashboard.uploadData}
@@ -193,7 +193,7 @@ export default function DashboardPage() {
             </p>
           </div>
         )}
-        {isFeatureEnabled('QBR Generator') && (
+        {isFeatureEnabled('qbr_generator') && (
           <div>
             <Link className="underline text-blue-600" href="/qbr">
               📋 {t.dashboard.qbrGenerator}
@@ -203,7 +203,7 @@ export default function DashboardPage() {
             </p>
           </div>
         )}
-        {isFeatureEnabled('Chatbot Analytics') && (
+        {isFeatureEnabled('chatbot_analytics') && (
           <div>
             <Link className="underline text-blue-600" href="/chatbot">
               🤖 Chatbot Analytics
@@ -213,7 +213,7 @@ export default function DashboardPage() {
             </p>
           </div>
         )}
-        {isFeatureEnabled('Admin Panel') && (
+        {isFeatureEnabled('admin_panel') && (
           <div>
             <Link className="underline text-blue-600" href="/admin">
               👑 Admin Panel
@@ -223,7 +223,7 @@ export default function DashboardPage() {
             </p>
           </div>
         )}
-        {isFeatureEnabled('Workspace Instellingen') && (
+        {isFeatureEnabled('workspace_settings') && (
           <div>
             <Link className="underline text-blue-600" href={`/workspace/${currentWorkspace?.id}`}>
               ⚙️ Workspace Instellingen
