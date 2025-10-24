@@ -75,6 +75,7 @@ export default function WorkspaceManagementPage() {
   const [invitations, setInvitations] = useState<WorkspaceInvitation[]>([]);
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [newInviteEmail, setNewInviteEmail] = useState("");
+  const [newInviteName, setNewInviteName] = useState("");
   const [newInviteRole, setNewInviteRole] = useState("member");
   const [isInviting, setIsInviting] = useState(false);
   const [error, setError] = useState("");
@@ -271,7 +272,8 @@ export default function WorkspaceManagementPage() {
             email: newInviteEmail,
             invitationUrl: invitationUrl,
             workspaceName: workspace?.name || 'Workspace',
-            role: newInviteRole
+            role: newInviteRole,
+            userName: newInviteName
           }),
         });
 
@@ -298,6 +300,7 @@ E-mail kon niet worden verstuurd. Deel deze link handmatig met de gebruiker.`);
       }
       
       setNewInviteEmail("");
+      setNewInviteName("");
       setNewInviteRole("member");
       setShowInviteForm(false);
       await loadInvitations();
@@ -359,7 +362,7 @@ E-mail kon niet worden verstuurd. Deel deze link handmatig met de gebruiker.`);
     }
   };
 
-  const createUserDirectly = async (email: string, role: string) => {
+  const createUserDirectly = async (email: string, role: string, name?: string) => {
     try {
       // Generate a temporary password
       const tempPassword = Math.random().toString(36).slice(-8);
@@ -396,7 +399,7 @@ E-mail kon niet worden verstuurd. Deel deze link handmatig met de gebruiker.`);
         return;
       }
 
-      setSuccess(`Gebruiker ${email} succesvol aangemaakt en toegevoegd aan workspace!
+      setSuccess(`Gebruiker ${name ? `${name} (${email})` : email} succesvol aangemaakt en toegevoegd aan workspace!
       
 Tijdelijk wachtwoord: ${tempPassword}
 
@@ -613,6 +616,20 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
               
               <form onSubmit={sendInvitation} className="space-y-4">
                 <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    Naam (optioneel)
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    value={newInviteName}
+                    onChange={(e) => setNewInviteName(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue transition-colors"
+                    placeholder="Voornaam Achternaam"
+                  />
+                </div>
+
+                <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                     E-mailadres
                   </label>
@@ -655,6 +672,7 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
                     onClick={() => {
                       setShowInviteForm(false);
                       setNewInviteEmail("");
+                      setNewInviteName("");
                       setNewInviteRole("member");
                     }}
                     className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors"

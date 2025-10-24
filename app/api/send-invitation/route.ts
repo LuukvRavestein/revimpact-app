@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, invitationUrl, workspaceName, role } = await request.json();
+    const { email, invitationUrl, workspaceName, role, userName } = await request.json();
 
     // For now, we'll use a simple email service
     // You can integrate with SendGrid, Resend, or any other email service
     
-    const emailContent = {
-      to: email,
+    // Send email using Resend
+    const { data, error } = await resend.emails.send({
+      from: 'RevImpact <noreply@revimpact.nl>',
+      to: [email],
       subject: `Uitnodiging voor RevImpact Workspace: ${workspaceName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -18,7 +23,7 @@ export async function POST(request: NextRequest) {
           </div>
           
           <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h2 style="color: #1E1E1E; margin-top: 0;">Je bent uitgenodigd voor een RevImpact Workspace!</h2>
+            <h2 style="color: #1E1E1E; margin-top: 0;">Hallo${userName ? ` ${userName}` : ''}!</h2>
             
             <p style="color: #666; line-height: 1.6;">
               Je bent uitgenodigd om lid te worden van de workspace <strong>${workspaceName}</strong> 
@@ -52,40 +57,20 @@ export async function POST(request: NextRequest) {
           </div>
         </div>
       `,
-      text: `
-        Je bent uitgenodigd voor RevImpact Workspace: ${workspaceName}
-        
-        Rol: ${role === 'owner' ? 'Eigenaar' : 'Lid'}
-        
-        Accepteer je uitnodiging door op deze link te klikken:
-        ${invitationUrl}
-        
-        Deze uitnodiging verloopt over 7 dagen.
-        
-        Met vriendelijke groet,
-        Het RevImpact Team
-      `
-    };
+    });
 
-    // For development, we'll just log the email
-    // In production, you would send this via your email service
-    console.log('Email would be sent:', emailContent);
-
-    // Simulate email sending
-    // Replace this with actual email service integration
-    const emailSent = true; // This would be the result from your email service
-
-    if (emailSent) {
-      return NextResponse.json({ 
-        success: true, 
-        message: 'Uitnodiging per e-mail verstuurd!' 
-      });
-    } else {
+    if (error) {
+      console.error('Resend error:', error);
       return NextResponse.json({ 
         success: false, 
         message: 'Fout bij versturen van e-mail' 
       }, { status: 500 });
     }
+
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Uitnodiging per e-mail verstuurd!' 
+    });
 
   } catch (error) {
     console.error('Error sending invitation email:', error);
