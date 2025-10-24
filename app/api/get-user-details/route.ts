@@ -49,9 +49,33 @@ export async function POST(request: NextRequest) {
       userIds.map(async (userId: string) => {
         try {
           console.log('Fetching user:', userId);
+          
+          // Try to get user from auth.users table directly
+          const { data: authUsers, error: authError } = await supabase
+            .from('auth.users')
+            .select('id, email, raw_user_meta_data')
+            .eq('id', userId)
+            .single();
+          
+          console.log('Auth users query result:', authUsers, 'Error:', authError);
+          
+          if (authUsers && !authError) {
+            const result = {
+              id: userId,
+              email: authUsers.email || 'Unknown User',
+              name: authUsers.raw_user_meta_data?.full_name || 
+                    authUsers.email?.split('@')[0] || 
+                    'Unknown User'
+            };
+            
+            console.log('Returning user data from auth.users:', result);
+            return result;
+          }
+          
+          // Fallback to admin API
           const { data: userData, error } = await supabase.auth.admin.getUserById(userId);
           
-          console.log('User data for', userId, ':', userData, 'Error:', error);
+          console.log('Admin API result for', userId, ':', userData, 'Error:', error);
           
           if (error || !userData?.user) {
             console.log('No user data found for:', userId);
@@ -70,7 +94,7 @@ export async function POST(request: NextRequest) {
                   'Unknown User'
           };
           
-          console.log('Returning user data:', result);
+          console.log('Returning user data from admin API:', result);
           return result;
         } catch (err) {
           console.error('Error fetching user:', userId, err);
