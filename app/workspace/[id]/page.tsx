@@ -79,6 +79,13 @@ export default function WorkspaceManagementPage() {
   const [newInviteName, setNewInviteName] = useState("");
   const [newInviteRole, setNewInviteRole] = useState("member");
   const [isInviting, setIsInviting] = useState(false);
+  
+  // Edit user states
+  const [editingUser, setEditingUser] = useState<string | null>(null);
+  const [editUserName, setEditUserName] = useState("");
+  const [editUserEmail, setEditUserEmail] = useState("");
+  const [editUserRole, setEditUserRole] = useState("member");
+  const [isUpdatingUser, setIsUpdatingUser] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const router = useRouter();
@@ -378,6 +385,75 @@ E-mail kon niet worden verstuurd. Deel deze link handmatig met de gebruiker.`);
     }
   };
 
+  const startEditUser = (member: any) => {
+    setEditingUser(member.id);
+    setEditUserName(member.users?.name || '');
+    setEditUserEmail(member.users?.email || '');
+    setEditUserRole(member.role);
+  };
+
+  const cancelEditUser = () => {
+    setEditingUser(null);
+    setEditUserName('');
+    setEditUserEmail('');
+    setEditUserRole('member');
+  };
+
+  const updateUser = async (memberId: string, userId: string) => {
+    try {
+      setIsUpdatingUser(true);
+      setError('');
+      setSuccess('');
+
+      // Update user metadata (name)
+      if (editUserName) {
+        const { error: userError } = await supabase.auth.admin.updateUserById(userId, {
+          user_metadata: { full_name: editUserName }
+        });
+
+        if (userError) {
+          console.error('Error updating user metadata:', userError);
+          setError('Fout bij bijwerken van gebruikersnaam');
+          return;
+        }
+      }
+
+      // Update user email
+      if (editUserEmail) {
+        const { error: emailError } = await supabase.auth.admin.updateUserById(userId, {
+          email: editUserEmail
+        });
+
+        if (emailError) {
+          console.error('Error updating user email:', emailError);
+          setError('Fout bij bijwerken van email adres');
+          return;
+        }
+      }
+
+      // Update workspace role
+      const { error: roleError } = await supabase
+        .from('workspace_members')
+        .update({ role: editUserRole })
+        .eq('id', memberId);
+
+      if (roleError) {
+        console.error('Error updating role:', roleError);
+        setError('Fout bij bijwerken van rol');
+        return;
+      }
+
+      setSuccess('Gebruiker succesvol bijgewerkt');
+      setEditingUser(null);
+      await loadWorkspace();
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError(`Onverwachte fout: ${err}`);
+    } finally {
+      setIsUpdatingUser(false);
+    }
+  };
+
   const deleteInvitation = async (invitationId: string, email: string) => {
     if (!confirm(`Weet je zeker dat je de uitnodiging voor ${email} wilt verwijderen?`)) {
       return;
@@ -578,22 +654,94 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
             
             <div className="space-y-3">
               {workspace.members.map((member) => (
-                <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-impact-blue rounded-full flex items-center justify-center text-sm text-white font-medium">
-                      {(member.users?.name || member.users?.email || 'U').charAt(0).toUpperCase()}
+                <div key={member.id} className="p-4 bg-gray-50 rounded-lg">
+                  {editingUser === member.id ? (
+                    // Edit mode
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Naam
+                        </label>
+                        <input
+                          type="text"
+                          value={editUserName}
+                          onChange={(e) => setEditUserName(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue transition-colors"
+                          placeholder="Volledige naam"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          E-mailadres
+                        </label>
+                        <input
+                          type="email"
+                          value={editUserEmail}
+                          onChange={(e) => setEditUserEmail(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue transition-colors"
+                          placeholder="gebruiker@bedrijf.com"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Rol
+                        </label>
+                        <select
+                          value={editUserRole}
+                          onChange={(e) => setEditUserRole(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue transition-colors"
+                        >
+                          <option value="member">Lid</option>
+                          <option value="owner">Eigenaar</option>
+                        </select>
+                      </div>
+                      
+                      <div className="flex space-x-3">
+                        <button
+                          onClick={() => updateUser(member.id, member.user_id)}
+                          disabled={isUpdatingUser}
+                          className="bg-gradient-to-r from-impact-blue to-impact-blue/90 hover:from-impact-blue/90 hover:to-impact-blue text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] focus:ring-2 focus:ring-impact-blue/20 focus:outline-none disabled:opacity-50"
+                        >
+                          {isUpdatingUser ? "Bijwerken..." : "Opslaan"}
+                        </button>
+                        <button
+                          onClick={cancelEditUser}
+                          className="bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-2 px-4 rounded-lg transition-colors"
+                        >
+                          Annuleren
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">{member.users?.name || member.users?.email || 'Onbekend'}</p>
-                      <p className="text-sm text-gray-500">{member.users?.email} • Rol: {member.role}</p>
+                  ) : (
+                    // View mode
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-impact-blue rounded-full flex items-center justify-center text-sm text-white font-medium">
+                          {(member.users?.name || member.users?.email || 'U').charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{member.users?.name || member.users?.email || 'Onbekend'}</p>
+                          <p className="text-sm text-gray-500">{member.users?.email} • Rol: {member.role}</p>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => startEditUser(member)}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+                        >
+                          Bewerken
+                        </button>
+                        <button
+                          onClick={() => removeMember(member.id, member.users?.name || member.users?.email || 'lid')}
+                          className="text-red-600 hover:text-red-800 text-sm font-medium transition-colors"
+                        >
+                          Verwijderen
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  <button
-                    onClick={() => removeMember(member.id, member.users?.name || member.users?.email || 'lid')}
-                    className="text-red-600 hover:text-red-800 text-sm font-medium transition-colors"
-                  >
-                    Verwijderen
-                  </button>
+                  )}
                 </div>
               ))}
             </div>
