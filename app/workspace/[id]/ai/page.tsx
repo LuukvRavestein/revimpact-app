@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createSupabaseBrowserClient } from '@/lib/supabaseClient';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -37,9 +37,9 @@ export default function WorkspaceAIPage() {
 
   useEffect(() => {
     loadWorkspaceData();
-  }, [workspaceId]);
+  }, [workspaceId, loadWorkspaceData]);
 
-  const loadWorkspaceData = async () => {
+  const loadWorkspaceData = useCallback(async () => {
     try {
       // Check if user has access to workspace
       const { data: { session } } = await supabase.auth.getSession();
@@ -87,7 +87,7 @@ export default function WorkspaceAIPage() {
       setError('Fout bij laden van workspace data');
       setLoading(false);
     }
-  };
+  }, [supabase, router, workspaceId]);
 
   if (loading) {
     return (

@@ -108,13 +108,11 @@ export async function POST(request: Request) {
 async function generateDashboardConfig({
   analysis,
   dashboardName,
-  customRequirements,
-  workspaceId
+  customRequirements
 }: {
-  analysis: any;
+  analysis: unknown;
   dashboardName: string;
   customRequirements?: string;
-  workspaceId: string;
 }) {
   // Create dashboard generation prompt
   const prompt = createDashboardPrompt({
@@ -136,7 +134,7 @@ function createDashboardPrompt({
   dashboardName,
   customRequirements
 }: {
-  analysis: any;
+  analysis: unknown;
   dashboardName: string;
   customRequirements?: string;
 }) {

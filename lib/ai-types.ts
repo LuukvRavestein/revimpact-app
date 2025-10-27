@@ -13,7 +13,7 @@ interface DataSummary {
   totalRecords: number;
   columns: ColumnInfo[];
   dataTypes: Record<string, string>;
-  sampleValues: Record<string, any[]>; // Only sample values, not full data
+  sampleValues: Record<string, unknown[]>; // Only sample values, not full data
   businessContext: string; // Business description from user
 }
 
@@ -21,7 +21,7 @@ interface ColumnInfo {
   name: string;
   type: 'text' | 'number' | 'date' | 'boolean';
   description?: string;
-  sampleValues: any[];
+  sampleValues: unknown[];
 }
 
 interface AIAnalysisResult {
@@ -58,7 +58,19 @@ interface WidgetSuggestion {
   type: 'chart' | 'metric' | 'table' | 'text';
   title: string;
   dataQuery: string;
-  config: Record<string, any>;
+  config: Record<string, unknown>;
+}
+
+interface DataPoint {
+  label: string;
+  value: number;
+  timestamp?: string;
+}
+
+interface LayoutConfig {
+  rows: number;
+  cols: number;
+  theme?: string;
 }
 
 // AI Agent per workspace
@@ -78,3 +90,18 @@ interface PrivacyControls {
   dataAnonymizationLevel: 'none' | 'partial' | 'full';
   aiModelVersion: string;
 }
+
+export type {
+  AIAnalysisRequest,
+  DataSummary,
+  ColumnInfo,
+  AIAnalysisResult,
+  Insight,
+  Recommendation,
+  DashboardSuggestion,
+  WidgetSuggestion,
+  DataPoint,
+  LayoutConfig,
+  WorkspaceAIAgent,
+  PrivacyControls
+};

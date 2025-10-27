@@ -11,8 +11,19 @@ interface AIDashboardProps {
 interface AnalysisResult {
   id: string;
   analysis_type: string;
-  insights: any[];
-  recommendations: any[];
+  insights: Array<{
+    type: string;
+    title: string;
+    description: string;
+    significance: string;
+  }>;
+  recommendations: Array<{
+    category: string;
+    title: string;
+    description: string;
+    priority: string;
+    estimatedImpact: string;
+  }>;
   confidence_score: number;
   created_at: string;
 }
@@ -21,7 +32,10 @@ interface Dashboard {
   id: string;
   dashboard_name: string;
   dashboard_description: string;
-  dashboard_config: any;
+  dashboard_config: {
+    layout: { rows: number; cols: number };
+    theme: string;
+  };
   created_at: string;
 }
 
@@ -41,7 +55,7 @@ export default function AIDashboard({ workspaceId, uploadId }: AIDashboardProps)
   useEffect(() => {
     loadAnalysisResults();
     loadDashboards();
-  }, [workspaceId, uploadId]);
+  }, [workspaceId, uploadId, loadAnalysisResults, loadDashboards]);
 
   const loadAnalysisResults = async () => {
     try {

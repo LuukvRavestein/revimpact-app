@@ -85,7 +85,7 @@ export async function POST(request: Request) {
 }
 
 // Get data summary without exposing actual customer data
-async function getDataSummary(supabase: any, uploadId: string) {
+async function getDataSummary(supabase: unknown, uploadId: string) {
   // Get upload metadata
   const { data: upload } = await supabase
     .from('customer_data_uploads')
@@ -121,7 +121,7 @@ async function getDataSummary(supabase: any, uploadId: string) {
 }
 
 // Get or create workspace AI agent
-async function getWorkspaceAIAgent(supabase: any, workspaceId: string) {
+async function getWorkspaceAIAgent(supabase: unknown, workspaceId: string) {
   let { data: agent } = await supabase
     .from('workspace_ai_agents')
     .select('*')
@@ -155,8 +155,8 @@ async function performAIAnalysis({
   analysisType,
   customPrompt
 }: {
-  dataSummary: any;
-  aiAgent: any;
+  dataSummary: unknown;
+  aiAgent: unknown;
   analysisType: string;
   customPrompt?: string;
 }) {
@@ -182,8 +182,8 @@ function createAnalysisPrompt({
   analysisType,
   customPrompt
 }: {
-  dataSummary: any;
-  aiAgent: any;
+  dataSummary: unknown;
+  aiAgent: unknown;
   analysisType: string;
   customPrompt?: string;
 }) {
@@ -193,7 +193,7 @@ Your personality: ${aiAgent.agent_personality}
 
 Data Summary:
 - Total records: ${dataSummary.totalRecords}
-- Columns: ${dataSummary.columns.map((c: any) => c.mapped_field).join(', ')}
+- Columns: ${dataSummary.columns.map((c: unknown) => c.mapped_field).join(', ')}
 - File type: ${dataSummary.uploadInfo.file_type}
 
 Analysis Type: ${analysisType}
@@ -242,25 +242,26 @@ async function callOpenAI(prompt: string) {
 }
 
 // Process AI response into structured format
-function processAIResponse(response: string, analysisType: string) {
+function processAIResponse(response: string, _analysisType: string) {
   // Parse AI response and structure it
   // This would parse the text response and create structured insights
   
   return {
     insights: [
       {
-        type: 'pattern',
+        type: 'pattern' as const,
         title: 'Data Structure Analysis',
         description: 'Analysis of data patterns based on metadata',
-        significance: 'medium'
+        dataPoints: [],
+        significance: 'medium' as const
       }
     ],
     recommendations: [
       {
-        category: 'action',
+        category: 'action' as const,
         title: 'Create Customer Dashboard',
         description: 'Based on data structure, create a customer overview dashboard',
-        priority: 'high',
+        priority: 'high' as const,
         estimatedImpact: 'High visibility into customer data'
       }
     ],
@@ -270,7 +271,7 @@ function processAIResponse(response: string, analysisType: string) {
         description: 'Main customer metrics dashboard',
         widgets: [
           {
-            type: 'metric',
+            type: 'metric' as const,
             title: 'Total Customers',
             dataQuery: 'SELECT COUNT(*) FROM customer_records',
             config: { format: 'number' }
