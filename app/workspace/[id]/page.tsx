@@ -46,6 +46,11 @@ const FEATURE_DESCRIPTIONS = {
     description: "Upload en analyseer klantdata",
     icon: "📊"
   },
+  ai_dashboard: {
+    name: "AI Dashboard Generator",
+    description: "Genereer gepersonaliseerde dashboards met AI",
+    icon: "🤖"
+  },
   qbr_generator: {
     name: "QBR Generator",
     description: "Genereer Quarterly Business Reviews",
@@ -168,7 +173,31 @@ export default function WorkspaceManagementPage() {
         return;
       }
 
-      setFeatures(data || []);
+      // If no AI dashboard feature exists, create it
+      const hasAIFeature = data?.some(f => f.feature_name === 'ai_dashboard');
+      if (!hasAIFeature) {
+        await supabase
+          .from('workspace_features')
+          .insert({
+            workspace_id: workspaceId,
+            feature_name: 'ai_dashboard',
+            enabled: true
+          });
+      }
+
+      // Reload features after potential insert
+      const { data: updatedData, error: reloadError } = await supabase
+        .from('workspace_features')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('feature_name');
+
+      if (reloadError) {
+        console.error('Error reloading features:', reloadError);
+        return;
+      }
+
+      setFeatures(updatedData || []);
     } catch (err) {
       console.error('Error loading features:', err);
     }
@@ -613,24 +642,53 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
             <div className="space-y-4">
               {features.map((feature) => {
                 const featureInfo = FEATURE_DESCRIPTIONS[feature.feature_name as keyof typeof FEATURE_DESCRIPTIONS];
+                const hasLink = feature.feature_name === 'ai_dashboard' || feature.feature_name === 'data_upload';
+                
                 return (
                   <div key={feature.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <span className="text-2xl">{featureInfo?.icon || "🔧"}</span>
                       <div>
-                        <h3 className="font-medium text-gray-900">{featureInfo?.name || feature.feature_name}</h3>
+                        {hasLink ? (
+                          <Link 
+                            href={
+                              feature.feature_name === 'ai_dashboard' 
+                                ? `/workspace/${workspaceId}/ai`
+                                : '/data'
+                            }
+                            className="font-medium text-gray-900 hover:text-impact-blue transition-colors"
+                          >
+                            {featureInfo?.name || feature.feature_name}
+                          </Link>
+                        ) : (
+                          <h3 className="font-medium text-gray-900">{featureInfo?.name || feature.feature_name}</h3>
+                        )}
                         <p className="text-sm text-gray-500">{featureInfo?.description || "Feature beschrijving"}</p>
                       </div>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={feature.enabled}
-                        onChange={(e) => toggleFeature(feature.id, e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-impact-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-impact-blue"></div>
-                    </label>
+                    <div className="flex items-center space-x-3">
+                      {hasLink && (
+                        <Link 
+                          href={
+                            feature.feature_name === 'ai_dashboard' 
+                              ? `/workspace/${workspaceId}/ai`
+                              : '/data'
+                          }
+                          className="px-3 py-1 text-sm bg-impact-blue text-white rounded-lg hover:bg-impact-blue/90 transition-colors"
+                        >
+                          Open
+                        </Link>
+                      )}
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={feature.enabled}
+                          onChange={(e) => toggleFeature(feature.id, e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-impact-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-impact-blue"></div>
+                      </label>
+                    </div>
                   </div>
                 );
               })}
