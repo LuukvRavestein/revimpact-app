@@ -35,10 +35,6 @@ export default function WorkspaceAIPage() {
   const workspaceId = params.id as string;
   const supabase = createSupabaseBrowserClient();
 
-  useEffect(() => {
-    loadWorkspaceData();
-  }, [workspaceId, loadWorkspaceData]);
-
   const loadWorkspaceData = useCallback(async () => {
     try {
       // Check if user has access to workspace
@@ -88,6 +84,10 @@ export default function WorkspaceAIPage() {
       setLoading(false);
     }
   }, [supabase, router, workspaceId]);
+
+  useEffect(() => {
+    loadWorkspaceData();
+  }, [workspaceId, loadWorkspaceData]);
 
   if (loading) {
     return (
