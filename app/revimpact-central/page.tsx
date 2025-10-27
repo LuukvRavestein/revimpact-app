@@ -157,7 +157,7 @@ export default function RevImpactCentralPage() {
       setSuccess(`Super admin ${email} is toegevoegd`);
       setNewSuperAdminEmail("");
       setShowSuperAdminForm(false);
-    } catch (err) {
+    } catch (_err) {
       setError("Fout bij toevoegen van super admin");
     } finally {
       setIsAddingSuperAdmin(false);

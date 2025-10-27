@@ -242,7 +242,7 @@ async function callOpenAI(prompt: string) {
 }
 
 // Process AI response into structured format
-function processAIResponse(response: string, _analysisType: string) {
+function processAIResponse(_response: string, _analysisType: string) {
   // Parse AI response and structure it
   // This would parse the text response and create structured insights
   
