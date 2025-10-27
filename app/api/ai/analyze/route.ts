@@ -85,7 +85,7 @@ export async function POST(request: Request) {
 }
 
 // Get data summary without exposing actual customer data
-async function getDataSummary(supabase: unknown, uploadId: string) {
+async function getDataSummary(supabase: any, uploadId: string) {
   // Get upload metadata
   const { data: upload } = await supabase
     .from('customer_data_uploads')
@@ -121,7 +121,7 @@ async function getDataSummary(supabase: unknown, uploadId: string) {
 }
 
 // Get or create workspace AI agent
-async function getWorkspaceAIAgent(supabase: unknown, workspaceId: string) {
+async function getWorkspaceAIAgent(supabase: any, workspaceId: string) {
   let { data: agent } = await supabase
     .from('workspace_ai_agents')
     .select('*')
@@ -155,8 +155,8 @@ async function performAIAnalysis({
   analysisType,
   customPrompt
 }: {
-  dataSummary: unknown;
-  aiAgent: unknown;
+  dataSummary: any;
+  aiAgent: any;
   analysisType: string;
   customPrompt?: string;
 }) {
@@ -182,8 +182,8 @@ function createAnalysisPrompt({
   analysisType,
   customPrompt
 }: {
-  dataSummary: unknown;
-  aiAgent: unknown;
+  dataSummary: any;
+  aiAgent: any;
   analysisType: string;
   customPrompt?: string;
 }) {
@@ -193,7 +193,7 @@ Your personality: ${aiAgent.agent_personality}
 
 Data Summary:
 - Total records: ${dataSummary.totalRecords}
-- Columns: ${dataSummary.columns.map((c: unknown) => c.mapped_field).join(', ')}
+- Columns: ${dataSummary.columns.map((c: any) => c.mapped_field).join(', ')}
 - File type: ${dataSummary.uploadInfo.file_type}
 
 Analysis Type: ${analysisType}

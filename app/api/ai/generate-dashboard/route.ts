@@ -110,7 +110,7 @@ async function generateDashboardConfig({
   dashboardName,
   customRequirements
 }: {
-  analysis: unknown;
+  analysis: any;
   dashboardName: string;
   customRequirements?: string;
 }) {
@@ -134,7 +134,7 @@ function createDashboardPrompt({
   dashboardName,
   customRequirements
 }: {
-  analysis: unknown;
+  analysis: any;
   dashboardName: string;
   customRequirements?: string;
 }) {

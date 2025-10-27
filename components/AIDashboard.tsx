@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabaseClient';
 
 interface AIDashboardProps {
@@ -57,7 +57,7 @@ export default function AIDashboard({ workspaceId, uploadId }: AIDashboardProps)
     loadDashboards();
   }, [workspaceId, uploadId, loadAnalysisResults, loadDashboards]);
 
-  const loadAnalysisResults = async () => {
+  const loadAnalysisResults = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('ai_analysis_results')
@@ -71,9 +71,9 @@ export default function AIDashboard({ workspaceId, uploadId }: AIDashboardProps)
     } catch (err) {
       console.error('Error loading analysis results:', err);
     }
-  };
+  }, [supabase, workspaceId, uploadId]);
 
-  const loadDashboards = async () => {
+  const loadDashboards = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('ai_generated_dashboards')
@@ -86,7 +86,7 @@ export default function AIDashboard({ workspaceId, uploadId }: AIDashboardProps)
     } catch (err) {
       console.error('Error loading dashboards:', err);
     }
-  };
+  }, [supabase, workspaceId]);
 
   const runAnalysis = async (analysisType: string) => {
     setLoading(true);
