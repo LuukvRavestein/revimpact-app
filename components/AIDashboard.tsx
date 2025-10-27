@@ -51,12 +51,6 @@ export default function AIDashboard({ workspaceId, uploadId }: AIDashboardProps)
 
   const supabase = createSupabaseBrowserClient();
 
-  // Load existing analysis results and dashboards
-  useEffect(() => {
-    loadAnalysisResults();
-    loadDashboards();
-  }, [workspaceId, uploadId, loadAnalysisResults, loadDashboards]);
-
   const loadAnalysisResults = useCallback(async () => {
     try {
       const { data, error } = await supabase
@@ -87,6 +81,12 @@ export default function AIDashboard({ workspaceId, uploadId }: AIDashboardProps)
       console.error('Error loading dashboards:', err);
     }
   }, [supabase, workspaceId]);
+
+  // Load existing analysis results and dashboards
+  useEffect(() => {
+    loadAnalysisResults();
+    loadDashboards();
+  }, [workspaceId, uploadId, loadAnalysisResults, loadDashboards]);
 
   const runAnalysis = async (analysisType: string) => {
     setLoading(true);
