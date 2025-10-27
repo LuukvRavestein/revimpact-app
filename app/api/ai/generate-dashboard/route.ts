@@ -53,8 +53,7 @@ export async function POST(request: Request) {
     const dashboardConfig = await generateDashboardConfig({
       analysis,
       dashboardName,
-      customRequirements,
-      workspaceId
+      customRequirements
     });
 
     // Create dashboard in database
