@@ -561,8 +561,9 @@ export default function AcademyMonitoringPage() {
     return filtered;
   }, [participants, searchCustomer, searchPerson, fromDate]);
 
-  // Sort participants
-  const sortedParticipants = [...filteredParticipants].sort((a, b) => {
+  // Sort participants - ensure we use filteredParticipants
+  const sortedParticipants = useMemo(() => {
+    return [...filteredParticipants].sort((a, b) => {
     if (!sortColumn) return 0;
     
     let aValue: any;
@@ -606,13 +607,18 @@ export default function AcademyMonitoringPage() {
         ? (aValue < bValue ? -1 : aValue > bValue ? 1 : 0)
         : (aValue > bValue ? -1 : aValue < bValue ? 1 : 0);
     }
-  });
+    });
+  }, [filteredParticipants, sortColumn, sortDirection]);
 
   // Paginate participants
   const totalPages = Math.ceil(sortedParticipants.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedParticipants = sortedParticipants.slice(startIndex, endIndex);
+  
+  // Ensure pagination uses sortedParticipants from filtered data
+  const paginatedParticipants = useMemo(() => {
+    return sortedParticipants.slice(startIndex, endIndex);
+  }, [sortedParticipants, startIndex, endIndex, currentPage, itemsPerPage]);
 
   // Reset to page 1 when search changes
   useEffect(() => {
