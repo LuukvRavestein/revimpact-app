@@ -330,8 +330,22 @@ export default function AcademyMonitoringPage() {
           continue;
         }
         
-        const startDate = findColumn(row, ['Startdatum', 'startdatum', 'Startdatum']) || '';
-        const completedOn = findColumn(row, ['Voltooid op', 'voltooid op', 'Voltooid op', 'Voltooid op']) || '';
+        const startDateRaw = findColumn(row, ['Startdatum', 'startdatum', 'Startdatum']) || '';
+        const completedOnRaw = findColumn(row, ['Voltooid op', 'voltooid op', 'Voltooid op', 'Voltooid op']) || '';
+        
+        // Debug: log first few dates to see what Excel returns
+        if (progressRecords.length < 3) {
+          console.log('Date parsing debug:', {
+            rowIndex: progressRecords.length,
+            startDateRaw: startDateRaw,
+            startDateType: typeof startDateRaw,
+            startDateValue: startDateRaw,
+            parsedStartDate: parseDate(startDateRaw)
+          });
+        }
+        
+        const startDate = parseDate(startDateRaw);
+        const completedOn = parseDate(completedOnRaw);
         const score = findColumn(row, ['Score', 'score']) || null;
         const passThreshold = findColumn(row, ['Slaagdrempel voor score', 'slaagdrempel voor score']) || null;
         const progress = findColumn(row, ['Voortgang', 'voortgang']) || null;
@@ -354,8 +368,8 @@ export default function AcademyMonitoringPage() {
           participant_email: participantEmail || '',
           customer_name: customerName,
           lesson_module: lessonModule || 'Onbekend',
-          start_date: parseDate(startDate),
-          completed_on: parseDate(completedOn),
+          start_date: startDate,
+          completed_on: completedOn,
           score: score ? parseFloat(score.toString()) : null,
           pass_threshold: passThreshold ? parseFloat(passThreshold.toString()) : null,
           progress_percentage: progress ? parseInt(progress.toString()) : null,
