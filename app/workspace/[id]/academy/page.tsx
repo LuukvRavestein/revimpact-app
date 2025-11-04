@@ -547,15 +547,38 @@ export default function AcademyMonitoringPage() {
       return result;
     });
     
-    // Debug: Log filter results
+    // Debug: Log filter results and verify no Bentacera records
     if (searchCustomerTrimmed) {
       const uniqueCustomersInResults = new Set(filtered.map(p => p.customer_name));
+      const bentaceraRecords = filtered.filter(p => {
+        const customerName = String(p.customer_name || '').toLowerCase();
+        return customerName.includes('bentacera');
+      });
+      
       console.log('Filter results:', {
         searchTerm: searchCustomerTrimmed,
         totalRecords: filtered.length,
         uniqueCustomers: Array.from(uniqueCustomersInResults),
-        bentaceraCount: filtered.filter(p => String(p.customer_name).toLowerCase().includes('bentacera')).length
+        bentaceraCount: bentaceraRecords.length,
+        bentaceraRecords: bentaceraRecords.map(p => ({
+          id: p.id,
+          customer: p.customer_name,
+          participant: p.participant_name
+        }))
       });
+      
+      // If Bentacera records are found but shouldn't be, log detailed info
+      if (bentaceraRecords.length > 0) {
+        console.error('BUG: Bentacera records in filtered results!', {
+          searchTerm: searchCustomerTrimmed,
+          records: bentaceraRecords.map(p => ({
+            id: p.id,
+            customer_name: p.customer_name,
+            customer_name_type: typeof p.customer_name,
+            participant_name: p.participant_name
+          }))
+        });
+      }
     }
     
     return filtered;
@@ -1023,7 +1046,20 @@ export default function AcademyMonitoringPage() {
                     </td>
                   </tr>
                 ) : (
-                  paginatedParticipants.map((participant) => (
+                  paginatedParticipants.map((participant) => {
+                    // Debug: Log if we see Bentacera in paginated results when searching for zonm
+                    if (searchCustomer.trim().toLowerCase() === 'zonm' && 
+                        String(participant.customer_name || '').toLowerCase().includes('bentacera')) {
+                      console.error('BUG: Bentacera record in paginatedParticipants!', {
+                        participant_id: participant.id,
+                        customer_name: participant.customer_name,
+                        participant_name: participant.participant_name,
+                        filteredLength: filteredParticipants.length,
+                        sortedLength: sortedParticipants.length,
+                        paginatedLength: paginatedParticipants.length
+                      });
+                    }
+                    return (
                     <tr key={participant.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {participant.participant_name}
@@ -1060,7 +1096,8 @@ export default function AcademyMonitoringPage() {
                           : '-'}
                       </td>
                     </tr>
-                  ))
+                    );
+                  })
                 )}
               </tbody>
             </table>
