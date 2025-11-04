@@ -596,6 +596,28 @@ export default function AcademyMonitoringPage() {
   const uniqueParticipants = new Set(filteredParticipants.map(p => p.participant_email)).size;
   const totalModules = filteredParticipants.length;
 
+  // Calculate top 10 most active customers (by number of modules)
+  const customerCounts = filteredParticipants.reduce((acc, p) => {
+    const customer = p.customer_name || 'Onbekend';
+    acc[customer] = (acc[customer] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const top10Customers = Object.entries(customerCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10)
+    .map(([name, count]) => ({ name, count }));
+
+  // Calculate top 10 most used lesson modules
+  const moduleCounts = filteredParticipants.reduce((acc, p) => {
+    const module = p.lesson_module || 'Onbekend';
+    acc[module] = (acc[module] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+  const top10Modules = Object.entries(moduleCounts)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 10)
+    .map(([name, count]) => ({ name, count }));
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-impact-light via-white to-impact-light flex items-center justify-center">
@@ -669,41 +691,25 @@ export default function AcademyMonitoringPage() {
           </div>
         )}
 
-        {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Totaal Modules</h3>
-            <p className="text-3xl font-bold text-impact-blue">{totalModules}</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Unieke Deelnemers</h3>
-            <p className="text-3xl font-bold text-impact-blue">{uniqueParticipants}</p>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Klanten</h3>
-            <p className="text-3xl font-bold text-impact-blue">{uniqueCustomers}</p>
-          </div>
-        </div>
-
-        {/* Upload Section */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Upload Excel Bestand</h2>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <div className="space-y-4">
+        {/* Upload Section - Moved to top and made more compact */}
+        <div className="bg-white rounded-lg shadow-md p-4 mb-8">
+          <h2 className="text-lg font-semibold mb-3">Upload Excel Bestand</h2>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+            <div className="flex items-center justify-center space-x-4">
               <div className="text-gray-500">
-                <svg className="mx-auto h-12 w-12" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                <svg className="h-8 w-8" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                   <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
               <div>
                 <label htmlFor="academy-file-upload" className="cursor-pointer">
-                  <span className="mt-2 block text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-gray-900">
                     {isUploading || isProcessing 
                       ? (isProcessing ? 'Bestand verwerken...' : 'Bestand uploaden...')
                       : 'Klik om Excel bestand te uploaden'}
                   </span>
-                  <span className="mt-1 block text-sm text-gray-500">
-                    .xlsx, .xls bestanden
+                  <span className="ml-2 text-xs text-gray-500">
+                    (.xlsx, .xls)
                   </span>
                 </label>
                 <input
@@ -721,14 +727,14 @@ export default function AcademyMonitoringPage() {
           
           {/* Upload History - Collapsible */}
           {uploads.length > 0 && (
-            <div className="mt-6">
+            <div className="mt-4">
               <button
                 onClick={() => setShowUploadHistory(!showUploadHistory)}
-                className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+                className="flex items-center justify-between w-full text-left text-xs font-medium text-gray-700 hover:text-gray-900 transition-colors"
               >
                 <span>Upload Geschiedenis ({uploads.length})</span>
                 <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${showUploadHistory ? 'transform rotate-180' : ''}`}
+                  className={`w-4 h-4 text-gray-500 transition-transform ${showUploadHistory ? 'transform rotate-180' : ''}`}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -737,11 +743,11 @@ export default function AcademyMonitoringPage() {
                 </svg>
               </button>
               {showUploadHistory && (
-                <div className="mt-3 space-y-2">
+                <div className="mt-2 space-y-1">
                   {uploads.map((upload) => (
-                    <div key={upload.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div key={upload.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{upload.filename}</p>
+                        <p className="text-xs font-medium text-gray-900">{upload.filename}</p>
                         <p className="text-xs text-gray-500">
                           {new Date(upload.upload_date).toLocaleString('nl-NL')}
                         </p>
@@ -761,6 +767,62 @@ export default function AcademyMonitoringPage() {
               )}
             </div>
           )}
+        </div>
+
+        {/* Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Totaal Modules</h3>
+            <p className="text-3xl font-bold text-impact-blue">{totalModules}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Unieke Deelnemers</h3>
+            <p className="text-3xl font-bold text-impact-blue">{uniqueParticipants}</p>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Klanten</h3>
+            <p className="text-3xl font-bold text-impact-blue">{uniqueCustomers}</p>
+          </div>
+        </div>
+
+        {/* Top 10 Lists */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Top 10 Meest Actieve Klanten</h3>
+            {top10Customers.length > 0 ? (
+              <div className="space-y-2">
+                {top10Customers.map((customer, index) => (
+                  <div key={customer.name} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm font-medium text-gray-500 w-6">{index + 1}.</span>
+                      <span className="text-sm font-medium text-gray-900">{customer.name}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-impact-blue">{customer.count}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Geen data beschikbaar</p>
+            )}
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Top 10 Meest Gebruikte Lesmodules</h3>
+            {top10Modules.length > 0 ? (
+              <div className="space-y-2">
+                {top10Modules.map((module, index) => (
+                  <div key={module.name} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-sm font-medium text-gray-500 w-6">{index + 1}.</span>
+                      <span className="text-sm font-medium text-gray-900 truncate">{module.name}</span>
+                    </div>
+                    <span className="text-sm font-semibold text-impact-blue">{module.count}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Geen data beschikbaar</p>
+            )}
+          </div>
         </div>
 
         {/* Search Section */}
