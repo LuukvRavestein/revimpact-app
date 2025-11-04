@@ -311,12 +311,81 @@ export default function ChatbotPage() {
     }
   }, [supabase]);
 
+  // Check authentication and client type on component mount
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        router.push("/signin");
+        return;
+      }
+
+      // Get workspace information
+      const { data: memberships, error: mErr } = await supabase
+        .from("workspace_members")
+        .select("workspace_id, role, workspaces(name)")
+        .eq("user_id", session.user.id)
+        .limit(1);
+      
+      if (mErr) {
+        console.error("Error loading memberships:", mErr);
+        setIsAuthenticated(false);
+        setLoading(false);
+        return;
+      }
+
+      const membership = memberships?.[0] as { 
+        workspace_id: string; 
+        role: string; 
+        workspaces: { name: string }[] | { name: string }
+      } | undefined;
+      
+      let name: string | undefined;
+      
+      if (membership?.workspaces) {
+        if (Array.isArray(membership.workspaces)) {
+          name = membership.workspaces[0]?.name;
+        } else {
+          name = membership.workspaces.name;
+        }
+      }
+
+      const workspaceIdValue = membership?.workspace_id;
+      setWorkspaceName(name || "My Workspace");
+      setWorkspaceId(workspaceIdValue || null);
+      
+      // Check if this is a Timewax client
+      const workspaceNameLower = (name || "").toLowerCase();
+      const isTimewax = workspaceNameLower.includes('timewax');
+      
+      if (!isTimewax) {
+        // Not a Timewax client, redirect to dashboard
+        router.push("/dashboard");
+        return;
+      }
+      
+      setIsAuthenticated(true);
+      
+      // Load existing data if workspace is available
+      if (workspaceIdValue) {
+        await loadChatbotData(workspaceIdValue);
+        await loadUploadHistory(workspaceIdValue);
+      } else {
+        setLoading(false);
+      }
+    };
+    
+    checkAuthentication();
+  }, [supabase, router, loadChatbotData, loadUploadHistory]);
+
   // Run forwarding detection test on component mount
   useEffect(() => {
     if (isAuthenticated) {
       testForwardingDetection();
     }
   }, [isAuthenticated]);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
