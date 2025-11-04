@@ -578,14 +578,6 @@ export default function AcademyMonitoringPage() {
     setCurrentPage(1);
   }, [selectedCustomers, selectedPersons, fromDate]);
 
-  // Filter dropdown options based on search input
-  const filteredCustomerOptions = allUniqueCustomers.filter(customer =>
-    customer.toLowerCase().includes(customerSearchInput.toLowerCase())
-  );
-  const filteredPersonOptions = allUniquePersons.filter(person =>
-    person.toLowerCase().includes(personSearchInput.toLowerCase())
-  );
-
   // Handle column sort
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -616,6 +608,14 @@ export default function AcademyMonitoringPage() {
       .filter(p => p.name || p.email)
       .map(p => p.name || p.email || '')
   )).sort();
+
+  // Filter dropdown options based on search input
+  const filteredCustomerOptions = allUniqueCustomers.filter(customer =>
+    customer.toLowerCase().includes(customerSearchInput.toLowerCase())
+  );
+  const filteredPersonOptions = allUniquePersons.filter(person =>
+    person.toLowerCase().includes(personSearchInput.toLowerCase())
+  );
 
   // Get unique customers for statistics (based on filtered participants)
   const uniqueCustomers = new Set(filteredParticipants.map(p => p.customer_name)).size;
