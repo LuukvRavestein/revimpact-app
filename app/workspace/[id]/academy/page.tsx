@@ -504,27 +504,25 @@ export default function AcademyMonitoringPage() {
     const searchCustomerTrimmed = searchCustomer.trim();
     const searchPersonTrimmed = searchPerson.trim();
     
-    return participants.filter(p => {
+    const filtered = participants.filter(p => {
       // Customer name filter: check if search text appears in customer_name (case-insensitive)
       let matchesCustomer = true; // Default: show all if no search term
       
       if (searchCustomerTrimmed) {
         // Only match if customer_name exists, is a string, and contains the search term
-        if (!p.customer_name || typeof p.customer_name !== 'string') {
+        if (!p.customer_name) {
           matchesCustomer = false;
         } else {
-          const customerNameClean = String(p.customer_name).trim().toLowerCase();
-          const searchTermClean = searchCustomerTrimmed.toLowerCase();
+          const customerNameStr = String(p.customer_name);
+          const customerNameClean = customerNameStr.trim().toLowerCase();
+          const searchTermClean = searchCustomerTrimmed.trim().toLowerCase();
+          
+          // Check if customer name contains the search term
           matchesCustomer = customerNameClean.includes(searchTermClean);
           
-          // Debug: Log first few non-matching records when searching for "zon"
-          if (searchTermClean === 'zon' && customerNameClean === 'bentacera' && matchesCustomer) {
-            console.error('BUG: Bentacera matched "zon" search!', {
-              original: p.customer_name,
-              cleaned: customerNameClean,
-              searchTerm: searchTermClean,
-              includes: customerNameClean.includes(searchTermClean)
-            });
+          // Debug logging for problematic cases
+          if (searchTermClean && customerNameClean && !matchesCustomer && customerNameClean.includes('bentacera')) {
+            // This shouldn't log if filter works correctly
           }
         }
       }
@@ -533,7 +531,7 @@ export default function AcademyMonitoringPage() {
       let matchesPerson = true; // Default: show all if no search term
       
       if (searchPersonTrimmed) {
-        const searchTermClean = searchPersonTrimmed.toLowerCase();
+        const searchTermClean = searchPersonTrimmed.trim().toLowerCase();
         const nameClean = p.participant_name ? String(p.participant_name).trim().toLowerCase() : '';
         const emailClean = p.participant_email ? String(p.participant_email).trim().toLowerCase() : '';
         matchesPerson = nameClean.includes(searchTermClean) || emailClean.includes(searchTermClean);
@@ -548,6 +546,19 @@ export default function AcademyMonitoringPage() {
       
       return result;
     });
+    
+    // Debug: Log filter results
+    if (searchCustomerTrimmed) {
+      const uniqueCustomersInResults = new Set(filtered.map(p => p.customer_name));
+      console.log('Filter results:', {
+        searchTerm: searchCustomerTrimmed,
+        totalRecords: filtered.length,
+        uniqueCustomers: Array.from(uniqueCustomersInResults),
+        bentaceraCount: filtered.filter(p => String(p.customer_name).toLowerCase().includes('bentacera')).length
+      });
+    }
+    
+    return filtered;
   }, [participants, searchCustomer, searchPerson, fromDate]);
 
   // Sort participants
