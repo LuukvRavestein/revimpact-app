@@ -265,12 +265,21 @@ export default function AcademyMonitoringPage() {
         return;
       }
 
-      // Read Excel file
+      // Read Excel file with date handling options
       const data = await file.arrayBuffer();
-      const workbook = XLSX.read(data);
+      const workbook = XLSX.read(data, {
+        cellDates: false, // Don't parse dates automatically - keep as strings/numbers
+        cellNF: false,
+        cellText: true // Get cell text instead of formatted values
+      });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet) as any[];
+      
+      // Convert to JSON with raw cell values to preserve date formats
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+        raw: false, // Get formatted strings instead of raw values
+        defval: '' // Default value for empty cells
+      }) as any[];
 
       if (jsonData.length === 0) {
         setError('Het Excel bestand bevat geen data');
