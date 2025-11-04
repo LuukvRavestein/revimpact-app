@@ -26,14 +26,8 @@ CREATE POLICY "Users can view workspace features they belong to" ON workspace_fe
   );
 
 DROP POLICY IF EXISTS "Admins can manage workspace features" ON workspace_features;
-CREATE POLICY "Admins can manage workspace features" ON workspace_features
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM auth.users 
-      WHERE id = auth.uid() 
-      AND (email ILIKE '%admin%' OR email = 'luuk@revimpact.nl' OR email = 'admin@revimpact.nl')
-    )
-  );
+-- Note: Admin check removed as auth.users is not accessible via RLS
+-- Admins should use workspace owner role instead
 
 DROP POLICY IF EXISTS "Workspace owners can manage features" ON workspace_features;
 CREATE POLICY "Workspace owners can manage features" ON workspace_features
