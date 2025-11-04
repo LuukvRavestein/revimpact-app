@@ -142,6 +142,7 @@ export default function AcademyMonitoringPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [showUploadHistory, setShowUploadHistory] = useState(false);
   const itemsPerPage = 50;
   
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -720,31 +721,46 @@ export default function AcademyMonitoringPage() {
             </div>
           </div>
           
-          {/* Upload History */}
+          {/* Upload History - Collapsible */}
           {uploads.length > 0 && (
             <div className="mt-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">Upload Geschiedenis</h3>
-              <div className="space-y-2">
-                {uploads.slice(0, 5).map((upload) => (
-                  <div key={upload.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{upload.filename}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(upload.upload_date).toLocaleString('nl-NL')}
-                      </p>
+              <button
+                onClick={() => setShowUploadHistory(!showUploadHistory)}
+                className="flex items-center justify-between w-full text-left text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+              >
+                <span>Upload Geschiedenis ({uploads.length})</span>
+                <svg
+                  className={`w-5 h-5 text-gray-500 transition-transform ${showUploadHistory ? 'transform rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showUploadHistory && (
+                <div className="mt-3 space-y-2">
+                  {uploads.map((upload) => (
+                    <div key={upload.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{upload.filename}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(upload.upload_date).toLocaleString('nl-NL')}
+                        </p>
+                      </div>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        upload.status === 'processed' 
+                          ? 'bg-green-100 text-green-800'
+                          : upload.status === 'processing'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {upload.status}
+                      </span>
                     </div>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      upload.status === 'processed' 
-                        ? 'bg-green-100 text-green-800'
-                        : upload.status === 'processing'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {upload.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
