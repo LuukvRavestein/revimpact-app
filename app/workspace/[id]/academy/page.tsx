@@ -139,6 +139,7 @@ export default function AcademyMonitoringPage() {
   const [success, setSuccess] = useState("");
   const [searchCustomer, setSearchCustomer] = useState("");
   const [searchPerson, setSearchPerson] = useState("");
+  const [fromDate, setFromDate] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<string | null>('start_date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
@@ -494,14 +495,19 @@ export default function AcademyMonitoringPage() {
     }
   };
 
-  // Filter participants based on search
+  // Filter participants based on search and date
   const filteredParticipants = participants.filter(p => {
     const matchesCustomer = !searchCustomer || 
       (p.customer_name && p.customer_name.toLowerCase().includes(searchCustomer.toLowerCase()));
     const matchesPerson = !searchPerson || 
       p.participant_name.toLowerCase().includes(searchPerson.toLowerCase()) ||
       p.participant_email.toLowerCase().includes(searchPerson.toLowerCase());
-    return matchesCustomer && matchesPerson;
+    
+    // Filter by from date (start_date must be >= fromDate)
+    const matchesDate = !fromDate || !p.start_date || 
+      new Date(p.start_date) >= new Date(fromDate);
+    
+    return matchesCustomer && matchesPerson && matchesDate;
   });
 
   // Sort participants
@@ -560,7 +566,7 @@ export default function AcademyMonitoringPage() {
   // Reset to page 1 when search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchCustomer, searchPerson]);
+  }, [searchCustomer, searchPerson, fromDate]);
 
   // Handle column sort
   const handleSort = (column: string) => {
@@ -759,8 +765,8 @@ export default function AcademyMonitoringPage() {
 
         {/* Search Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Zoeken</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <h2 className="text-xl font-semibold mb-4">Zoeken & Filteren</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Zoek op Klantnaam
@@ -784,6 +790,25 @@ export default function AcademyMonitoringPage() {
                 placeholder="Bijv. Wim Hiensch"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue transition-colors"
               />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Vanaf Datum
+              </label>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue transition-colors"
+              />
+              {fromDate && (
+                <button
+                  onClick={() => setFromDate("")}
+                  className="mt-2 text-xs text-impact-blue hover:text-impact-blue/80 underline"
+                >
+                  Filter wissen
+                </button>
+              )}
             </div>
           </div>
         </div>
