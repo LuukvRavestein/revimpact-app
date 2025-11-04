@@ -99,6 +99,10 @@ export default function AcademyMonitoringPage() {
   const [success, setSuccess] = useState("");
   const [searchCustomer, setSearchCustomer] = useState("");
   const [searchPerson, setSearchPerson] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const itemsPerPage = 50;
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -343,6 +347,95 @@ export default function AcademyMonitoringPage() {
     return matchesCustomer && matchesPerson;
   });
 
+  // Sort participants
+  const sortedParticipants = [...filteredParticipants].sort((a, b) => {
+    if (!sortColumn) return 0;
+    
+    let aValue: any;
+    let bValue: any;
+
+    switch (sortColumn) {
+      case 'participant_name':
+        aValue = a.participant_name || '';
+        bValue = b.participant_name || '';
+        break;
+      case 'participant_email':
+        aValue = a.participant_email || '';
+        bValue = b.participant_email || '';
+        break;
+      case 'customer_name':
+        aValue = a.customer_name || '';
+        bValue = b.customer_name || '';
+        break;
+      case 'lesson_module':
+        aValue = a.lesson_module || '';
+        bValue = b.lesson_module || '';
+        break;
+      case 'start_date':
+        aValue = a.start_date ? new Date(a.start_date).getTime() : 0;
+        bValue = b.start_date ? new Date(b.start_date).getTime() : 0;
+        break;
+      case 'progress_percentage':
+        aValue = a.progress_percentage ?? 0;
+        bValue = b.progress_percentage ?? 0;
+        break;
+      case 'score':
+        aValue = a.score ?? 0;
+        bValue = b.score ?? 0;
+        break;
+      case 'duration_seconds':
+        aValue = a.duration_seconds ?? 0;
+        bValue = b.duration_seconds ?? 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc' 
+        ? aValue.localeCompare(bValue, 'nl')
+        : bValue.localeCompare(aValue, 'nl');
+    } else {
+      return sortDirection === 'asc' 
+        ? (aValue < bValue ? -1 : aValue > bValue ? 1 : 0)
+        : (aValue > bValue ? -1 : aValue < bValue ? 1 : 0);
+    }
+  });
+
+  // Paginate participants
+  const totalPages = Math.ceil(sortedParticipants.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedParticipants = sortedParticipants.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchCustomer, searchPerson]);
+
+  // Handle column sort
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  // Sort indicator component
+  const SortIndicator = ({ column }: { column: string }) => {
+    if (sortColumn !== column) {
+      return <span className="ml-1 text-gray-400">↕</span>;
+    }
+    return (
+      <span className="ml-1 text-impact-blue">
+        {sortDirection === 'asc' ? '↑' : '↓'}
+      </span>
+    );
+  };
+
   // Get unique customers for statistics
   const uniqueCustomers = new Set(participants.map(p => p.customer_name)).size;
   const uniqueParticipants = new Set(participants.map(p => p.participant_email)).size;
@@ -534,38 +627,91 @@ export default function AcademyMonitoringPage() {
         {/* Results Table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold">Voortgang Overzicht</h2>
-            <p className="text-sm text-gray-500 mt-1">
-              {filteredParticipants.length} van {participants.length} records
-            </p>
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-xl font-semibold">Voortgang Overzicht</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  {filteredParticipants.length} van {participants.length} records
+                  {totalPages > 1 && ` • Pagina ${currentPage} van ${totalPages}`}
+                </p>
+              </div>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Deelnemer
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort('participant_name')}
+                  >
+                    <div className="flex items-center">
+                      Deelnemer
+                      <SortIndicator column="participant_name" />
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    E-mail
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort('participant_email')}
+                  >
+                    <div className="flex items-center">
+                      E-mail
+                      <SortIndicator column="participant_email" />
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Klant
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort('customer_name')}
+                  >
+                    <div className="flex items-center">
+                      Klant
+                      <SortIndicator column="customer_name" />
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Lesmodule
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort('lesson_module')}
+                  >
+                    <div className="flex items-center">
+                      Lesmodule
+                      <SortIndicator column="lesson_module" />
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Startdatum
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort('start_date')}
+                  >
+                    <div className="flex items-center">
+                      Startdatum
+                      <SortIndicator column="start_date" />
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Voortgang
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort('progress_percentage')}
+                  >
+                    <div className="flex items-center">
+                      Voortgang
+                      <SortIndicator column="progress_percentage" />
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Score
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort('score')}
+                  >
+                    <div className="flex items-center">
+                      Score
+                      <SortIndicator column="score" />
+                    </div>
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Tijdsduur
+                  <th 
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => handleSort('duration_seconds')}
+                  >
+                    <div className="flex items-center">
+                      Tijdsduur
+                      <SortIndicator column="duration_seconds" />
+                    </div>
                   </th>
                 </tr>
               </thead>
@@ -579,7 +725,7 @@ export default function AcademyMonitoringPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredParticipants.map((participant) => (
+                  paginatedParticipants.map((participant) => (
                     <tr key={participant.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {participant.participant_name}
@@ -629,6 +775,91 @@ export default function AcademyMonitoringPage() {
               </tbody>
             </table>
           </div>
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+              <div className="flex-1 flex justify-between sm:hidden">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Vorige
+                </button>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Volgende
+                </button>
+              </div>
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-700">
+                    Toont <span className="font-medium">{startIndex + 1}</span> tot{' '}
+                    <span className="font-medium">{Math.min(endIndex, sortedParticipants.length)}</span> van{' '}
+                    <span className="font-medium">{sortedParticipants.length}</span> resultaten
+                  </p>
+                </div>
+                <div>
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="sr-only">Vorige</span>
+                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    {[...Array(totalPages)].map((_, i) => {
+                      const page = i + 1;
+                      // Show first page, last page, current page, and pages around current
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 2 && page <= currentPage + 2)
+                      ) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                              currentPage === page
+                                ? 'z-10 bg-impact-blue border-impact-blue text-white'
+                                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      } else if (page === currentPage - 3 || page === currentPage + 3) {
+                        return (
+                          <span key={page} className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                      disabled={currentPage === totalPages}
+                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="sr-only">Volgende</span>
+                      <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
