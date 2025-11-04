@@ -70,6 +70,11 @@ const FEATURE_DESCRIPTIONS = {
     name: "Admin Panel",
     description: "Toegang tot admin functionaliteit",
     icon: "👑"
+  },
+  academy_monitoring: {
+    name: "Academy Monitoring",
+    description: "Monitor voortgang van deelnemers in Timewax Academy",
+    icon: "🎓"
   }
 };
 
@@ -642,7 +647,15 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
             <div className="space-y-4">
               {features.map((feature) => {
                 const featureInfo = FEATURE_DESCRIPTIONS[feature.feature_name as keyof typeof FEATURE_DESCRIPTIONS];
-                const hasLink = feature.feature_name === 'ai_dashboard' || feature.feature_name === 'data_upload';
+                const hasLink = feature.feature_name === 'ai_dashboard' || 
+                               feature.feature_name === 'data_upload' ||
+                               feature.feature_name === 'academy_monitoring';
+                
+                const linkUrl = feature.feature_name === 'ai_dashboard' 
+                  ? `/workspace/${workspaceId}/ai`
+                  : feature.feature_name === 'academy_monitoring'
+                  ? `/workspace/${workspaceId}/academy`
+                  : '/data';
                 
                 return (
                   <div key={feature.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -651,11 +664,7 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
                       <div>
                         {hasLink ? (
                           <Link 
-                            href={
-                              feature.feature_name === 'ai_dashboard' 
-                                ? `/workspace/${workspaceId}/ai`
-                                : '/data'
-                            }
+                            href={linkUrl}
                             className="font-medium text-gray-900 hover:text-impact-blue transition-colors"
                           >
                             {featureInfo?.name || feature.feature_name}
@@ -669,11 +678,7 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
                     <div className="flex items-center space-x-3">
                       {hasLink && (
                         <Link 
-                          href={
-                            feature.feature_name === 'ai_dashboard' 
-                              ? `/workspace/${workspaceId}/ai`
-                              : '/data'
-                          }
+                          href={linkUrl}
                           className="px-3 py-1 text-sm bg-impact-blue text-white rounded-lg hover:bg-impact-blue/90 transition-colors"
                         >
                           Open
