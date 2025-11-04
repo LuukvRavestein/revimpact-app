@@ -497,11 +497,16 @@ export default function AcademyMonitoringPage() {
 
   // Filter participants based on search and date
   const filteredParticipants = participants.filter(p => {
-    const matchesCustomer = !searchCustomer || 
-      (p.customer_name && p.customer_name.toLowerCase().includes(searchCustomer.toLowerCase()));
-    const matchesPerson = !searchPerson || 
-      p.participant_name.toLowerCase().includes(searchPerson.toLowerCase()) ||
-      p.participant_email.toLowerCase().includes(searchPerson.toLowerCase());
+    // Customer name filter: exact match (case-insensitive) or starts with (case-insensitive)
+    const searchCustomerTrimmed = searchCustomer.trim().toLowerCase();
+    const matchesCustomer = !searchCustomerTrimmed || 
+      (p.customer_name && p.customer_name.trim().toLowerCase() === searchCustomerTrimmed);
+    
+    // Person filter: contains match (case-insensitive)
+    const searchPersonTrimmed = searchPerson.trim().toLowerCase();
+    const matchesPerson = !searchPersonTrimmed || 
+      (p.participant_name && p.participant_name.toLowerCase().includes(searchPersonTrimmed)) ||
+      (p.participant_email && p.participant_email.toLowerCase().includes(searchPersonTrimmed));
     
     // Filter by from date (start_date must be >= fromDate)
     const matchesDate = !fromDate || !p.start_date || 
