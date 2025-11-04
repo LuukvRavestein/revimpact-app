@@ -516,6 +516,16 @@ export default function AcademyMonitoringPage() {
           const customerNameClean = String(p.customer_name).trim().toLowerCase();
           const searchTermClean = searchCustomerTrimmed.toLowerCase();
           matchesCustomer = customerNameClean.includes(searchTermClean);
+          
+          // Debug: Log first few non-matching records when searching for "zon"
+          if (searchTermClean === 'zon' && customerNameClean === 'bentacera' && matchesCustomer) {
+            console.error('BUG: Bentacera matched "zon" search!', {
+              original: p.customer_name,
+              cleaned: customerNameClean,
+              searchTerm: searchTermClean,
+              includes: customerNameClean.includes(searchTermClean)
+            });
+          }
         }
       }
       
