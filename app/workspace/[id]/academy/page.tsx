@@ -267,6 +267,13 @@ export default function AcademyMonitoringPage() {
         const participantName = findColumn(row, ['Gebruiker', 'gebruiker', 'Gebruiker']) || '';
         const participantEmail = findColumn(row, ['E-mail', 'e-mail', 'E-mail', 'Email', 'email']) || '';
         const lessonModule = findColumn(row, ['Lesmodule', 'lesmodule', 'Lesmodule']) || '';
+        
+        // Skip rows without essential data (name or email)
+        if (!participantName && !participantEmail) {
+          console.warn('Skipping row without participant name or email:', row);
+          continue;
+        }
+        
         const startDate = findColumn(row, ['Startdatum', 'startdatum', 'Startdatum']) || '';
         const completedOn = findColumn(row, ['Voltooid op', 'voltooid op', 'Voltooid op', 'Voltooid op']) || '';
         const score = findColumn(row, ['Score', 'score']) || null;
@@ -287,10 +294,10 @@ export default function AcademyMonitoringPage() {
         progressRecords.push({
           workspace_id: workspaceId,
           upload_id: uploadRecord.id,
-          participant_name: participantName,
-          participant_email: participantEmail,
+          participant_name: participantName || 'Onbekend',
+          participant_email: participantEmail || '',
           customer_name: customerName,
-          lesson_module: lessonModule,
+          lesson_module: lessonModule || 'Onbekend',
           start_date: parseDate(startDate),
           completed_on: parseDate(completedOn),
           score: score ? parseFloat(score.toString()) : null,
@@ -302,32 +309,88 @@ export default function AcademyMonitoringPage() {
           raw_data: row
         });
       }
+      
+      console.log(`Processed ${progressRecords.length} records from ${jsonData.length} rows`);
 
       // Insert progress records in batches
       const batchSize = 100;
+      let successCount = 0;
+      let errorCount = 0;
+      const errors: string[] = [];
+
       for (let i = 0; i < progressRecords.length; i += batchSize) {
         const batch = progressRecords.slice(i, i + batchSize);
-        const { error: insertError } = await supabase
-          .from('academy_participant_progress')
-          .insert(batch);
+        try {
+          const { error: insertError } = await supabase
+            .from('academy_participant_progress')
+            .insert(batch);
 
-        if (insertError) {
-          console.error('Error inserting batch:', insertError);
-          throw insertError;
+          if (insertError) {
+            console.error(`Error inserting batch ${Math.floor(i / batchSize) + 1}:`, insertError);
+            errorCount += batch.length;
+            errors.push(`Batch ${Math.floor(i / batchSize) + 1}: ${insertError.message}`);
+          } else {
+            successCount += batch.length;
+          }
+        } catch (batchError: any) {
+          console.error(`Exception inserting batch ${Math.floor(i / batchSize) + 1}:`, batchError);
+          errorCount += batch.length;
+          errors.push(`Batch ${Math.floor(i / batchSize) + 1}: ${batchError.message || 'Unknown error'}`);
         }
       }
 
-      // Update upload status
-      await supabase
-        .from('academy_data_uploads')
-        .update({ status: 'processed' })
-        .eq('id', uploadRecord.id);
+      // Update upload status based on results
+      if (successCount > 0 && errorCount === 0) {
+        await supabase
+          .from('academy_data_uploads')
+          .update({ status: 'processed' })
+          .eq('id', uploadRecord.id);
+        setSuccess(`Bestand succesvol verwerkt! ${successCount} records toegevoegd.`);
+      } else if (successCount > 0 && errorCount > 0) {
+        await supabase
+          .from('academy_data_uploads')
+          .update({ status: 'processed' })
+          .eq('id', uploadRecord.id);
+        setSuccess(`Gedeeltelijk verwerkt: ${successCount} records toegevoegd, ${errorCount} records gefaald.`);
+        if (errors.length > 0) {
+          console.error('Batch errors:', errors);
+        }
+      } else {
+        await supabase
+          .from('academy_data_uploads')
+          .update({ status: 'error' })
+          .eq('id', uploadRecord.id);
+        throw new Error(`Geen records konden worden toegevoegd. Errors: ${errors.join('; ')}`);
+      }
 
-      setSuccess(`Bestand succesvol verwerkt! ${progressRecords.length} records toegevoegd.`);
       await loadWorkspaceData();
     } catch (err: any) {
       console.error('Error processing file:', err);
       setError(`Fout bij verwerken van bestand: ${err.message || 'Onbekende fout'}`);
+      
+      // Try to update status to error if upload record exists
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: lastUpload } = await supabase
+            .from('academy_data_uploads')
+            .select('id')
+            .eq('workspace_id', workspaceId)
+            .eq('created_by', session.user.id)
+            .order('upload_date', { ascending: false })
+            .limit(1)
+            .single();
+          
+          if (lastUpload) {
+            await supabase
+              .from('academy_data_uploads')
+              .update({ status: 'error' })
+              .eq('id', lastUpload.id);
+          }
+        }
+      } catch (updateErr) {
+        console.error('Error updating upload status:', updateErr);
+      }
     } finally {
       setIsUploading(false);
       setIsProcessing(false);
