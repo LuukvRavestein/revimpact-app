@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -496,42 +496,49 @@ export default function AcademyMonitoringPage() {
   };
 
   // Filter participants based on search and date
-  const filteredParticipants = participants.filter(p => {
-    // Customer name filter: check if search text appears in customer_name (case-insensitive)
+  const filteredParticipants = useMemo(() => {
+    if (!participants || participants.length === 0) {
+      return [];
+    }
+    
     const searchCustomerTrimmed = searchCustomer.trim();
-    let matchesCustomer = true; // Default: show all if no search term
-    
-    if (searchCustomerTrimmed) {
-      // Only match if customer_name exists and contains the search term
-      if (!p.customer_name || typeof p.customer_name !== 'string') {
-        matchesCustomer = false;
-      } else {
-        const customerNameLower = p.customer_name.trim().toLowerCase();
-        const searchTermLower = searchCustomerTrimmed.toLowerCase();
-        matchesCustomer = customerNameLower.includes(searchTermLower);
-      }
-    }
-    
-    // Person filter: check if search text appears in participant_name or participant_email (case-insensitive)
     const searchPersonTrimmed = searchPerson.trim();
-    let matchesPerson = true; // Default: show all if no search term
     
-    if (searchPersonTrimmed) {
-      const searchTermLower = searchPersonTrimmed.toLowerCase();
-      const nameMatch = p.participant_name && 
-        p.participant_name.trim().toLowerCase().includes(searchTermLower);
-      const emailMatch = p.participant_email && 
-        p.participant_email.trim().toLowerCase().includes(searchTermLower);
-      matchesPerson = nameMatch || emailMatch || false;
-    }
-    
-    // Filter by from date (start_date must be >= fromDate)
-    const matchesDate = !fromDate || !p.start_date || 
-      new Date(p.start_date) >= new Date(fromDate);
-    
-    // Only return true if all conditions are met
-    return matchesCustomer && matchesPerson && matchesDate;
-  });
+    return participants.filter(p => {
+      // Customer name filter: check if search text appears in customer_name (case-insensitive)
+      let matchesCustomer = true; // Default: show all if no search term
+      
+      if (searchCustomerTrimmed) {
+        // Only match if customer_name exists, is a string, and contains the search term
+        if (!p.customer_name || typeof p.customer_name !== 'string') {
+          matchesCustomer = false;
+        } else {
+          const customerNameClean = String(p.customer_name).trim().toLowerCase();
+          const searchTermClean = searchCustomerTrimmed.toLowerCase();
+          matchesCustomer = customerNameClean.includes(searchTermClean);
+        }
+      }
+      
+      // Person filter: check if search text appears in participant_name or participant_email (case-insensitive)
+      let matchesPerson = true; // Default: show all if no search term
+      
+      if (searchPersonTrimmed) {
+        const searchTermClean = searchPersonTrimmed.toLowerCase();
+        const nameClean = p.participant_name ? String(p.participant_name).trim().toLowerCase() : '';
+        const emailClean = p.participant_email ? String(p.participant_email).trim().toLowerCase() : '';
+        matchesPerson = nameClean.includes(searchTermClean) || emailClean.includes(searchTermClean);
+      }
+      
+      // Filter by from date (start_date must be >= fromDate)
+      const matchesDate = !fromDate || !p.start_date || 
+        new Date(p.start_date) >= new Date(fromDate);
+      
+      // Only return true if ALL conditions are met
+      const result = matchesCustomer && matchesPerson && matchesDate;
+      
+      return result;
+    });
+  }, [participants, searchCustomer, searchPerson, fromDate]);
 
   // Sort participants
   const sortedParticipants = [...filteredParticipants].sort((a, b) => {
