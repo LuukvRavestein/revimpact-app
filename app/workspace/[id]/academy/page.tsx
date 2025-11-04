@@ -137,8 +137,12 @@ export default function AcademyMonitoringPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [searchCustomer, setSearchCustomer] = useState("");
-  const [searchPerson, setSearchPerson] = useState("");
+  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
+  const [selectedPersons, setSelectedPersons] = useState<string[]>([]);
+  const [customerSearchInput, setCustomerSearchInput] = useState("");
+  const [personSearchInput, setPersonSearchInput] = useState("");
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [showPersonDropdown, setShowPersonDropdown] = useState(false);
   const [fromDate, setFromDate] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortColumn, setSortColumn] = useState<string | null>('start_date');
@@ -497,16 +501,17 @@ export default function AcademyMonitoringPage() {
 
   // Filter participants based on search and date
   const filteredParticipants = participants.filter(p => {
-    // Customer name filter: exact match (case-insensitive) or starts with (case-insensitive)
-    const searchCustomerTrimmed = searchCustomer.trim().toLowerCase();
-    const matchesCustomer = !searchCustomerTrimmed || 
-      (p.customer_name && p.customer_name.trim().toLowerCase() === searchCustomerTrimmed);
+    // Customer name filter: match if selected customers is empty or customer is in selected list
+    const matchesCustomer = selectedCustomers.length === 0 || 
+      (p.customer_name && selectedCustomers.includes(p.customer_name));
     
-    // Person filter: contains match (case-insensitive)
-    const searchPersonTrimmed = searchPerson.trim().toLowerCase();
-    const matchesPerson = !searchPersonTrimmed || 
-      (p.participant_name && p.participant_name.toLowerCase().includes(searchPersonTrimmed)) ||
-      (p.participant_email && p.participant_email.toLowerCase().includes(searchPersonTrimmed));
+    // Person filter: match if selected persons is empty or person name/email matches
+    const matchesPerson = selectedPersons.length === 0 || 
+      selectedPersons.some(selectedPerson => {
+        const selectedLower = selectedPerson.toLowerCase();
+        return (p.participant_name && p.participant_name.toLowerCase() === selectedLower) ||
+               (p.participant_email && p.participant_email.toLowerCase() === selectedLower);
+      });
     
     // Filter by from date (start_date must be >= fromDate)
     const matchesDate = !fromDate || !p.start_date || 
@@ -571,7 +576,15 @@ export default function AcademyMonitoringPage() {
   // Reset to page 1 when search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchCustomer, searchPerson, fromDate]);
+  }, [selectedCustomers, selectedPersons, fromDate]);
+
+  // Filter dropdown options based on search input
+  const filteredCustomerOptions = allUniqueCustomers.filter(customer =>
+    customer.toLowerCase().includes(customerSearchInput.toLowerCase())
+  );
+  const filteredPersonOptions = allUniquePersons.filter(person =>
+    person.toLowerCase().includes(personSearchInput.toLowerCase())
+  );
 
   // Handle column sort
   const handleSort = (column: string) => {
@@ -595,6 +608,14 @@ export default function AcademyMonitoringPage() {
       </span>
     );
   };
+
+  // Get unique customers and persons for dropdown options
+  const allUniqueCustomers = Array.from(new Set(participants.map(p => p.customer_name).filter(Boolean))).sort();
+  const allUniquePersons = Array.from(new Set(
+    participants.map(p => ({ name: p.participant_name, email: p.participant_email }))
+      .filter(p => p.name || p.email)
+      .map(p => p.name || p.email || '')
+  )).sort();
 
   // Get unique customers for statistics (based on filtered participants)
   const uniqueCustomers = new Set(filteredParticipants.map(p => p.customer_name)).size;
@@ -841,30 +862,199 @@ export default function AcademyMonitoringPage() {
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
           <h2 className="text-xl font-semibold mb-4">Zoeken & Filteren</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
+            {/* Customer Multi-Select Dropdown */}
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Zoek op Klantnaam
+                Selecteer Klant(en)
               </label>
-              <input
-                type="text"
-                value={searchCustomer}
-                onChange={(e) => setSearchCustomer(e.target.value)}
-                placeholder="Bijv. Innax"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue transition-colors"
-              />
+              <div className="relative">
+                {/* Selected items display */}
+                {selectedCustomers.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {selectedCustomers.map((customer) => (
+                      <span
+                        key={customer}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-impact-blue text-white"
+                      >
+                        {customer}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCustomers(selectedCustomers.filter(c => c !== customer));
+                          }}
+                          className="ml-1.5 hover:text-gray-200"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Search input */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={customerSearchInput}
+                    onChange={(e) => {
+                      setCustomerSearchInput(e.target.value);
+                      setShowCustomerDropdown(true);
+                    }}
+                    onFocus={() => setShowCustomerDropdown(true)}
+                    placeholder="Typ om te zoeken..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue transition-colors"
+                  />
+                  <svg
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${showCustomerDropdown ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                
+                {/* Dropdown menu */}
+                {showCustomerDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowCustomerDropdown(false)}
+                    ></div>
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                      {filteredCustomerOptions.length > 0 ? (
+                        filteredCustomerOptions.map((customer) => (
+                          <div
+                            key={customer}
+                            onClick={() => {
+                              if (selectedCustomers.includes(customer)) {
+                                setSelectedCustomers(selectedCustomers.filter(c => c !== customer));
+                              } else {
+                                setSelectedCustomers([...selectedCustomers, customer]);
+                                setCustomerSearchInput("");
+                              }
+                            }}
+                            className={`px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors ${
+                              selectedCustomers.includes(customer) ? 'bg-impact-blue/10' : ''
+                            }`}
+                          >
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={selectedCustomers.includes(customer)}
+                                onChange={() => {}}
+                                className="mr-2"
+                              />
+                              <span>{customer}</span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-sm text-gray-500">Geen resultaten</div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-            <div>
+
+            {/* Person Multi-Select Dropdown */}
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Zoek op Persoon
+                Selecteer Persoon(en)
               </label>
-              <input
-                type="text"
-                value={searchPerson}
-                onChange={(e) => setSearchPerson(e.target.value)}
-                placeholder="Bijv. Wim Hiensch"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue transition-colors"
-              />
+              <div className="relative">
+                {/* Selected items display */}
+                {selectedPersons.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {selectedPersons.map((person) => (
+                      <span
+                        key={person}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-impact-blue text-white"
+                      >
+                        {person}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedPersons(selectedPersons.filter(p => p !== person));
+                          }}
+                          className="ml-1.5 hover:text-gray-200"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Search input */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={personSearchInput}
+                    onChange={(e) => {
+                      setPersonSearchInput(e.target.value);
+                      setShowPersonDropdown(true);
+                    }}
+                    onFocus={() => setShowPersonDropdown(true)}
+                    placeholder="Typ om te zoeken..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-impact-blue/20 focus:border-impact-blue transition-colors"
+                  />
+                  <svg
+                    className={`absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 transition-transform ${showPersonDropdown ? 'rotate-180' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                
+                {/* Dropdown menu */}
+                {showPersonDropdown && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setShowPersonDropdown(false)}
+                    ></div>
+                    <div className="absolute z-20 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                      {filteredPersonOptions.length > 0 ? (
+                        filteredPersonOptions.map((person) => (
+                          <div
+                            key={person}
+                            onClick={() => {
+                              if (selectedPersons.includes(person)) {
+                                setSelectedPersons(selectedPersons.filter(p => p !== person));
+                              } else {
+                                setSelectedPersons([...selectedPersons, person]);
+                                setPersonSearchInput("");
+                              }
+                            }}
+                            className={`px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors ${
+                              selectedPersons.includes(person) ? 'bg-impact-blue/10' : ''
+                            }`}
+                          >
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={selectedPersons.includes(person)}
+                                onChange={() => {}}
+                                className="mr-2"
+                              />
+                              <span>{person}</span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-sm text-gray-500">Geen resultaten</div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
+
+            {/* Date Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Vanaf Datum
