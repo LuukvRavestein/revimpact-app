@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
@@ -215,6 +215,13 @@ const testForwardingDetection = () => {
   return { passed, failed, total: testCases.length, accuracy: (passed / testCases.length) * 100 };
 };
 
+interface ChatbotUpload {
+  id: string;
+  filename: string;
+  upload_date: string;
+  status: string;
+}
+
 export default function ChatbotPage() {
   const { t } = useLanguage();
   const router = useRouter();
@@ -222,67 +229,87 @@ export default function ChatbotPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [processedData, setProcessedData] = useState<ProcessedData | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<string>('all');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [workspaceName, setWorkspaceName] = useState<string>("");
-
-  // Check authentication and client type on component mount
-  useEffect(() => {
-    const checkAuthentication = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+  const [uploads, setUploads] = useState<ChatbotUpload[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showUploadHistory, setShowUploadHistory] = useState(false);
+  
+  // Load chatbot data from Supabase
+  const loadChatbotData = useCallback(async (workspaceId: string) => {
+    try {
+      setLoading(true);
       
-      if (!session?.user) {
-        router.push("/signin");
-        return;
-      }
-
-      // Get workspace information
-      const { data: memberships, error: mErr } = await supabase
-        .from("workspace_members")
-        .select("workspace_id, role, workspaces(name)")
-        .eq("user_id", session.user.id)
-        .limit(1);
+      // Fetch all conversations for this workspace
+      const { data: conversations, error: convError } = await supabase
+        .from('chatbot_conversations')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('timestamp', { ascending: true });
       
-      if (mErr) {
-        console.error("Error loading memberships:", mErr);
-        setIsAuthenticated(false);
-        return;
-      }
-
-      const membership = memberships?.[0] as { 
-        workspace_id: string; 
-        role: string; 
-        workspaces: { name: string }[] | { name: string }
-      } | undefined;
-      
-      let name: string | undefined;
-      
-      if (membership?.workspaces) {
-        if (Array.isArray(membership.workspaces)) {
-          name = membership.workspaces[0]?.name;
-        } else {
-          name = membership.workspaces.name;
-        }
-      }
-
-      setWorkspaceName(name || "My Workspace");
-      
-      // Check if this is a Timewax client
-      const workspaceNameLower = (name || "").toLowerCase();
-      const isTimewax = workspaceNameLower.includes('timewax');
-      
-      if (!isTimewax) {
-        // Not a Timewax client, redirect to dashboard
-        router.push("/dashboard");
+      if (convError) {
+        console.error('Error loading conversations:', convError);
+        setLoading(false);
         return;
       }
       
-      setIsAuthenticated(true);
-    };
-    
-    checkAuthentication();
-  }, [supabase, router]);
+      if (!conversations || conversations.length === 0) {
+        setLoading(false);
+        return;
+      }
+      
+      // Convert stored conversations back to ChatbotData format
+      const chatbotData: ChatbotData[] = conversations.map((conv: any) => ({
+        conversation_id: conv.conversation_id,
+        usr_id: conv.usr_id || '',
+        Cli_Id: conv.cli_id || '',
+        Content: conv.content,
+        Type: conv.message_type,
+        Username: conv.username || '',
+        Timestamp: conv.timestamp ? new Date(conv.timestamp).toISOString() : '',
+        // Legacy fields
+        user_id: conv.usr_id || '',
+        cu_id: conv.cli_id || '',
+        content: conv.content,
+        type: conv.message_type,
+        username: conv.username || '',
+        timestamp: conv.timestamp ? new Date(conv.timestamp).toISOString() : ''
+      }));
+      
+      // Process the data
+      const processed = processChatbotData(chatbotData);
+      setProcessedData(processed);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error loading chatbot data:', err);
+      setLoading(false);
+    }
+  }, [supabase]);
+  
+  // Load upload history
+  const loadUploadHistory = useCallback(async (workspaceId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('chatbot_data_uploads')
+        .select('id, filename, upload_date, status')
+        .eq('workspace_id', workspaceId)
+        .order('upload_date', { ascending: false })
+        .limit(10);
+      
+      if (error) {
+        console.error('Error loading upload history:', error);
+        return;
+      }
+      
+      setUploads(data || []);
+    } catch (err) {
+      console.error('Error loading upload history:', err);
+    }
+  }, [supabase]);
 
   // Run forwarding detection test on component mount
   useEffect(() => {
@@ -302,22 +329,178 @@ export default function ChatbotPage() {
   };
 
   const processExcelFile = async (file: File) => {
+    if (!workspaceId) {
+      setError('Workspace niet gevonden');
+      return;
+    }
+
+    setIsUploading(true);
     setIsProcessing(true);
     setError(null);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        setError('Geen actieve sessie');
+        setIsUploading(false);
+        setIsProcessing(false);
+        return;
+      }
+
+      // Read Excel file
       const data = await file.arrayBuffer();
       const workbook = XLSX.read(data);
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet) as ChatbotData[];
 
+      if (jsonData.length === 0) {
+        setError('Het Excel bestand bevat geen data');
+        setIsUploading(false);
+        setIsProcessing(false);
+        return;
+      }
+
+      // Create upload record
+      const { data: uploadRecord, error: uploadError } = await supabase
+        .from('chatbot_data_uploads')
+        .insert({
+          workspace_id: workspaceId,
+          filename: file.name,
+          file_type: 'xlsx',
+          file_size: file.size,
+          status: 'processing',
+          created_by: session.user.id
+        })
+        .select()
+        .single();
+
+      if (uploadError || !uploadRecord) {
+        setError('Fout bij uploaden: ' + (uploadError?.message || 'Onbekende fout'));
+        setIsUploading(false);
+        setIsProcessing(false);
+        return;
+      }
+
+      // Delete old conversations for this workspace
+      const { error: deleteError } = await supabase
+        .from('chatbot_conversations')
+        .delete()
+        .eq('workspace_id', workspaceId);
+
+      if (deleteError) {
+        console.error('Error deleting old conversations:', deleteError);
+      }
+
+      // Process and save data
       const processed = processChatbotData(jsonData);
+      
+      // Extract customer names from username JSON
+      const customerMap = new Map<string, string>();
+      jsonData.forEach(row => {
+        try {
+          const username = row.Username || row.username;
+          const userId = row.usr_id || row.user_id;
+          
+          if (username && username !== '[username]' && userId) {
+            const userInfo = JSON.parse(username);
+            if (userInfo.clientName) {
+              customerMap.set(userId, userInfo.clientName);
+            }
+          }
+        } catch (e) {
+          // Ignore parse errors
+        }
+      });
+
+      // Analyze conversations to determine if forwarded
+      const conversationMap = new Map<string, ChatbotData[]>();
+      jsonData.forEach(row => {
+        if (!conversationMap.has(row.conversation_id)) {
+          conversationMap.set(row.conversation_id, []);
+        }
+        conversationMap.get(row.conversation_id)!.push(row);
+      });
+
+      const forwardedConversations = new Set<string>();
+      conversationMap.forEach((messages, conversationId) => {
+        const assistantMessages = messages.filter(m => 
+          (m.Type === 'ASSISTANT' || m.type === 'ASSISTANT') && 
+          (m.Content || m.content)
+        );
+        
+        assistantMessages.forEach(msg => {
+          const content = (msg.Content || msg.content || '').toLowerCase();
+          if (isSupportTicketForwarding(content)) {
+            forwardedConversations.add(conversationId);
+          }
+        });
+      });
+
+      // Insert conversations in batches
+      const batchSize = 100;
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (let i = 0; i < jsonData.length; i += batchSize) {
+        const batch = jsonData.slice(i, i + batchSize);
+        const conversationRecords = batch.map(row => {
+          const userId = row.usr_id || row.user_id || '';
+          const customerName = customerMap.get(userId) || null;
+          const isForwarded = forwardedConversations.has(row.conversation_id);
+          
+          // Determine if self-resolved (user messages in conversations that were NOT forwarded)
+          const isSelfResolved = !isForwarded && (row.Type === 'USER' || row.type === 'USER');
+
+          return {
+            workspace_id: workspaceId,
+            upload_id: uploadRecord.id,
+            conversation_id: row.conversation_id,
+            usr_id: userId,
+            cli_id: row.Cli_Id || row.cu_id || null,
+            customer_name: customerName,
+            content: row.Content || row.content || '',
+            message_type: row.Type || row.type || 'UNKNOWN',
+            username: row.Username || row.username || null,
+            timestamp: (row.Timestamp || row.timestamp) ? new Date(row.Timestamp || row.timestamp || '') : null,
+            is_forwarded: isForwarded,
+            is_self_resolved: isSelfResolved,
+            topic: null, // Could be extracted later if needed
+            raw_data: row
+          };
+        });
+
+        const { error: insertError } = await supabase
+          .from('chatbot_conversations')
+          .insert(conversationRecords);
+
+        if (insertError) {
+          console.error('Error inserting batch:', insertError);
+          errorCount += batch.length;
+        } else {
+          successCount += batch.length;
+        }
+      }
+
+      // Update upload status
+      const finalStatus = successCount > 0 ? 'processed' : 'error';
+      await supabase
+        .from('chatbot_data_uploads')
+        .update({ status: finalStatus })
+        .eq('id', uploadRecord.id);
+
+      // Reload data and upload history
+      await loadChatbotData(workspaceId);
+      await loadUploadHistory(workspaceId);
+
       setProcessedData(processed);
+      setUploadedFile(file);
+      setIsUploading(false);
+      setIsProcessing(false);
     } catch (err) {
-      setError(t.chatbot.errorProcessing);
+      setError(t.chatbot.errorProcessing || 'Fout bij verwerken van bestand');
       console.error("Error processing file:", err);
-    } finally {
+      setIsUploading(false);
       setIsProcessing(false);
     }
   };
@@ -1002,13 +1185,13 @@ export default function ChatbotPage() {
     router.push('/signin');
   };
 
-  // Show loading state while checking authentication
-  if (isAuthenticated === null) {
+  // Show loading state while checking authentication or loading data
+  if (isAuthenticated === null || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Controleren toegang...</p>
+          <p className="text-gray-600">{isAuthenticated === null ? 'Controleren toegang...' : 'Data laden...'}</p>
         </div>
       </div>
     );
@@ -1069,70 +1252,94 @@ export default function ChatbotPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {!processedData ? (
-          /* Upload Section */
-          <div className="bg-white rounded-lg shadow-sm border p-8">
-            <div className="text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 mb-4">
-                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        )}
+
+        {/* Upload Section - Always visible */}
+        <div className="bg-white rounded-lg shadow-md p-4 mb-8">
+          <h2 className="text-lg font-semibold mb-3">Upload Chatbot Data</h2>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+            <div className="flex items-center justify-center space-x-4">
+              <div className="text-gray-500">
+                <svg className="h-8 w-8" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                  <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                {t.chatbot.uploadTitle}
-              </h2>
-              <p className="text-gray-600 mb-6">
-                {t.chatbot.uploadSubtitle}
-              </p>
-
-              <div
-                className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-gray-400 transition-colors cursor-pointer"
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
-                onClick={() => fileInputRef.current?.click()}
-              >
+              <div>
+                <label htmlFor="chatbot-file-upload" className="cursor-pointer">
+                  <span className="text-sm font-medium text-gray-900">
+                    {isUploading || isProcessing 
+                      ? (isProcessing ? 'Bestand verwerken...' : 'Bestand uploaden...')
+                      : 'Klik om Excel bestand te uploaden'}
+                  </span>
+                  <span className="ml-2 text-xs text-gray-500">
+                    (.xlsx, .xls, .csv)
+                  </span>
+                </label>
                 <input
                   ref={fileInputRef}
+                  id="chatbot-file-upload"
                   type="file"
                   accept=".xlsx,.xls,.csv"
                   onChange={handleFileUpload}
-                  className="hidden"
+                  className="sr-only"
+                  disabled={isUploading || isProcessing}
                 />
-                
-                {isProcessing ? (
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600">{t.chatbot.processing}</p>
-                  </div>
-                ) : (
-                  <div>
-                    <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <p className="text-lg font-medium text-gray-900 mb-2">
-                      {t.chatbot.dragDrop}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {t.chatbot.fileTypes}
-                    </p>
-                  </div>
-                )}
               </div>
-
-              {uploadedFile && (
-                <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-green-800">
-                    <strong>{t.chatbot.fileSelected}</strong> {uploadedFile.name}
-                  </p>
-                </div>
-              )}
-
-              {error && (
-                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-800">{error}</p>
+            </div>
+          </div>
+          
+          {/* Upload History - Collapsible */}
+          {uploads.length > 0 && (
+            <div className="mt-4">
+              <button
+                onClick={() => setShowUploadHistory(!showUploadHistory)}
+                className="flex items-center justify-between w-full text-left text-xs font-medium text-gray-700 hover:text-gray-900 transition-colors"
+              >
+                <span>Upload Geschiedenis ({uploads.length})</span>
+                <svg
+                  className={`w-4 h-4 text-gray-500 transition-transform ${showUploadHistory ? 'transform rotate-180' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showUploadHistory && (
+                <div className="mt-2 space-y-1">
+                  {uploads.map((upload: ChatbotUpload) => (
+                    <div key={upload.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                      <div>
+                        <p className="text-xs font-medium text-gray-900">{upload.filename}</p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(upload.upload_date).toLocaleString('nl-NL')}
+                        </p>
+                      </div>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        upload.status === 'processed' 
+                          ? 'bg-green-100 text-green-800'
+                          : upload.status === 'processing'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {upload.status}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
+          )}
+        </div>
+
+        {!processedData ? (
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <p className="text-gray-600">Upload een Excel bestand om chatbot analytics te zien</p>
           </div>
         ) : (
           /* Dashboard Section */
