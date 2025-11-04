@@ -112,16 +112,32 @@ export default function AcademyMonitoringPage() {
 
   const loadParticipantProgress = useCallback(async () => {
     try {
-      const query = supabase
-        .from('academy_participant_progress')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('participant_name', { ascending: true });
+      // Load all records (Supabase has a default limit, so we need to handle pagination)
+      let allData: ParticipantProgress[] = [];
+      let from = 0;
+      const limit = 1000; // Supabase default limit
+      let hasMore = true;
 
-      const { data, error } = await query;
+      while (hasMore) {
+        const { data, error, count } = await supabase
+          .from('academy_participant_progress')
+          .select('*', { count: 'exact' })
+          .eq('workspace_id', workspaceId)
+          .order('participant_name', { ascending: true })
+          .range(from, from + limit - 1);
 
-      if (error) throw error;
-      setParticipants(data || []);
+        if (error) throw error;
+        
+        if (data) {
+          allData = [...allData, ...data];
+        }
+        
+        hasMore = data && data.length === limit;
+        from += limit;
+      }
+
+      console.log(`Loaded ${allData.length} participant records`);
+      setParticipants(allData);
     } catch (err) {
       console.error('Error loading participant progress:', err);
       setError('Fout bij laden van voortgang');
