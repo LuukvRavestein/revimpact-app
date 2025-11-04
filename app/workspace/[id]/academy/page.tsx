@@ -306,6 +306,20 @@ export default function AcademyMonitoringPage() {
       // Process the data
       setIsProcessing(true);
       
+      // Delete old participant progress data for this workspace before adding new data
+      // This ensures we always have the latest snapshot without duplicates
+      const { error: deleteError } = await supabase
+        .from('academy_participant_progress')
+        .delete()
+        .eq('workspace_id', workspaceId);
+
+      if (deleteError) {
+        console.warn('Warning: Could not delete old data:', deleteError);
+        // Continue anyway - we'll still add the new data
+      } else {
+        console.log('Old participant progress data deleted for workspace');
+      }
+      
       const progressRecords: any[] = [];
       
       // Helper function to find column value (case-insensitive)
