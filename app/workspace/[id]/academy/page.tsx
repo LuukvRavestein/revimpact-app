@@ -499,23 +499,38 @@ export default function AcademyMonitoringPage() {
   const filteredParticipants = participants.filter(p => {
     // Customer name filter: check if search text appears in customer_name (case-insensitive)
     const searchCustomerTrimmed = searchCustomer.trim();
-    const matchesCustomer = !searchCustomerTrimmed || 
-      (p.customer_name && p.customer_name.trim().toLowerCase().includes(searchCustomerTrimmed.toLowerCase()));
+    let matchesCustomer = true; // Default: show all if no search term
+    
+    if (searchCustomerTrimmed) {
+      // Only match if customer_name exists and contains the search term
+      if (!p.customer_name || typeof p.customer_name !== 'string') {
+        matchesCustomer = false;
+      } else {
+        const customerNameLower = p.customer_name.trim().toLowerCase();
+        const searchTermLower = searchCustomerTrimmed.toLowerCase();
+        matchesCustomer = customerNameLower.includes(searchTermLower);
+      }
+    }
     
     // Person filter: check if search text appears in participant_name or participant_email (case-insensitive)
     const searchPersonTrimmed = searchPerson.trim();
-    const matchesPerson = !searchPersonTrimmed || 
-      (p.participant_name && p.participant_name.trim().toLowerCase().includes(searchPersonTrimmed.toLowerCase())) ||
-      (p.participant_email && p.participant_email.trim().toLowerCase().includes(searchPersonTrimmed.toLowerCase()));
+    let matchesPerson = true; // Default: show all if no search term
+    
+    if (searchPersonTrimmed) {
+      const searchTermLower = searchPersonTrimmed.toLowerCase();
+      const nameMatch = p.participant_name && 
+        p.participant_name.trim().toLowerCase().includes(searchTermLower);
+      const emailMatch = p.participant_email && 
+        p.participant_email.trim().toLowerCase().includes(searchTermLower);
+      matchesPerson = nameMatch || emailMatch || false;
+    }
     
     // Filter by from date (start_date must be >= fromDate)
     const matchesDate = !fromDate || !p.start_date || 
       new Date(p.start_date) >= new Date(fromDate);
     
     // Only return true if all conditions are met
-    const result = matchesCustomer && matchesPerson && matchesDate;
-    
-    return result;
+    return matchesCustomer && matchesPerson && matchesDate;
   });
 
   // Sort participants
