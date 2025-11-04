@@ -168,11 +168,18 @@ export default function WorkspaceManagementPage() {
   const loadFeatures = useCallback(async () => {
     try {
       // First, get workspace name to check if it's Timewax
-      const { data: workspaceData } = await supabase
+      const { data: workspaceData, error: workspaceError } = await supabase
         .from('workspaces')
         .select('name')
         .eq('id', workspaceId)
         .single();
+
+      if (workspaceError) {
+        console.error('Error loading workspace:', workspaceError);
+        setError(`Fout bij laden workspace: ${workspaceError.message}`);
+        setFeatures([]);
+        return;
+      }
 
       const { data, error } = await supabase
         .from('workspace_features')
@@ -182,19 +189,29 @@ export default function WorkspaceManagementPage() {
 
       if (error) {
         console.error('Error loading features:', error);
+        // Check if table doesn't exist
+        if (error.message?.includes('does not exist') || error.code === '42P01') {
+          setError('Workspace features tabel bestaat niet. Voer add-academy-feature.sql uit in Supabase.');
+        } else {
+          setError(`Fout bij laden features: ${error.message}`);
+        }
+        setFeatures([]);
         return;
       }
 
       // If no AI dashboard feature exists, create it
       const hasAIFeature = data?.some(f => f.feature_name === 'ai_dashboard');
       if (!hasAIFeature) {
-        await supabase
+        const { error: insertError } = await supabase
           .from('workspace_features')
           .insert({
             workspace_id: workspaceId,
             feature_name: 'ai_dashboard',
             enabled: true
           });
+        if (insertError) {
+          console.error('Error creating AI feature:', insertError);
+        }
       }
 
       // If this is a Timewax workspace and academy_monitoring doesn't exist, create it
@@ -202,13 +219,16 @@ export default function WorkspaceManagementPage() {
       if (workspaceNameLower.includes('timewax')) {
         const hasAcademyFeature = data?.some(f => f.feature_name === 'academy_monitoring');
         if (!hasAcademyFeature) {
-          await supabase
+          const { error: insertError } = await supabase
             .from('workspace_features')
             .insert({
               workspace_id: workspaceId,
               feature_name: 'academy_monitoring',
               enabled: true
             });
+          if (insertError) {
+            console.error('Error creating Academy feature:', insertError);
+          }
         }
       }
 
@@ -221,12 +241,18 @@ export default function WorkspaceManagementPage() {
 
       if (reloadError) {
         console.error('Error reloading features:', reloadError);
+        setError(`Fout bij herladen features: ${reloadError.message}`);
+        // Still set features from initial load if available
+        setFeatures(data || []);
         return;
       }
 
       setFeatures(updatedData || []);
-    } catch (err) {
+      setError(''); // Clear any previous errors
+    } catch (err: any) {
       console.error('Error loading features:', err);
+      setError(`Onverwachte fout: ${err?.message || 'Onbekende fout'}`);
+      setFeatures([]);
     }
   }, [supabase, workspaceId]);
 
