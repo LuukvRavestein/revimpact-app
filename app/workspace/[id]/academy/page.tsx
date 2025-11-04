@@ -106,6 +106,24 @@ export default function AcademyMonitoringPage() {
   const workspaceId = params.id as string;
   const supabase = createSupabaseBrowserClient();
 
+  const loadParticipantProgress = useCallback(async () => {
+    try {
+      const query = supabase
+        .from('academy_participant_progress')
+        .select('*')
+        .eq('workspace_id', workspaceId)
+        .order('participant_name', { ascending: true });
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setParticipants(data || []);
+    } catch (err) {
+      console.error('Error loading participant progress:', err);
+      setError('Fout bij laden van voortgang');
+    }
+  }, [supabase, workspaceId]);
+
   const loadWorkspaceData = useCallback(async () => {
     try {
       // Check if user has access to workspace
@@ -166,25 +184,7 @@ export default function AcademyMonitoringPage() {
       setError('Fout bij laden van workspace data');
       setLoading(false);
     }
-  }, [supabase, router, workspaceId]);
-
-  const loadParticipantProgress = async () => {
-    try {
-      let query = supabase
-        .from('academy_participant_progress')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('participant_name', { ascending: true });
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      setParticipants(data || []);
-    } catch (err) {
-      console.error('Error loading participant progress:', err);
-      setError('Fout bij laden van voortgang');
-    }
-  };
+  }, [supabase, router, workspaceId, loadParticipantProgress]);
 
   useEffect(() => {
     loadWorkspaceData();
