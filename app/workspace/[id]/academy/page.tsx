@@ -770,7 +770,7 @@ export default function AcademyMonitoringPage() {
                   <span className="text-white font-bold text-xl">A</span>
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-impact-dark">Timewax Academy Monitoring</h1>
+                  <h1 className="text-3xl font-bold text-impact-dark">Timewax Academy Dashboard</h1>
                   <p className="text-gray-600">{workspace.name}</p>
                 </div>
               </div>

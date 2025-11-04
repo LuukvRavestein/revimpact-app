@@ -72,7 +72,7 @@ const FEATURE_DESCRIPTIONS = {
     icon: "👑"
   },
   academy_monitoring: {
-    name: "Academy Monitoring",
+    name: "Academy Dashboard",
     description: "Monitor voortgang van deelnemers in Timewax Academy",
     icon: "🎓"
   }

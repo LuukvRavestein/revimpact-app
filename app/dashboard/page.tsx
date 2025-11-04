@@ -260,7 +260,7 @@ export default function DashboardPage() {
                     </svg>
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 group-hover:text-impact-blue transition-colors">
-                    Academy Monitoring
+                    Academy Dashboard
                   </h3>
                 </div>
                 <p className="text-gray-600 text-sm">
