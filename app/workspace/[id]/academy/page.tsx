@@ -640,8 +640,32 @@ export default function AcademyMonitoringPage() {
   
   // Ensure pagination uses sortedParticipants from filtered data
   const paginatedParticipants = useMemo(() => {
-    return sortedParticipants.slice(startIndex, endIndex);
-  }, [sortedParticipants, startIndex, endIndex, currentPage, itemsPerPage]);
+    const paginated = sortedParticipants.slice(startIndex, endIndex);
+    
+    // Debug: Verify paginated data matches filter
+    if (searchCustomer.trim()) {
+      const uniqueCustomersInPaginated = new Set(paginated.map(p => p.customer_name));
+      const bentaceraInPaginated = paginated.filter(p => 
+        String(p.customer_name || '').toLowerCase().includes('bentacera')
+      );
+      
+      if (bentaceraInPaginated.length > 0) {
+        console.error('BUG: Bentacera in paginatedParticipants!', {
+          searchTerm: searchCustomer.trim(),
+          paginatedLength: paginated.length,
+          sortedLength: sortedParticipants.length,
+          filteredLength: filteredParticipants.length,
+          uniqueCustomers: Array.from(uniqueCustomersInPaginated),
+          bentaceraRecords: bentaceraInPaginated.map(p => ({
+            id: p.id,
+            customer: p.customer_name
+          }))
+        });
+      }
+    }
+    
+    return paginated;
+  }, [sortedParticipants, startIndex, endIndex, currentPage, itemsPerPage, searchCustomer, filteredParticipants.length]);
 
   // Reset to page 1 when search changes
   useEffect(() => {
