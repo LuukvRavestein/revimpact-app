@@ -140,8 +140,8 @@ export default function AcademyMonitoringPage() {
   const [searchCustomer, setSearchCustomer] = useState("");
   const [searchPerson, setSearchPerson] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortColumn, setSortColumn] = useState<string | null>('start_date');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showUploadHistory, setShowUploadHistory] = useState(false);
   const itemsPerPage = 50;
   
