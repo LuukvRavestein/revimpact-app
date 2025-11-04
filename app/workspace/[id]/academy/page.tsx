@@ -1084,7 +1084,7 @@ export default function AcademyMonitoringPage() {
                       });
                     }
                     return (
-                    <tr key={participant.id} className="hover:bg-gray-50">
+                    <tr key={`${participant.id}-${searchCustomer}-${currentPage}`} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {participant.participant_name}
                       </td>
