@@ -601,16 +601,23 @@ export default function AcademyMonitoringPage() {
   const uniqueParticipants = new Set(filteredParticipants.map(p => p.participant_email)).size;
   const totalModules = filteredParticipants.length;
 
-  // Calculate top 10 most active customers (by number of modules)
-  const customerCounts = filteredParticipants.reduce((acc, p) => {
+  // Calculate top 10 most active customers (by number of unique participants)
+  const customerParticipants = filteredParticipants.reduce((acc, p) => {
     const customer = p.customer_name || 'Onbekend';
-    acc[customer] = (acc[customer] || 0) + 1;
+    if (!acc[customer]) {
+      acc[customer] = new Set<string>();
+    }
+    // Add participant email to set (unique participants)
+    if (p.participant_email) {
+      acc[customer].add(p.participant_email);
+    }
     return acc;
-  }, {} as Record<string, number>);
-  const top10Customers = Object.entries(customerCounts)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 10)
-    .map(([name, count]) => ({ name, count }));
+  }, {} as Record<string, Set<string>>);
+  
+  const top10Customers = Object.entries(customerParticipants)
+    .map(([name, participantSet]) => ({ name, count: participantSet.size }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
 
   // Calculate top 10 most used lesson modules
   const moduleCounts = filteredParticipants.reduce((acc, p) => {
