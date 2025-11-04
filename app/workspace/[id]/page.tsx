@@ -167,6 +167,13 @@ export default function WorkspaceManagementPage() {
 
   const loadFeatures = useCallback(async () => {
     try {
+      // First, get workspace name to check if it's Timewax
+      const { data: workspaceData } = await supabase
+        .from('workspaces')
+        .select('name')
+        .eq('id', workspaceId)
+        .single();
+
       const { data, error } = await supabase
         .from('workspace_features')
         .select('*')
@@ -188,6 +195,21 @@ export default function WorkspaceManagementPage() {
             feature_name: 'ai_dashboard',
             enabled: true
           });
+      }
+
+      // If this is a Timewax workspace and academy_monitoring doesn't exist, create it
+      const workspaceNameLower = workspaceData?.name?.toLowerCase() || '';
+      if (workspaceNameLower.includes('timewax')) {
+        const hasAcademyFeature = data?.some(f => f.feature_name === 'academy_monitoring');
+        if (!hasAcademyFeature) {
+          await supabase
+            .from('workspace_features')
+            .insert({
+              workspace_id: workspaceId,
+              feature_name: 'academy_monitoring',
+              enabled: true
+            });
+        }
       }
 
       // Reload features after potential insert
