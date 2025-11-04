@@ -516,10 +516,6 @@ export default function AcademyMonitoringPage() {
         aValue = a.participant_name || '';
         bValue = b.participant_name || '';
         break;
-      case 'participant_email':
-        aValue = a.participant_email || '';
-        bValue = b.participant_email || '';
-        break;
       case 'customer_name':
         aValue = a.customer_name || '';
         bValue = b.customer_name || '';
@@ -536,13 +532,9 @@ export default function AcademyMonitoringPage() {
         aValue = a.progress_percentage ?? 0;
         bValue = b.progress_percentage ?? 0;
         break;
-      case 'score':
-        aValue = a.score ?? 0;
-        bValue = b.score ?? 0;
-        break;
-      case 'duration_seconds':
-        aValue = a.duration_seconds ?? 0;
-        bValue = b.duration_seconds ?? 0;
+      case 'completed_on':
+        aValue = a.completed_on ? new Date(a.completed_on).getTime() : 0;
+        bValue = b.completed_on ? new Date(b.completed_on).getTime() : 0;
         break;
       default:
         return 0;
@@ -818,17 +810,8 @@ export default function AcademyMonitoringPage() {
                     onClick={() => handleSort('participant_name')}
                   >
                     <div className="flex items-center">
-                      Deelnemer
+                      Resource
                       <SortIndicator column="participant_name" />
-                    </div>
-                  </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                    onClick={() => handleSort('participant_email')}
-                  >
-                    <div className="flex items-center">
-                      E-mail
-                      <SortIndicator column="participant_email" />
                     </div>
                   </th>
                   <th 
@@ -869,20 +852,11 @@ export default function AcademyMonitoringPage() {
                   </th>
                   <th 
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                    onClick={() => handleSort('score')}
+                    onClick={() => handleSort('completed_on')}
                   >
                     <div className="flex items-center">
-                      Score
-                      <SortIndicator column="score" />
-                    </div>
-                  </th>
-                  <th 
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors"
-                    onClick={() => handleSort('duration_seconds')}
-                  >
-                    <div className="flex items-center">
-                      Tijdsduur
-                      <SortIndicator column="duration_seconds" />
+                      Voltooid op
+                      <SortIndicator column="completed_on" />
                     </div>
                   </th>
                 </tr>
@@ -890,7 +864,7 @@ export default function AcademyMonitoringPage() {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredParticipants.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                       {participants.length === 0 
                         ? 'Geen data beschikbaar. Upload een Excel bestand om te beginnen.'
                         : 'Geen resultaten gevonden voor de geselecteerde filters.'}
@@ -901,9 +875,6 @@ export default function AcademyMonitoringPage() {
                     <tr key={participant.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {participant.participant_name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {participant.participant_email}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {participant.customer_name}
@@ -932,13 +903,8 @@ export default function AcademyMonitoringPage() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {participant.score !== null 
-                          ? `${participant.score}${participant.pass_threshold ? ` / ${participant.pass_threshold}` : ''}`
-                          : '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {participant.duration_seconds 
-                          ? `${Math.floor(participant.duration_seconds / 3600)}:${Math.floor((participant.duration_seconds % 3600) / 60).toString().padStart(2, '0')}:${(participant.duration_seconds % 60).toString().padStart(2, '0')}`
+                        {participant.completed_on 
+                          ? new Date(participant.completed_on).toLocaleDateString('nl-NL')
                           : '-'}
                       </td>
                     </tr>
