@@ -591,10 +591,10 @@ export default function AcademyMonitoringPage() {
     );
   };
 
-  // Get unique customers for statistics
-  const uniqueCustomers = new Set(participants.map(p => p.customer_name)).size;
-  const uniqueParticipants = new Set(participants.map(p => p.participant_email)).size;
-  const totalModules = participants.length;
+  // Get unique customers for statistics (based on filtered participants)
+  const uniqueCustomers = new Set(filteredParticipants.map(p => p.customer_name)).size;
+  const uniqueParticipants = new Set(filteredParticipants.map(p => p.participant_email)).size;
+  const totalModules = filteredParticipants.length;
 
   if (loading) {
     return (
