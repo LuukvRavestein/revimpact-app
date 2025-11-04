@@ -36,6 +36,65 @@ interface ParticipantProgress {
   user_groups: string[];
 }
 
+// Helper function to normalize lesson module names to Dutch (grouping different language versions)
+function normalizeLessonModule(moduleName: string): string {
+  if (!moduleName || moduleName.trim() === '') {
+    return 'Onbekend';
+  }
+  
+  const normalized = moduleName.trim();
+  
+  // Mapping of common modules in different languages to Dutch
+  // Format: [Dutch, English, German, French, ...other variations]
+  const moduleMappings: Record<string, string[]> = {
+    // Safety modules
+    'Veiligheid': ['veiligheid', 'safety', 'sicherheit', 'sécurité', 'safety & security'],
+    // Health modules
+    'Gezondheid': ['gezondheid', 'health', 'gesundheit', 'santé', 'health & wellness'],
+    // First Aid modules
+    'EHBO': ['ehbo', 'first aid', 'erste hilfe', 'premiers secours', 'firstaid'],
+    // Fire Safety modules
+    'Brandveiligheid': ['brandveiligheid', 'fire safety', 'brandschutz', 'sécurité incendie', 'firesafety'],
+    // Working at Height modules
+    'Werken op Hoogte': ['werken op hoogte', 'working at height', 'arbeiten in höhe', 'travail en hauteur', 'working atheight'],
+    // Manual Handling modules
+    'Handmatig Tillen': ['handmatig tillen', 'manual handling', 'manuelles heben', 'manutention', 'manualhandling'],
+    // Machine Safety modules
+    'Machineveiligheid': ['machineveiligheid', 'machine safety', 'maschinensicherheit', 'sécurité des machines', 'machinesafety'],
+    // Environmental modules
+    'Milieu': ['milieu', 'environment', 'umwelt', 'environnement', 'environmental'],
+    // GDPR/Privacy modules
+    'Privacy': ['privacy', 'privacy & gdpr', 'datenschutz', 'confidentialité', 'gdpr'],
+    // Information Security modules
+    'Informatiebeveiliging': ['informatiebeveiliging', 'information security', 'informationssicherheit', 'sécurité de l\'information', 'informationsecurity'],
+    // Ergonomics modules
+    'Ergonomie': ['ergonomie', 'ergonomics', 'ergonomie', 'ergonomie', 'ergonomics'],
+  };
+  
+  // Check if module matches any known mapping
+  for (const [dutchName, variations] of Object.entries(moduleMappings)) {
+    const normalizedLower = normalized.toLowerCase();
+    for (const variation of variations) {
+      if (normalizedLower === variation.toLowerCase() || normalizedLower.includes(variation.toLowerCase())) {
+        return dutchName;
+      }
+    }
+  }
+  
+  // If no mapping found, check if it's already in Dutch (contains common Dutch words)
+  const commonDutchWords = ['veiligheid', 'gezondheid', 'ehbo', 'brand', 'hoogte', 'tillen', 'machine', 'milieu', 'privacy', 'informatie', 'ergonomie'];
+  const normalizedLower = normalized.toLowerCase();
+  for (const word of commonDutchWords) {
+    if (normalizedLower.includes(word)) {
+      // Capitalize first letter
+      return normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+    }
+  }
+  
+  // If no match, return original name (capitalize first letter)
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
 // Helper function to extract customer name from email domain
 function extractCustomerName(email: string): string {
   if (!email || !email.includes('@')) {
@@ -347,7 +406,8 @@ export default function AcademyMonitoringPage() {
         // Map Excel columns to our data structure (flexible column matching)
         const participantName = findColumn(row, ['Gebruiker', 'gebruiker', 'Gebruiker']) || '';
         const participantEmail = findColumn(row, ['E-mail', 'e-mail', 'E-mail', 'Email', 'email']) || '';
-        const lessonModule = findColumn(row, ['Lesmodule', 'lesmodule', 'Lesmodule']) || '';
+        const lessonModuleRaw = findColumn(row, ['Lesmodule', 'lesmodule', 'Lesmodule']) || '';
+        const lessonModule = normalizeLessonModule(lessonModuleRaw); // Normalize to Dutch
         
         // Skip rows without essential data (name or email)
         if (!participantName && !participantEmail) {
@@ -602,8 +662,8 @@ export default function AcademyMonitoringPage() {
         bValue = b.customer_name || '';
         break;
       case 'lesson_module':
-        aValue = a.lesson_module || '';
-        bValue = b.lesson_module || '';
+        aValue = normalizeLessonModule(a.lesson_module || '');
+        bValue = normalizeLessonModule(b.lesson_module || '');
         break;
       case 'start_date':
         aValue = a.start_date ? new Date(a.start_date).getTime() : 0;
@@ -699,6 +759,8 @@ export default function AcademyMonitoringPage() {
   // Get unique customers for statistics (based on filtered participants)
   const uniqueCustomers = new Set(filteredParticipants.map(p => p.customer_name)).size;
   const uniqueParticipants = new Set(filteredParticipants.map(p => p.participant_email)).size;
+  // Count unique modules (normalized to group by language)
+  const uniqueModules = new Set(filteredParticipants.map(p => normalizeLessonModule(p.lesson_module || 'Onbekend'))).size;
   const totalModules = filteredParticipants.length;
 
   // Calculate top 10 most active customers (by number of unique participants)
@@ -719,9 +781,9 @@ export default function AcademyMonitoringPage() {
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
-  // Calculate top 10 most used lesson modules
+  // Calculate top 10 most used lesson modules (normalized to group by language)
   const moduleCounts = filteredParticipants.reduce((acc, p) => {
-    const moduleName = p.lesson_module || 'Onbekend';
+    const moduleName = normalizeLessonModule(p.lesson_module || 'Onbekend');
     acc[moduleName] = (acc[moduleName] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -884,8 +946,8 @@ export default function AcademyMonitoringPage() {
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Totaal Modules</h3>
-            <p className="text-3xl font-bold text-impact-blue">{totalModules}</p>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Unieke Modules</h3>
+            <p className="text-3xl font-bold text-impact-blue">{uniqueModules}</p>
           </div>
           <div className="bg-white rounded-lg shadow-md p-6">
             <h3 className="text-sm font-medium text-gray-500 mb-2">Unieke Deelnemers</h3>
@@ -1092,7 +1154,7 @@ export default function AcademyMonitoringPage() {
                         {participant.customer_name}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {participant.lesson_module}
+                        {normalizeLessonModule(participant.lesson_module)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {participant.start_date 
