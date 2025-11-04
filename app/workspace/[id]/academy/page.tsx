@@ -161,7 +161,7 @@ export default function AcademyMonitoringPage() {
       let hasMore = true;
 
       while (hasMore) {
-        const { data, error, count } = await supabase
+        const { data, error } = await supabase
           .from('academy_participant_progress')
           .select('*', { count: 'exact' })
           .eq('workspace_id', workspaceId)
@@ -609,8 +609,8 @@ export default function AcademyMonitoringPage() {
 
   // Calculate top 10 most used lesson modules
   const moduleCounts = filteredParticipants.reduce((acc, p) => {
-    const module = p.lesson_module || 'Onbekend';
-    acc[module] = (acc[module] || 0) + 1;
+    const moduleName = p.lesson_module || 'Onbekend';
+    acc[moduleName] = (acc[moduleName] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
   const top10Modules = Object.entries(moduleCounts)
