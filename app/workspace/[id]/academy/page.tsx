@@ -62,28 +62,68 @@ function parseDuration(duration: string): number {
   return 0;
 }
 
-// Helper function to parse date from DD-MM-YYYY format
-function parseDate(dateStr: string): string | null {
-  if (!dateStr) return null;
+// Helper function to parse date from various formats
+function parseDate(dateValue: any): string | null {
+  if (!dateValue) return null;
+  
   try {
-    // Handle DD-MM-YYYY format
-    const parts = dateStr.split('-');
-    if (parts.length === 3) {
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
-      const year = parseInt(parts[2], 10);
-      const date = new Date(year, month, day);
-      if (!isNaN(date.getTime())) {
-        return date.toISOString().split('T')[0];
+    // If it's already a Date object (from Excel parsing)
+    if (dateValue instanceof Date) {
+      // Format as YYYY-MM-DD without timezone conversion
+      const year = dateValue.getFullYear();
+      const month = String(dateValue.getMonth() + 1).padStart(2, '0');
+      const day = String(dateValue.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
+    // Convert to string first
+    const dateStr = String(dateValue).trim();
+    if (!dateStr || dateStr === '') return null;
+    
+    // Handle DD-MM-YYYY format (most common in Dutch Excel files)
+    const ddmmyyyyMatch = dateStr.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+    if (ddmmyyyyMatch) {
+      const day = parseInt(ddmmyyyyMatch[1], 10);
+      const month = parseInt(ddmmyyyyMatch[2], 10);
+      const year = parseInt(ddmmyyyyMatch[3], 10);
+      
+      // Validate date
+      if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1900) {
+        // Format as YYYY-MM-DD directly (no timezone conversion)
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       }
     }
-    // Try standard ISO format
-    const date = new Date(dateStr);
-    if (!isNaN(date.getTime())) {
-      return date.toISOString().split('T')[0];
+    
+    // Handle YYYY-MM-DD format
+    const yyyymmddMatch = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (yyyymmddMatch) {
+      return dateStr; // Already in correct format
+    }
+    
+    // Handle Excel serial number (days since 1900-01-01)
+    const serialNumber = parseFloat(dateStr);
+    if (!isNaN(serialNumber) && serialNumber > 0 && serialNumber < 100000) {
+      // Excel epoch starts on 1900-01-01, but Excel incorrectly treats 1900 as a leap year
+      // JavaScript Date epoch starts on 1970-01-01
+      const excelEpoch = new Date(1899, 11, 30); // Dec 30, 1899 (Excel's epoch - 1 day offset)
+      const jsDate = new Date(excelEpoch.getTime() + serialNumber * 24 * 60 * 60 * 1000);
+      const year = jsDate.getFullYear();
+      const month = String(jsDate.getMonth() + 1).padStart(2, '0');
+      const day = String(jsDate.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
+    // Try standard Date parsing (but be careful with timezone)
+    const parsedDate = new Date(dateStr);
+    if (!isNaN(parsedDate.getTime())) {
+      // Extract date components in local timezone to avoid UTC conversion issues
+      const year = parsedDate.getFullYear();
+      const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(parsedDate.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
   } catch (e) {
-    console.error('Error parsing date:', e);
+    console.error('Error parsing date:', e, 'Value:', dateValue);
   }
   return null;
 }
