@@ -6,6 +6,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import SignOutButton from "@/components/SignOutButton";
 import Link from "next/link";
+import { isSuperAdmin, getSuperAdminEmails } from "@/lib/adminUtils";
 
 interface Workspace {
   id: string;
@@ -45,10 +46,7 @@ export default function RevImpactCentralPage() {
   const supabase = createSupabaseBrowserClient();
 
   // Super admin emails - in a real app, this would be stored in a database
-  const [superAdminEmails, setSuperAdminEmails] = useState<string[]>([
-    'luuk@revimpact.nl',
-    'admin@revimpact.nl'
-  ]);
+  const [superAdminEmails, setSuperAdminEmails] = useState<string[]>(getSuperAdminEmails());
 
   const loadWorkspaces = useCallback(async () => {
     try {
@@ -120,7 +118,7 @@ export default function RevImpactCentralPage() {
 
       // Check if user is super admin (only specific emails)
       const userEmail = session.user.email?.toLowerCase() || '';
-      const isAdminUser = superAdminEmails.includes(userEmail);
+      const isAdminUser = isSuperAdmin(userEmail);
 
       if (!isAdminUser) {
         router.push("/dashboard");
@@ -617,6 +615,12 @@ export default function RevImpactCentralPage() {
                           className="text-impact-blue hover:text-impact-blue/80 font-medium transition-colors"
                         >
                           Beheren
+                        </Link>
+                        <Link
+                          href={`/workspace/${workspace.id}/view`}
+                          className="text-impact-lime hover:text-impact-lime/80 font-medium transition-colors"
+                        >
+                          Open als Gebruiker
                         </Link>
                         <button
                           onClick={() => openEditForm(workspace)}

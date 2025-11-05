@@ -6,6 +6,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import SignOutButton from "@/components/SignOutButton";
 import Link from "next/link";
+import { isSuperAdmin } from "@/lib/adminUtils";
 
 interface Workspace {
   id: string;
@@ -316,9 +317,7 @@ export default function WorkspaceManagementPage() {
 
       // Check if user is admin
       const userEmail = session.user.email?.toLowerCase() || '';
-      const isAdminUser = userEmail.includes('admin') || 
-                         userEmail === 'luuk@revimpact.nl' || 
-                         userEmail === 'admin@revimpact.nl';
+      const isAdminUser = isSuperAdmin(userEmail);
 
       if (!isAdminUser) {
         router.push("/dashboard");

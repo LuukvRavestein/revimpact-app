@@ -7,6 +7,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import SignOutButton from "@/components/SignOutButton";
 import Link from "next/link";
 import * as XLSX from 'xlsx';
+import { isSuperAdmin } from '@/lib/adminUtils';
 
 interface Workspace {
   id: string;
@@ -273,17 +274,23 @@ export default function AcademyMonitoringPage() {
 
       setWorkspace(workspaceData);
 
-      // Check workspace membership
-      const { data: membership, error: membershipError } = await supabase
-        .from('workspace_members')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .eq('user_id', session.user.id)
-        .single();
+      // Check if user is super admin
+      const userEmail = session.user.email?.toLowerCase() || '';
+      const isAdminUser = isSuperAdmin(userEmail);
 
-      if (membershipError || !membership) {
-        router.push('/workspace');
-        return;
+      // Check workspace membership (unless super admin)
+      if (!isAdminUser) {
+        const { data: membership, error: membershipError } = await supabase
+          .from('workspace_members')
+          .select('*')
+          .eq('workspace_id', workspaceId)
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (membershipError || !membership) {
+          router.push('/workspace');
+          return;
+        }
       }
 
       // Load uploads
