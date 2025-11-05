@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 import { useLanguage } from "@/contexts/LanguageContext"
+import { createSupabaseBrowserClient } from "@/lib/supabaseClient"
 // import { Input } from "@/components/ui/input" // Will be used later
 import Link from "next/link"
 
@@ -25,6 +26,10 @@ export default function DataPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { t } = useLanguage()
+  const supabase = createSupabaseBrowserClient()
+
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [aiSuggestions, setAiSuggestions] = useState<Array<{originalColumn: string; suggestedField: string; confidence: number; reasoning: string}>>([])
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -32,31 +37,87 @@ export default function DataPage() {
 
     setUploadedFile(file)
     setIsUploading(true)
+    setIsAnalyzing(true)
 
-    // Simulate file processing
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Mock CSV parsing (in real app, use a CSV parser library)
-    const text = await file.text()
-    const lines = text.split('\n').filter(line => line.trim())
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
-    const rows = lines.slice(1).map(line => 
-      line.split(',').map(cell => cell.trim().replace(/"/g, ''))
-    )
+    try {
+      // Parse CSV file
+      const text = await file.text()
+      const lines = text.split('\n').filter(line => line.trim())
+      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''))
+      const rows = lines.slice(1).map(line => 
+        line.split(',').map(cell => cell.trim().replace(/"/g, ''))
+      ).filter(row => row.some(cell => cell)) // Filter empty rows
 
-    // Initialize column mapping with default values
-    const columnMapping: ColumnMapping = {}
-    headers.forEach(header => {
-      columnMapping[header] = 'unmapped'
-    })
+      // Get workspace ID
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.user) {
+        alert('Please sign in to upload data')
+        setIsUploading(false)
+        setIsAnalyzing(false)
+        return
+      }
 
-    setParsedData({
-      headers,
-      rows: rows.slice(0, 10), // Show first 10 rows for preview
-      columnMapping
-    })
-    
-    setIsUploading(false)
+      // Get user's workspace
+      const { data: workspaceData } = await supabase
+        .from('workspace_members')
+        .select('workspace_id')
+        .eq('user_id', session.user.id)
+        .limit(1)
+        .single()
+
+      const workspaceId = workspaceData?.workspace_id || ''
+
+      // Call AI to analyze columns and suggest mappings
+      const response = await fetch('/api/ai/map-columns', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          headers,
+          sampleRows: rows.slice(0, 20), // Send first 20 rows for analysis
+          workspaceId
+        })
+      })
+
+      let initialMapping: ColumnMapping = {}
+
+      if (response.ok) {
+        const result = await response.json()
+        if (result.success && result.suggestions) {
+          // Initialize mapping with AI suggestions (only high confidence)
+          headers.forEach(header => {
+            const suggestion = result.suggestions.find((s: any) => s.originalColumn === header)
+            if (suggestion && suggestion.confidence > 0.6) {
+              initialMapping[header] = suggestion.suggestedField
+            } else {
+              initialMapping[header] = 'unmapped'
+            }
+          })
+          setAiSuggestions(result.suggestions)
+        } else {
+          // Fallback: initialize with unmapped
+          headers.forEach(header => {
+            initialMapping[header] = 'unmapped'
+          })
+        }
+      } else {
+        // Fallback if AI fails
+        headers.forEach(header => {
+          initialMapping[header] = 'unmapped'
+        })
+      }
+
+      setParsedData({
+        headers,
+        rows: rows.slice(0, 10), // Show first 10 rows for preview
+        columnMapping: initialMapping
+      })
+    } catch (error) {
+      console.error('File upload error:', error)
+      alert('Error processing file. Please try again.')
+    } finally {
+      setIsUploading(false)
+      setIsAnalyzing(false)
+    }
   }
 
   const handleColumnMapping = (header: string, mapping: string) => {
@@ -163,30 +224,84 @@ export default function DataPage() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <h2 className="text-xl font-semibold">{t.dataUpload.columnMapping}</h2>
-              <p className="text-gray-600">{t.dataUpload.columnMappingSubtitle}</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold">{t.dataUpload.columnMapping}</h2>
+                  <p className="text-gray-600">{t.dataUpload.columnMappingSubtitle}</p>
+                </div>
+                {isAnalyzing && (
+                  <div className="flex items-center space-x-2 text-sm text-blue-600">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span>AI analyseert kolommen...</span>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {parsedData.headers.map((header, index) => (
-                    <div key={index} className="space-y-2">
-                      <label className="block text-sm font-medium">
-                        Column: <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{header}</span>
-                      </label>
-                      <select
-                        value={parsedData.columnMapping[header]}
-                        onChange={(e) => handleColumnMapping(header, e.target.value)}
-                        className="w-full p-2 border rounded-md text-sm"
-                      >
-                        {columnMappingOptions.map(option => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                {aiSuggestions.length > 0 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                      <div className="ml-3 flex-1">
+                        <h3 className="text-sm font-medium text-blue-900">AI Suggesties Geladen</h3>
+                        <p className="text-sm text-blue-700 mt-1">
+                          AI heeft de kolommen geanalyseerd en automatische mapping voorstellen gedaan. 
+                          Je kunt deze aanpassen indien nodig.
+                        </p>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {parsedData.headers.map((header, index) => {
+                    const suggestion = aiSuggestions.find(s => s.originalColumn === header)
+                    const confidence = suggestion?.confidence || 0
+                    const isHighConfidence = confidence > 0.7
+                    const isMediumConfidence = confidence > 0.5 && confidence <= 0.7
+                    
+                    return (
+                      <div key={index} className="space-y-2">
+                        <label className="block text-sm font-medium">
+                          Column: <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{header}</span>
+                          {suggestion && (
+                            <span className={`ml-2 text-xs px-2 py-1 rounded ${
+                              isHighConfidence 
+                                ? 'bg-green-100 text-green-800' 
+                                : isMediumConfidence
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {isHighConfidence ? '✓ Hoog' : isMediumConfidence ? '~ Gemiddeld' : '? Laag'} ({Math.round(confidence * 100)}%)
+                            </span>
+                          )}
+                        </label>
+                        {suggestion && suggestion.reasoning && (
+                          <p className="text-xs text-gray-500 italic">{suggestion.reasoning}</p>
+                        )}
+                        <select
+                          value={parsedData.columnMapping[header]}
+                          onChange={(e) => handleColumnMapping(header, e.target.value)}
+                          className={`w-full p-2 border rounded-md text-sm ${
+                            isHighConfidence && parsedData.columnMapping[header] === suggestion?.suggestedField
+                              ? 'border-green-300 bg-green-50'
+                              : ''
+                          }`}
+                        >
+                          {columnMappingOptions.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )
+                  })}
                 </div>
 
                 <div className="pt-4 border-t">
