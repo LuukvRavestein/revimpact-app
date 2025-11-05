@@ -1,0 +1,7 @@
+Gebruiker,E-mail,Lesmodule,Startdatum,Voltooid op,Score,Slaagdrempel voor score,Voortgang,Tijdsduur,Externe gebruiker,Gebruikersgroepen
+Wim Hiensch,wimhiensch@innax.nl,Persoonlijke instellingen,27-10-2025,,,25,0:00:00,Nee,"Projectmanager, Management (NL), Timewax, Medewerker"
+Wim Hiensch,wimhiensch@innax.nl,Analytics,27-10-2025,,,12,0:00:00,Nee,"Medewerker, Management (NL), Projectmanager, Timewax"
+Jan Jansen,jan.jansen@example.com,Basis Training,01-11-2025,15-11-2025,85,70,100,1:00:00,Nee,Medewerker
+Piet Pietersen,piet@example.com,Geavanceerde Training,05-11-2025,,,50,0:30:00,Nee,"Manager, Medewerker"
+Externe Test,externe@external.com,Introductie,20-10-2025,,,30,0:15:00,Ja,Extern
+

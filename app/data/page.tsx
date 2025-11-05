@@ -78,14 +78,14 @@ export default function DataPage() {
         })
       })
 
-      let initialMapping: ColumnMapping = {}
+      const initialMapping: ColumnMapping = {}
 
       if (response.ok) {
         const result = await response.json()
         if (result.success && result.suggestions) {
           // Initialize mapping with AI suggestions (only high confidence)
           headers.forEach(header => {
-            const suggestion = result.suggestions.find((s: any) => s.originalColumn === header)
+            const suggestion = result.suggestions.find((s: {originalColumn: string; suggestedField: string; confidence: number}) => s.originalColumn === header)
             if (suggestion && suggestion.confidence > 0.6) {
               initialMapping[header] = suggestion.suggestedField
             } else {

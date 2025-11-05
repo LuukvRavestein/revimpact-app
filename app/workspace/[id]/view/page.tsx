@@ -6,7 +6,6 @@ import { createSupabaseBrowserClient } from "@/lib/supabaseClient";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import SignOutButton from "@/components/SignOutButton";
 import Link from "next/link";
-import { useCurrentWorkspace } from "@/hooks/useCurrentWorkspace";
 import { useWorkspaceFeatures } from "@/hooks/useWorkspaceFeatures";
 import { isSuperAdmin } from "@/lib/adminUtils";
 import { useLanguage } from "@/contexts/LanguageContext";

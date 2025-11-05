@@ -173,7 +173,7 @@ async function getAISuggestion(
   header: string,
   headers: string[],
   sampleRows: string[][],
-  availableFields: any[]
+  availableFields: Array<{value: string; keywords: string[]; examples: string[]}>
 ): Promise<{ field: string; confidence: number; reasoning: string } | null> {
   if (!process.env.OPENAI_API_KEY) {
     return null;
