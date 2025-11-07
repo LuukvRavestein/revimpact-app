@@ -499,7 +499,7 @@ export default function ChatbotPage() {
         );
         
         assistantMessages.forEach(msg => {
-          const content = (msg.Content || msg.content || '').toLowerCase();
+          const content = String(msg.Content || msg.content || '').toLowerCase();
           if (isSupportTicketForwarding(content)) {
             forwardedConversations.add(conversationId);
           }
@@ -528,7 +528,7 @@ export default function ChatbotPage() {
             usr_id: userId,
             cli_id: row.Cli_Id || row.cu_id || null,
             customer_name: customerName,
-            content: row.Content || row.content || '',
+            content: String(row.Content || row.content || ''),
             message_type: row.Type || row.type || 'UNKNOWN',
             username: row.Username || row.username || null,
             timestamp: (row.Timestamp || row.timestamp) ? new Date(row.Timestamp || row.timestamp || '') : null,
@@ -627,7 +627,7 @@ export default function ChatbotPage() {
       
       // Try to find any rows that might be user questions by looking at content patterns
       const alternativeUserQuestions = data.filter(row => {
-        const content = (row.Content || row.content || '').toLowerCase();
+        const content = String(row.Content || row.content || '').toLowerCase();
         const hasQuestionWords = content.includes('?') || 
                                 content.includes('hoe') || 
                                 content.includes('wat') || 
@@ -699,7 +699,7 @@ export default function ChatbotPage() {
           console.log('Sample assistant message:', {
             type: assistantMessages[0].Type || assistantMessages[0].type,
             label: assistantMessages[0].label,
-            content: (assistantMessages[0].Content || assistantMessages[0].content || '').substring(0, 100)
+            content: String(assistantMessages[0].Content || assistantMessages[0].content || '').substring(0, 100)
           });
         } else if (conversationId === Array.from(conversationMap.keys())[0]) {
           // Only log for first conversation to avoid spam
@@ -707,7 +707,7 @@ export default function ChatbotPage() {
           console.log('Sample message from first conversation:', {
             type: sortedMessages[0]?.Type || sortedMessages[0]?.type,
             label: sortedMessages[0]?.label,
-            content: (sortedMessages[0]?.Content || sortedMessages[0]?.content || '').substring(0, 100)
+            content: String(sortedMessages[0]?.Content || sortedMessages[0]?.content || '').substring(0, 100)
           });
           console.log('All message types in first conversation:');
           sortedMessages.forEach((m, index) => {
@@ -715,7 +715,7 @@ export default function ChatbotPage() {
             console.log('  Type:', m.Type);
             console.log('  type:', m.type);
             console.log('  label:', m.label);
-            console.log('  Content:', (m.Content || '').substring(0, 50));
+            console.log('  Content:', String(m.Content || '').substring(0, 50));
             console.log('  All properties:', Object.keys(m));
           });
         }
@@ -734,7 +734,7 @@ export default function ChatbotPage() {
         if (userMessages.length > 0) {
           // Check if any assistant message contains support ticket creation text
           const hasSupportTicket = assistantMessages.some(msg => {
-            const content = (msg.Content || msg.content || '');
+            const content = String(msg.Content || msg.content || '');
             const isSupportTicket = isSupportTicketForwarding(content);
             
             if (isSupportTicket) {
@@ -842,7 +842,7 @@ export default function ChatbotPage() {
         if (userMessages.length > 0) {
           // Check if any assistant message contains support ticket creation text
           const hasSupportTicket = assistantMessages.some(msg => {
-            const content = (msg.Content || msg.content || '');
+            const content = String(msg.Content || msg.content || '');
             const isSupportTicket = isSupportTicketForwarding(content);
             
             // Debug logging for main customer stats
@@ -1078,7 +1078,7 @@ export default function ChatbotPage() {
     const topicMatches = new Map<string, string[]>(); // For debugging
     
     userQuestions.forEach(q => {
-      const content = (q.Content || q.content || '').toLowerCase();
+      const content = String(q.Content || q.content || '').toLowerCase();
       Object.entries(topicKeywords).forEach(([topic, keywords]) => {
         const foundKeywords = keywords.filter(keyword => content.includes(keyword));
         if (foundKeywords.length > 0) {
@@ -1184,7 +1184,7 @@ export default function ChatbotPage() {
         );
         
         const hasSupportTicket = assistantMessages.some(msg => {
-          const content = (msg.Content || msg.content || '');
+          const content = String(msg.Content || msg.content || '');
           const isSupportTicket = isSupportTicketForwarding(content);
           
           // Debug logging for forwarding detection
