@@ -76,6 +76,180 @@ const FEATURE_DESCRIPTIONS = {
     name: "Academy Dashboard",
     description: "Monitor voortgang van deelnemers in Timewax Academy",
     icon: "🎓"
+  },
+  // Revenue & Groei Dashboards
+  revenue_mrr_arr_trend: {
+    name: "MRR / ARR Trend",
+    description: "Monthly Recurring Revenue, ARR Growth %, New vs. Lost MRR",
+    icon: "📈",
+    category: "Revenue & Groei"
+  },
+  revenue_expansion_contraction: {
+    name: "Expansion vs. Contraction",
+    description: "% upsell vs. % downgrade - meet groei van bestaande klanten",
+    icon: "📊",
+    category: "Revenue & Groei"
+  },
+  revenue_new_business: {
+    name: "New Business",
+    description: "New MRR per maand, ACV, win rate - stuurt sales en CSM",
+    icon: "💼",
+    category: "Revenue & Groei"
+  },
+  revenue_churn_impact: {
+    name: "Churn Impact",
+    description: "Lost MRR per klant, churn reason - combineert CSM + Finance data",
+    icon: "📉",
+    category: "Revenue & Groei"
+  },
+  revenue_forecast: {
+    name: "Revenue Forecast",
+    description: "Geprojecteerde MRR (pipeline + expansion likelihood)",
+    icon: "🔮",
+    category: "Revenue & Groei"
+  },
+  // Retentie & Churn Dashboards
+  retention_cohort: {
+    name: "Cohort Retention",
+    description: "% actieve klanten per cohort (maand van start)",
+    icon: "👥",
+    category: "Retentie & Churn"
+  },
+  retention_customer_lifetime: {
+    name: "Customer Lifetime",
+    description: "Gem. duur klantrelatie, churn-ratio - kern van CLTV-berekening",
+    icon: "⏱️",
+    category: "Retentie & Churn"
+  },
+  retention_logo_vs_revenue_churn: {
+    name: "Logo vs. Revenue Churn",
+    description: "Aantal vs. waarde - toont of je kleine of grote klanten verliest",
+    icon: "⚖️",
+    category: "Retentie & Churn"
+  },
+  retention_renewal_health: {
+    name: "Renewal Health",
+    description: "Renewals per maand, renewal success rate",
+    icon: "🔄",
+    category: "Retentie & Churn"
+  },
+  retention_customer_health: {
+    name: "Customer Health",
+    description: "Composite score: product usage + NPS + open tickets",
+    icon: "❤️",
+    category: "Retentie & Churn"
+  },
+  // Onboarding & Activatie Dashboards
+  onboarding_time_to_value: {
+    name: "Time to Value (TTV)",
+    description: "Dagen van start → eerste succesactie",
+    icon: "⚡",
+    category: "Onboarding & Activatie"
+  },
+  onboarding_funnel: {
+    name: "Onboarding Funnel",
+    description: "Aanmeld → eerste project → eerste resultaat",
+    icon: "🔄",
+    category: "Onboarding & Activatie"
+  },
+  onboarding_activation_rate: {
+    name: "Activation Rate",
+    description: "% klanten die binnen 14 dagen waarde zien",
+    icon: "✅",
+    category: "Onboarding & Activatie"
+  },
+  onboarding_implementation_progress: {
+    name: "Implementation Progress",
+    description: "Status per klant, taken voltooid",
+    icon: "📋",
+    category: "Onboarding & Activatie"
+  },
+  // Product Usage & Activatie Dashboards
+  product_feature_adoption: {
+    name: "Feature Adoption",
+    description: "Actieve gebruikers per feature - stuurt productontwikkeling",
+    icon: "🎯",
+    category: "Product Usage"
+  },
+  product_dau_wau_mau: {
+    name: "DAU / WAU / MAU Ratio",
+    description: "Dagelijks / Wekelijks / Maandelijks actief - maakt engagement zichtbaar",
+    icon: "📊",
+    category: "Product Usage"
+  },
+  product_top_users: {
+    name: "Top Users & Accounts",
+    description: "Meest actieve gebruikers / klanten - herken ambassadeurs",
+    icon: "⭐",
+    category: "Product Usage"
+  },
+  product_usage_frequency: {
+    name: "Usage Frequency",
+    description: "Aantal logins per week / resource - laat usage gap zien",
+    icon: "📈",
+    category: "Product Usage"
+  },
+  product_feature_stickiness: {
+    name: "Feature Stickiness",
+    description: "% gebruikers dat kernfeatures gebruikt - helpt prioriteiten stellen",
+    icon: "🔗",
+    category: "Product Usage"
+  },
+  // Customer Success & NPS Dashboards
+  success_nps_sentiment: {
+    name: "NPS & Sentiment",
+    description: "NPS over tijd, gemiddeld sentiment - toont tevredenheidstrend",
+    icon: "😊",
+    category: "Customer Success"
+  },
+  success_support_tickets: {
+    name: "Support Tickets",
+    description: "Aantal open/gesloten tickets, gemiddelde SLA",
+    icon: "🎫",
+    category: "Customer Success"
+  },
+  success_customer_health_csm: {
+    name: "Customer Health by CSM",
+    description: "Health Score per klant + eigenaar - stuurt prioriteiten",
+    icon: "👤",
+    category: "Customer Success"
+  },
+  success_engagement_timeline: {
+    name: "Engagement Timeline",
+    description: "Interacties per klant (calls, QBRs, mails) - helpt bij renewals",
+    icon: "📅",
+    category: "Customer Success"
+  },
+  success_churn_reason_analysis: {
+    name: "Churn Reason Analysis",
+    description: "Top 5 redenen met impactscore - onderbouwt verbeterinitiatieven",
+    icon: "🔍",
+    category: "Customer Success"
+  },
+  // Efficiency & Operationeel Dashboards
+  efficiency_revenue_per_employee: {
+    name: "Revenue per Employee",
+    description: "MRR / aantal FTE - laat groei-efficiëntie zien",
+    icon: "💰",
+    category: "Efficiency"
+  },
+  efficiency_support_efficiency: {
+    name: "Support Efficiency",
+    description: "Tickets per CSM, tijd tot sluiting - meet schaalbaarheid",
+    icon: "⚡",
+    category: "Efficiency"
+  },
+  efficiency_cost_per_account: {
+    name: "Cost per Account",
+    description: "Supporturen per klant / CSM-capaciteit - optimaliseer marge",
+    icon: "💵",
+    category: "Efficiency"
+  },
+  efficiency_productivity_per_team: {
+    name: "Productivity per Team",
+    description: "Output per functie - helpt in resourceplanning",
+    icon: "📊",
+    category: "Efficiency"
   }
 };
 
@@ -200,9 +374,35 @@ export default function WorkspaceManagementPage() {
         return;
       }
 
-      // If no AI dashboard feature exists, create it
-      const hasAIFeature = data?.some(f => f.feature_name === 'ai_dashboard');
-      if (!hasAIFeature) {
+      // Get all known features from FEATURE_DESCRIPTIONS
+      const allKnownFeatures = Object.keys(FEATURE_DESCRIPTIONS);
+      const existingFeatures = data || [];
+      const existingFeatureNames = new Set(existingFeatures.map(f => f.feature_name));
+
+      // Create missing features with enabled: false
+      const featuresToCreate = allKnownFeatures.filter(featureName => !existingFeatureNames.has(featureName));
+      
+      if (featuresToCreate.length > 0) {
+        const newFeatures = featuresToCreate.map(featureName => ({
+          workspace_id: workspaceId,
+          feature_name: featureName,
+          enabled: false
+        }));
+
+        const { error: insertError } = await supabase
+          .from('workspace_features')
+          .insert(newFeatures);
+
+        if (insertError) {
+          console.error('Error creating missing features:', insertError);
+        } else {
+          console.log(`Created ${featuresToCreate.length} missing features`);
+        }
+      }
+
+      // If no AI dashboard feature exists, create it with enabled: true (legacy support)
+      const hasAIFeature = existingFeatures.some(f => f.feature_name === 'ai_dashboard');
+      if (!hasAIFeature && !featuresToCreate.includes('ai_dashboard')) {
         const { error: insertError } = await supabase
           .from('workspace_features')
           .insert({
@@ -215,7 +415,7 @@ export default function WorkspaceManagementPage() {
         }
       }
 
-      // If this is a Timewax workspace and academy_monitoring doesn't exist, create it
+      // If this is a Timewax workspace and academy_monitoring doesn't exist, create it with enabled: true
       const workspaceNameLower = workspaceData?.name?.toLowerCase() || '';
       if (workspaceNameLower.includes('timewax')) {
         const hasAcademyFeature = data?.some(f => f.feature_name === 'academy_monitoring');
@@ -244,11 +444,27 @@ export default function WorkspaceManagementPage() {
         console.error('Error reloading features:', reloadError);
         setError(`Fout bij herladen features: ${reloadError.message}`);
         // Still set features from initial load if available
-        setFeatures(data || []);
+        setFeatures(existingFeatures);
         return;
       }
 
-      setFeatures(updatedData || []);
+      // Ensure all known features are present (merge with any newly created ones)
+      const finalFeatures = updatedData || existingFeatures;
+      const finalFeatureNames = new Set(finalFeatures.map(f => f.feature_name));
+      
+      // Add any still missing features (shouldn't happen, but just in case)
+      const stillMissing = allKnownFeatures.filter(f => !finalFeatureNames.has(f));
+      if (stillMissing.length > 0) {
+        const missingFeatures = stillMissing.map(featureName => ({
+          id: `temp-${featureName}`,
+          feature_name: featureName,
+          enabled: false
+        }));
+        setFeatures([...finalFeatures, ...missingFeatures]);
+      } else {
+        setFeatures(finalFeatures);
+      }
+      
       setError(''); // Clear any previous errors
     } catch (err: any) {
       console.error('Error loading features:', err);
@@ -336,6 +552,31 @@ export default function WorkspaceManagementPage() {
 
   const toggleFeature = async (featureId: string, enabled: boolean) => {
     try {
+      // If this is a temp feature (not yet in database), create it first
+      if (featureId.startsWith('temp-')) {
+        const featureName = featureId.replace('temp-', '');
+        const { data, error } = await supabase
+          .from('workspace_features')
+          .insert({
+            workspace_id: workspaceId,
+            feature_name: featureName,
+            enabled
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Error creating feature:', error);
+          setError(`Fout bij aanmaken feature: ${error.message}`);
+          return;
+        }
+
+        setSuccess(`Feature ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}!`);
+        await loadFeatures();
+        return;
+      }
+
+      // Update existing feature
       const { error } = await supabase
         .from('workspace_features')
         .update({ enabled })
@@ -689,62 +930,149 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Features Management */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Workspace Features</h2>
-            <div className="space-y-4">
-              {features.map((feature) => {
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6 lg:col-span-2">
+            <h2 className="text-xl font-semibold text-gray-900 mb-6">Workspace Features</h2>
+            
+            {/* Group features by category */}
+            {(() => {
+              const featuresByCategory = features.reduce((acc, feature) => {
                 const featureInfo = FEATURE_DESCRIPTIONS[feature.feature_name as keyof typeof FEATURE_DESCRIPTIONS];
-                const hasLink = feature.feature_name === 'ai_dashboard' || 
-                               feature.feature_name === 'data_upload' ||
-                               feature.feature_name === 'academy_monitoring';
-                
-                const linkUrl = feature.feature_name === 'ai_dashboard' 
-                  ? `/workspace/${workspaceId}/ai`
-                  : feature.feature_name === 'academy_monitoring'
-                  ? `/workspace/${workspaceId}/academy`
-                  : '/data';
-                
-                return (
-                  <div key={feature.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-2xl">{featureInfo?.icon || "🔧"}</span>
-                      <div>
-                        {hasLink ? (
-                          <Link 
-                            href={linkUrl}
-                            className="font-medium text-gray-900 hover:text-impact-blue transition-colors"
-                          >
-                            {featureInfo?.name || feature.feature_name}
-                          </Link>
-                        ) : (
-                          <h3 className="font-medium text-gray-900">{featureInfo?.name || feature.feature_name}</h3>
-                        )}
-                        <p className="text-sm text-gray-500">{featureInfo?.description || "Feature beschrijving"}</p>
+                const category = featureInfo?.category || 'Overig';
+                if (!acc[category]) {
+                  acc[category] = [];
+                }
+                acc[category].push(feature);
+                return acc;
+              }, {} as Record<string, typeof features>);
+
+              const categoryOrder = [
+                'Revenue & Groei',
+                'Retentie & Churn',
+                'Onboarding & Activatie',
+                'Product Usage',
+                'Customer Success',
+                'Efficiency',
+                'Overig'
+              ];
+
+              return (
+                <div className="space-y-8">
+                  {categoryOrder.map((category) => {
+                    const categoryFeatures = featuresByCategory[category];
+                    if (!categoryFeatures || categoryFeatures.length === 0) return null;
+
+                    return (
+                      <div key={category}>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-200">
+                          {category}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {categoryFeatures.map((feature) => {
+                            const featureInfo = FEATURE_DESCRIPTIONS[feature.feature_name as keyof typeof FEATURE_DESCRIPTIONS];
+                            
+                            // Determine if feature has a link and what URL
+                            let hasLink = false;
+                            let linkUrl = '';
+                            
+                            if (feature.feature_name === 'ai_dashboard') {
+                              hasLink = true;
+                              linkUrl = `/workspace/${workspaceId}/ai`;
+                            } else if (feature.feature_name === 'academy_monitoring') {
+                              hasLink = true;
+                              linkUrl = `/workspace/${workspaceId}/academy`;
+                            } else if (feature.feature_name === 'data_upload') {
+                              hasLink = true;
+                              linkUrl = '/data';
+                            } else if (feature.feature_name.startsWith('revenue_')) {
+                              hasLink = true;
+                              linkUrl = `/workspace/${workspaceId}/revenue`;
+                            } else if (feature.feature_name.startsWith('retention_')) {
+                              hasLink = true;
+                              linkUrl = `/workspace/${workspaceId}/retention`;
+                            } else if (feature.feature_name.startsWith('onboarding_')) {
+                              hasLink = true;
+                              linkUrl = `/workspace/${workspaceId}/onboarding`;
+                            } else if (feature.feature_name.startsWith('product_')) {
+                              hasLink = true;
+                              linkUrl = `/workspace/${workspaceId}/product`;
+                            } else if (feature.feature_name.startsWith('success_')) {
+                              hasLink = true;
+                              linkUrl = `/workspace/${workspaceId}/success`;
+                            } else if (feature.feature_name.startsWith('efficiency_')) {
+                              hasLink = true;
+                              linkUrl = `/workspace/${workspaceId}/efficiency`;
+                            }
+                            
+                            return (
+                              <div 
+                                key={feature.id} 
+                                className={`flex items-start justify-between p-4 rounded-lg transition-all border-2 ${
+                                  feature.enabled
+                                    ? 'bg-green-50 border-green-200 hover:border-green-300'
+                                    : 'bg-gray-50 border-gray-200 hover:border-gray-300 opacity-75'
+                                }`}
+                              >
+                                <div className="flex items-start space-x-3 flex-1">
+                                  <span className="text-2xl">{featureInfo?.icon || "🔧"}</span>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center space-x-2">
+                                      {hasLink ? (
+                                        <Link 
+                                          href={linkUrl}
+                                          className="font-medium text-gray-900 hover:text-impact-blue transition-colors"
+                                        >
+                                          {featureInfo?.name || feature.feature_name}
+                                        </Link>
+                                      ) : (
+                                        <h3 className="font-medium text-gray-900">{featureInfo?.name || feature.feature_name}</h3>
+                                      )}
+                                      {feature.enabled && (
+                                        <span className="px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
+                                          Actief
+                                        </span>
+                                      )}
+                                      {!feature.enabled && (
+                                        <span className="px-2 py-0.5 text-xs font-semibold bg-gray-200 text-gray-600 rounded-full">
+                                          Uit
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-sm text-gray-500 mt-1">{featureInfo?.description || "Feature beschrijving"}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2 ml-2 flex-shrink-0">
+                                  {hasLink && feature.enabled && (
+                                    <Link 
+                                      href={linkUrl}
+                                      className="px-3 py-1.5 text-sm bg-impact-blue text-white rounded-lg hover:bg-impact-blue/90 transition-colors"
+                                    >
+                                      Open
+                                    </Link>
+                                  )}
+                                  <label className="relative inline-flex items-center cursor-pointer" title={feature.enabled ? 'Uitschakelen' : 'Inschakelen'}>
+                                    <input
+                                      type="checkbox"
+                                      checked={feature.enabled}
+                                      onChange={(e) => toggleFeature(feature.id, e.target.checked)}
+                                      className="sr-only peer"
+                                    />
+                                    <div className={`w-11 h-6 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${
+                                      feature.enabled
+                                        ? 'bg-green-500 peer-focus:ring-4 peer-focus:ring-green-200'
+                                        : 'bg-gray-300 peer-focus:ring-4 peer-focus:ring-gray-200'
+                                    }`}></div>
+                                  </label>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      {hasLink && (
-                        <Link 
-                          href={linkUrl}
-                          className="px-3 py-1 text-sm bg-impact-blue text-white rounded-lg hover:bg-impact-blue/90 transition-colors"
-                        >
-                          Open
-                        </Link>
-                      )}
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={feature.enabled}
-                          onChange={(e) => toggleFeature(feature.id, e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-impact-blue/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-impact-blue"></div>
-                      </label>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
 
           {/* Members Management */}
