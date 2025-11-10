@@ -145,21 +145,24 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
     };
     window.addEventListener('focus', handleFocus);
 
-    // Fallback: Periodic refresh every 3 seconds (only when tab is visible)
+    // Fallback: Periodic refresh every 2 seconds (only when tab is visible)
+    // This ensures we catch changes even if events don't work
+    let lastCheckedTimestamp = '';
     const intervalId = setInterval(() => {
       if (isMounted && document.visibilityState === 'visible') {
-        checkLocalStorage();
-        // Only reload if localStorage indicates a recent change
         const lastUpdate = localStorage.getItem(`workspace-feature-updated-${workspaceId}`);
-        if (lastUpdate) {
+        if (lastUpdate && lastUpdate !== lastCheckedTimestamp) {
           const lastUpdateTime = parseInt(lastUpdate, 10);
           const now = Date.now();
-          if (now - lastUpdateTime < 10000) {
+          // If update was within last 15 seconds, reload
+          if (now - lastUpdateTime < 15000) {
+            console.log('Periodic check detected feature update, reloading...');
+            lastCheckedTimestamp = lastUpdate;
             loadFeatures();
           }
         }
       }
-    }, 3000);
+    }, 2000);
 
     // Initial localStorage check
     checkLocalStorage();
