@@ -239,6 +239,22 @@ export default function ChatbotPage() {
   const [loading, setLoading] = useState(true);
   const [showUploadHistory, setShowUploadHistory] = useState(false);
   
+  // Helper function to check if a row is from a Timewax employee
+  const isTimewaxEmployee = (row: ChatbotData): boolean => {
+    try {
+      const username = row.Username || row.username;
+      if (username && username !== '[username]') {
+        const userInfo = JSON.parse(username);
+        if (userInfo.clientName && String(userInfo.clientName).toLowerCase().includes('timewax')) {
+          return true;
+        }
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+    return false;
+  };
+  
   // Load chatbot data from Supabase
   const loadChatbotData = useCallback(async (workspaceId: string) => {
     try {
@@ -421,10 +437,22 @@ export default function ChatbotPage() {
       const workbook = XLSX.read(data);
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet) as ChatbotData[];
+      const rawJsonData = XLSX.utils.sheet_to_json(worksheet) as ChatbotData[];
+
+      if (rawJsonData.length === 0) {
+        setError('Het Excel bestand bevat geen data');
+        setIsUploading(false);
+        setIsProcessing(false);
+        return;
+      }
+
+      // Filter out Timewax employees
+      const jsonData = rawJsonData.filter(row => !isTimewaxEmployee(row));
+      console.log('Filtered out Timewax employees:', rawJsonData.length - jsonData.length, 'rows removed');
+      console.log('Remaining data:', jsonData.length, 'rows');
 
       if (jsonData.length === 0) {
-        setError('Het Excel bestand bevat geen data');
+        setError('Na het filteren van Timewax medewerkers bevat het bestand geen data');
         setIsUploading(false);
         setIsProcessing(false);
         return;
@@ -464,7 +492,7 @@ export default function ChatbotPage() {
       // Process and save data
       const processed = processChatbotData(jsonData);
       
-      // Extract customer names from username JSON
+      // Extract customer names from username JSON (excluding Timewax employees)
       const customerMap = new Map<string, string>();
       jsonData.forEach(row => {
         try {
@@ -473,7 +501,7 @@ export default function ChatbotPage() {
           
           if (username && username !== '[username]' && userId) {
             const userInfo = JSON.parse(username);
-            if (userInfo.clientName) {
+            if (userInfo.clientName && !String(userInfo.clientName).toLowerCase().includes('timewax')) {
               customerMap.set(userId, userInfo.clientName);
             }
           }
@@ -578,22 +606,26 @@ export default function ChatbotPage() {
     console.log('Processing data:', data.length, 'rows');
     console.log('Sample data structure:', data.slice(0, 3));
     
+    // Filter out Timewax employees
+    const filteredData = data.filter(row => !isTimewaxEmployee(row));
+    console.log('After filtering Timewax employees:', filteredData.length, 'rows');
+    
     // Filter user questions (messages from users)
-    const userQuestions = data.filter(row => {
+    const userQuestions = filteredData.filter(row => {
       return row.Type === 'USER';
     });
     console.log('User questions found:', userQuestions.length);
 
-    // Extract customer names from username JSON
+    // Extract customer names from username JSON (excluding Timewax employees)
     const customerMap = new Map<string, string>();
-    data.forEach(row => {
+    filteredData.forEach(row => {
       try {
         const username = row.Username || row.username;
         const userId = row.usr_id || row.user_id;
         
         if (username && username !== '[username]' && userId) {
           const userInfo = JSON.parse(username);
-          if (userInfo.clientName) {
+          if (userInfo.clientName && !String(userInfo.clientName).toLowerCase().includes('timewax')) {
             customerMap.set(userId, userInfo.clientName);
             console.log('Found customer:', userInfo.clientName, 'for user:', userId);
           }
@@ -626,7 +658,7 @@ export default function ChatbotPage() {
       console.log('No user questions found with standard filtering, trying alternative approach...');
       
       // Try to find any rows that might be user questions by looking at content patterns
-      const alternativeUserQuestions = data.filter(row => {
+      const alternativeUserQuestions = filteredData.filter(row => {
         const content = String(row.Content || row.content || '').toLowerCase();
         const hasQuestionWords = content.includes('?') || 
                                 content.includes('hoe') || 
@@ -657,7 +689,7 @@ export default function ChatbotPage() {
 
     // Analyze conversation flows to determine resolution
     const conversationMap = new Map<string, ChatbotData[]>();
-    data.forEach(row => {
+    filteredData.forEach(row => {
       if (!conversationMap.has(row.conversation_id)) {
         conversationMap.set(row.conversation_id, []);
       }
