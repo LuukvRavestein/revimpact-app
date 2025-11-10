@@ -1032,26 +1032,41 @@ export default function AcademyMonitoringPage() {
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Trend per Week</h3>
             <div className="relative">
-              {/* Sticky Y-axis labels */}
-              <div 
-                className="absolute top-0 bottom-0 flex flex-col justify-between text-xs font-medium text-gray-600 bg-white z-10" 
-                style={{ 
-                  width: `${chartPadding.left}px`,
-                  paddingTop: `${chartPadding.top}px`,
-                  paddingBottom: `${chartPadding.bottom}px`,
-                  position: 'sticky',
-                  left: 0
-                }}
-              >
-                {[0, 0.25, 0.5, 0.75, 1].reverse().map((ratio) => (
-                  <span key={ratio} className="text-right pr-2">
-                    {Math.round(maxValue * ratio)}
-                  </span>
-                ))}
-              </div>
-              
-              <div className="overflow-x-auto" ref={chartContainerRef} style={{ marginLeft: `${chartPadding.left}px` }}>
-                <div className="relative" style={{ minWidth: `${chartWidth}px`, height: `${chartHeight}px` }}>
+              <div className="flex">
+                {/* Sticky Y-axis labels */}
+                <div 
+                  className="flex-shrink-0 flex flex-col justify-between text-xs font-medium text-gray-600 bg-white z-10" 
+                  style={{ 
+                    width: `${chartPadding.left}px`,
+                    height: `${chartHeight}px`,
+                    paddingTop: `${chartPadding.top}px`,
+                    paddingBottom: `${chartPadding.bottom}px`,
+                    position: 'sticky',
+                    left: 0
+                  }}
+                >
+                  {[0, 0.25, 0.5, 0.75, 1].reverse().map((ratio) => {
+                    const chartAreaHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+                    const labelY = chartPadding.top + chartAreaHeight * (1 - ratio);
+                    return (
+                      <span 
+                        key={ratio} 
+                        className="text-right pr-2 absolute"
+                        style={{
+                          top: `${labelY - 6}px`, // -6px to center the text vertically
+                          right: '0',
+                          transform: 'translateY(-50%)'
+                        }}
+                      >
+                        {Math.round(maxValue * ratio)}
+                      </span>
+                    );
+                  })}
+                </div>
+                
+                {/* Scrollable chart area */}
+                <div className="overflow-x-auto flex-1" ref={chartContainerRef}>
+                  <div className="relative" style={{ minWidth: `${chartWidth}px`, height: `${chartHeight}px` }}>
                   <svg 
                     className="absolute inset-0" 
                     viewBox={`0 0 ${chartWidth} ${chartHeight}`}
@@ -1250,6 +1265,7 @@ export default function AcademyMonitoringPage() {
                   </div>
                 </div>
               </div>
+            </div>
               
               {/* Legend */}
               <div className="flex items-center justify-center space-x-8 mt-8 pt-4 border-t border-gray-200">
