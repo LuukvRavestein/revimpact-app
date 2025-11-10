@@ -50,9 +50,12 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
         }
 
         console.log('Loaded features:', data?.length || 0, 'enabled features');
+        if (data && data.length > 0) {
+          console.log('Feature names:', data.map(f => `${f.feature_name} (enabled: ${f.enabled})`));
+        }
         if (isMounted) {
           setFeatures(data || []);
-          console.log('Features state updated:', data?.map(f => f.feature_name) || []);
+          console.log('Features state updated with', (data || []).length, 'features');
         }
       } catch (err) {
         console.error('Error loading workspace features:', err);
@@ -181,10 +184,11 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
   }, [supabase, workspaceId, refreshKey]);
 
   const isFeatureEnabled = useCallback((featureName: string): boolean => {
-    const enabled = features.some(feature => 
-      feature.feature_name === featureName && feature.enabled
-    );
-    console.log(`isFeatureEnabled('${featureName}'):`, enabled, 'from features:', features.map(f => f.feature_name));
+    // Since we only load enabled features, if it's in the array, it's enabled
+    const enabled = features.some(feature => feature.feature_name === featureName);
+    if (!enabled && features.length > 0) {
+      console.log(`isFeatureEnabled('${featureName}'): false - available features:`, features.map(f => f.feature_name));
+    }
     return enabled;
   }, [features]);
 
