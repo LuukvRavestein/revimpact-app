@@ -213,9 +213,11 @@ export default function AcademyMonitoringPage() {
   const [sortColumn, setSortColumn] = useState<string | null>('start_date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showUploadHistory, setShowUploadHistory] = useState(false);
+  const [hoveredWeek, setHoveredWeek] = useState<{ week: string; started: number; completed: number; x: number; y: number } | null>(null);
   const itemsPerPage = 50;
   
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const params = useParams();
   const workspaceId = params.id as string;
@@ -1030,12 +1032,32 @@ export default function AcademyMonitoringPage() {
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-6">Trend per Week</h3>
             <div className="relative">
-              <div className="overflow-x-auto">
+              {/* Sticky Y-axis labels */}
+              <div 
+                className="absolute top-0 bottom-0 flex flex-col justify-between text-xs font-medium text-gray-600 bg-white z-10" 
+                style={{ 
+                  left: '0', 
+                  width: `${chartPadding.left}px`,
+                  paddingTop: `${chartPadding.top}px`,
+                  paddingBottom: `${chartPadding.bottom}px`,
+                  position: 'sticky',
+                  left: 0
+                }}
+              >
+                {[0, 0.25, 0.5, 0.75, 1].reverse().map((ratio) => (
+                  <span key={ratio} className="text-right pr-2">
+                    {Math.round(maxValue * ratio)}
+                  </span>
+                ))}
+              </div>
+              
+              <div className="overflow-x-auto" ref={chartContainerRef} style={{ marginLeft: `${chartPadding.left}px` }}>
                 <div className="relative" style={{ minWidth: `${chartWidth}px`, height: `${chartHeight}px` }}>
                   <svg 
                     className="absolute inset-0" 
                     viewBox={`0 0 ${chartWidth} ${chartHeight}`}
                     preserveAspectRatio="none"
+                    onMouseLeave={() => setHoveredWeek(null)}
                   >
                     {/* Grid lines */}
                     {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
@@ -1084,6 +1106,56 @@ export default function AcademyMonitoringPage() {
                       strokeLinejoin="round"
                     />
                     
+                    {/* Invisible hover areas for each week */}
+                    {weeklyTrends.map((w, i) => {
+                      const x = chartPadding.left + i * pointSpacing;
+                      const chartAreaHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+                      const startedY = chartPadding.top + chartAreaHeight - (maxValue > 0 ? (w.started / maxValue) * chartAreaHeight : 0);
+                      const completedY = chartPadding.top + chartAreaHeight - (maxValue > 0 ? (w.completed / maxValue) * chartAreaHeight : 0);
+                      const minY = Math.min(startedY, completedY);
+                      const maxY = Math.max(startedY, completedY);
+                      
+                      return (
+                        <g key={`hover-${i}`}>
+                          {/* Invisible hover rectangle */}
+                          <rect
+                            x={x - pointSpacing / 2}
+                            y={chartPadding.top}
+                            width={pointSpacing}
+                            height={chartAreaHeight}
+                            fill="transparent"
+                            onMouseEnter={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const containerRect = chartContainerRef.current?.getBoundingClientRect();
+                              if (containerRect) {
+                                setHoveredWeek({
+                                  week: w.week,
+                                  started: w.started,
+                                  completed: w.completed,
+                                  x: rect.left - containerRect.left + rect.width / 2,
+                                  y: rect.top - containerRect.top + rect.height / 2
+                                });
+                              }
+                            }}
+                            onMouseMove={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              const containerRect = chartContainerRef.current?.getBoundingClientRect();
+                              if (containerRect) {
+                                setHoveredWeek({
+                                  week: w.week,
+                                  started: w.started,
+                                  completed: w.completed,
+                                  x: rect.left - containerRect.left + rect.width / 2,
+                                  y: rect.top - containerRect.top + rect.height / 2
+                                });
+                              }
+                            }}
+                            className="cursor-pointer"
+                          />
+                        </g>
+                      );
+                    })}
+                    
                     {/* Data points for started */}
                     {weeklyTrends.map((w, i) => {
                       const x = chartPadding.left + i * pointSpacing;
@@ -1098,9 +1170,8 @@ export default function AcademyMonitoringPage() {
                             fill="#ffffff"
                             stroke="#3b82f6"
                             strokeWidth="2"
-                            className="hover:r-7 transition-all cursor-pointer"
+                            className="hover:r-7 transition-all cursor-pointer pointer-events-none"
                           />
-                          <title>{`Week ${w.week}: ${w.started} gestart`}</title>
                         </g>
                       );
                     })}
@@ -1119,30 +1190,38 @@ export default function AcademyMonitoringPage() {
                             fill="#ffffff"
                             stroke="#10b981"
                             strokeWidth="2"
-                            className="hover:r-7 transition-all cursor-pointer"
+                            className="hover:r-7 transition-all cursor-pointer pointer-events-none"
                           />
-                          <title>{`Week ${w.week}: ${w.completed} voltooid`}</title>
                         </g>
                       );
                     })}
                   </svg>
                   
-                  {/* Y-axis labels */}
-                  <div 
-                    className="absolute top-0 bottom-0 flex flex-col justify-between text-xs font-medium text-gray-600" 
-                    style={{ 
-                      left: '0', 
-                      width: `${chartPadding.left}px`,
-                      paddingTop: `${chartPadding.top}px`,
-                      paddingBottom: `${chartPadding.bottom}px`
-                    }}
-                  >
-                    {[0, 0.25, 0.5, 0.75, 1].reverse().map((ratio) => (
-                      <span key={ratio} className="text-right pr-2">
-                        {Math.round(maxValue * ratio)}
-                      </span>
-                    ))}
-                  </div>
+                  {/* Hover tooltip */}
+                  {hoveredWeek && (
+                    <div
+                      className="absolute bg-gray-900 text-white text-xs rounded-lg shadow-lg px-3 py-2 z-20 pointer-events-none"
+                      style={{
+                        left: `${hoveredWeek.x}px`,
+                        top: `${hoveredWeek.y - 80}px`,
+                        transform: 'translateX(-50%)'
+                      }}
+                    >
+                      <div className="font-semibold mb-1">{hoveredWeek.week.replace('W', ' W')}</div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                        <span>Gestart: {hoveredWeek.started}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <span>Voltooid: {hoveredWeek.completed}</span>
+                      </div>
+                      {/* Arrow */}
+                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full">
+                        <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                      </div>
+                    </div>
+                  )}
                   
                   {/* Week labels - only show every Nth label */}
                   <div 
