@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabaseClient';
 
 interface WorkspaceFeature {
@@ -11,7 +11,13 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
   const [features, setFeatures] = useState<WorkspaceFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const supabase = createSupabaseBrowserClient();
+  
+  // Expose refresh function
+  const refreshFeatures = useCallback(() => {
+    setRefreshKey(prev => prev + 1);
+  }, []);
 
   useEffect(() => {
     if (!workspaceId) {
@@ -110,8 +116,8 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
       if (lastUpdate) {
         const lastUpdateTime = parseInt(lastUpdate, 10);
         const now = Date.now();
-        // If update was within last 5 seconds, reload
-        if (now - lastUpdateTime < 5000) {
+        // If update was within last 10 seconds, reload
+        if (now - lastUpdateTime < 10000) {
           console.log('Recent feature update detected, reloading features...');
           loadFeatures();
         }
@@ -127,13 +133,21 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
     };
     window.addEventListener('focus', handleFocus);
 
-    // Fallback: Periodic refresh every 10 seconds (only when tab is visible)
+    // Fallback: Periodic refresh every 3 seconds (only when tab is visible)
     const intervalId = setInterval(() => {
       if (isMounted && document.visibilityState === 'visible') {
         checkLocalStorage();
-        loadFeatures();
+        // Only reload if localStorage indicates a recent change
+        const lastUpdate = localStorage.getItem(`workspace-feature-updated-${workspaceId}`);
+        if (lastUpdate) {
+          const lastUpdateTime = parseInt(lastUpdate, 10);
+          const now = Date.now();
+          if (now - lastUpdateTime < 10000) {
+            loadFeatures();
+          }
+        }
       }
-    }, 10000);
+    }, 3000);
 
     // Initial localStorage check
     checkLocalStorage();
@@ -149,7 +163,7 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
       window.removeEventListener('focus', handleFocus);
       clearInterval(intervalId);
     };
-  }, [supabase, workspaceId]);
+  }, [supabase, workspaceId, refreshKey]);
 
   const isFeatureEnabled = (featureName: string): boolean => {
     return features.some(feature => 
@@ -161,6 +175,7 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
     features,
     loading,
     error,
-    isFeatureEnabled
+    isFeatureEnabled,
+    refreshFeatures
   };
 }

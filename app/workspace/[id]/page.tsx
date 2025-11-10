@@ -540,11 +540,14 @@ export default function WorkspaceManagementPage() {
         
         // Trigger custom event to notify other pages/tabs
         if (typeof window !== 'undefined') {
+          const timestamp = Date.now().toString();
+          console.log('Dispatching feature change event for workspace (new feature):', workspaceId);
           window.dispatchEvent(new CustomEvent('workspace-feature-changed', {
-            detail: { workspaceId, featureId: data.id, enabled }
+            detail: { workspaceId, featureId: data.id, enabled, timestamp }
           }));
           // Also update localStorage as a fallback for cross-tab communication
-          localStorage.setItem(`workspace-feature-updated-${workspaceId}`, Date.now().toString());
+          localStorage.setItem(`workspace-feature-updated-${workspaceId}`, timestamp);
+          console.log('Updated localStorage with timestamp:', timestamp);
         }
         return;
       }
@@ -566,11 +569,14 @@ export default function WorkspaceManagementPage() {
       
       // Trigger custom event to notify other pages/tabs
       if (typeof window !== 'undefined') {
+        const timestamp = Date.now().toString();
+        console.log('Dispatching feature change event for workspace:', workspaceId);
         window.dispatchEvent(new CustomEvent('workspace-feature-changed', {
-          detail: { workspaceId, featureId, enabled }
+          detail: { workspaceId, featureId, enabled, timestamp }
         }));
         // Also update localStorage as a fallback for cross-tab communication
-        localStorage.setItem(`workspace-feature-updated-${workspaceId}`, Date.now().toString());
+        localStorage.setItem(`workspace-feature-updated-${workspaceId}`, timestamp);
+        console.log('Updated localStorage with timestamp:', timestamp);
       }
     } catch (err) {
       console.error('Unexpected error:', err);
