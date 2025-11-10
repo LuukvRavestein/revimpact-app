@@ -1135,30 +1135,22 @@ export default function AcademyMonitoringPage() {
                             height={chartAreaHeight}
                             fill="transparent"
                             onMouseEnter={(e) => {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const containerRect = chartContainerRef.current?.getBoundingClientRect();
-                              if (containerRect) {
-                                setHoveredWeek({
-                                  week: w.week,
-                                  started: w.started,
-                                  completed: w.completed,
-                                  x: rect.left - containerRect.left + rect.width / 2,
-                                  y: rect.top - containerRect.top + rect.height / 2
-                                });
-                              }
+                              setHoveredWeek({
+                                week: w.week,
+                                started: w.started,
+                                completed: w.completed,
+                                x: e.clientX,
+                                y: e.clientY
+                              });
                             }}
                             onMouseMove={(e) => {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              const containerRect = chartContainerRef.current?.getBoundingClientRect();
-                              if (containerRect) {
-                                setHoveredWeek({
-                                  week: w.week,
-                                  started: w.started,
-                                  completed: w.completed,
-                                  x: rect.left - containerRect.left + rect.width / 2,
-                                  y: rect.top - containerRect.top + rect.height / 2
-                                });
-                              }
+                              setHoveredWeek({
+                                week: w.week,
+                                started: w.started,
+                                completed: w.completed,
+                                x: e.clientX,
+                                y: e.clientY
+                              });
                             }}
                             className="cursor-pointer"
                           />
@@ -1210,7 +1202,7 @@ export default function AcademyMonitoringPage() {
                   {/* Hover tooltip */}
                   {hoveredWeek && (
                     <div
-                      className="absolute bg-gray-900 text-white text-xs rounded-lg shadow-lg px-3 py-2 z-20 pointer-events-none"
+                      className="fixed bg-gray-900 text-white text-xs rounded-lg shadow-lg px-3 py-2 z-50 pointer-events-none"
                       style={{
                         left: `${hoveredWeek.x}px`,
                         top: `${hoveredWeek.y - 80}px`,
