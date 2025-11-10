@@ -393,59 +393,9 @@ export default function WorkspaceManagementPage() {
       const existingFeatures = data || [];
       const existingFeatureNames = new Set(existingFeatures.map(f => f.feature_name));
 
-      // Create missing features with enabled: false
-      const featuresToCreate = allKnownFeatures.filter(featureName => !existingFeatureNames.has(featureName));
-      
-      if (featuresToCreate.length > 0) {
-        const newFeatures = featuresToCreate.map(featureName => ({
-          workspace_id: workspaceId,
-          feature_name: featureName,
-          enabled: false
-        }));
-
-        const { error: insertError } = await supabase
-          .from('workspace_features')
-          .insert(newFeatures);
-
-        if (insertError) {
-          console.error('Error creating missing features:', insertError);
-        } else {
-          console.log(`Created ${featuresToCreate.length} missing features`);
-        }
-      }
-
-      // If no AI dashboard feature exists, create it with enabled: true (legacy support)
-      const hasAIFeature = existingFeatures.some(f => f.feature_name === 'ai_dashboard');
-      if (!hasAIFeature && !featuresToCreate.includes('ai_dashboard')) {
-        const { error: insertError } = await supabase
-          .from('workspace_features')
-          .insert({
-            workspace_id: workspaceId,
-            feature_name: 'ai_dashboard',
-            enabled: true
-          });
-        if (insertError) {
-          console.error('Error creating AI feature:', insertError);
-        }
-      }
-
-      // If this is a Timewax workspace and academy_monitoring doesn't exist, create it with enabled: true
-      const workspaceNameLower = workspaceData?.name?.toLowerCase() || '';
-      if (workspaceNameLower.includes('timewax')) {
-        const hasAcademyFeature = data?.some(f => f.feature_name === 'academy_monitoring');
-        if (!hasAcademyFeature) {
-          const { error: insertError } = await supabase
-            .from('workspace_features')
-            .insert({
-              workspace_id: workspaceId,
-              feature_name: 'academy_monitoring',
-              enabled: true
-            });
-          if (insertError) {
-            console.error('Error creating Academy feature:', insertError);
-          }
-        }
-      }
+      // Don't automatically create missing features - they will be created when toggled
+      // This avoids RLS policy violations. Features will be created on-demand when user toggles them.
+      // Missing features will be shown as temp entries that can be toggled to create them.
 
       // Reload features after potential insert
       const { data: updatedData, error: reloadError } = await supabase
@@ -462,11 +412,11 @@ export default function WorkspaceManagementPage() {
         return;
       }
 
-      // Ensure all known features are present (merge with any newly created ones)
+      // Ensure all known features are present (add temp entries for missing ones)
       const finalFeatures = updatedData || existingFeatures;
       const finalFeatureNames = new Set(finalFeatures.map(f => f.feature_name));
       
-      // Add any still missing features (shouldn't happen, but just in case)
+      // Add temp entries for missing features so they can be displayed and toggled
       const stillMissing = allKnownFeatures.filter(f => !finalFeatureNames.has(f));
       if (stillMissing.length > 0) {
         const missingFeatures = stillMissing.map(featureName => ({
