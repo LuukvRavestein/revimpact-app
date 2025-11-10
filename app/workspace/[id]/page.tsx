@@ -1026,8 +1026,7 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
                                     : 'bg-gray-50 border-gray-200 hover:border-gray-300 opacity-75'
                                 }`}
                               >
-                                <div className="flex items-start space-x-3 flex-1">
-                                  <span className="text-2xl">{featureInfo?.icon || "🔧"}</span>
+                                <div className="flex items-start flex-1">
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center space-x-2">
                                       {hasLink ? (
