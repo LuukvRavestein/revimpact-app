@@ -1036,7 +1036,6 @@ export default function AcademyMonitoringPage() {
               <div 
                 className="absolute top-0 bottom-0 flex flex-col justify-between text-xs font-medium text-gray-600 bg-white z-10" 
                 style={{ 
-                  left: '0', 
                   width: `${chartPadding.left}px`,
                   paddingTop: `${chartPadding.top}px`,
                   paddingBottom: `${chartPadding.bottom}px`,
@@ -1110,10 +1109,6 @@ export default function AcademyMonitoringPage() {
                     {weeklyTrends.map((w, i) => {
                       const x = chartPadding.left + i * pointSpacing;
                       const chartAreaHeight = chartHeight - chartPadding.top - chartPadding.bottom;
-                      const startedY = chartPadding.top + chartAreaHeight - (maxValue > 0 ? (w.started / maxValue) * chartAreaHeight : 0);
-                      const completedY = chartPadding.top + chartAreaHeight - (maxValue > 0 ? (w.completed / maxValue) * chartAreaHeight : 0);
-                      const minY = Math.min(startedY, completedY);
-                      const maxY = Math.max(startedY, completedY);
                       
                       return (
                         <g key={`hover-${i}`}>
