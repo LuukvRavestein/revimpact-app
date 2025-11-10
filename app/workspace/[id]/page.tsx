@@ -41,41 +41,55 @@ interface WorkspaceInvitation {
   expires_at: string;
 }
 
-const FEATURE_DESCRIPTIONS = {
+type FeatureDescription = {
+  name: string;
+  description: string;
+  icon: string;
+  category?: string;
+};
+
+const FEATURE_DESCRIPTIONS: Record<string, FeatureDescription> = {
   data_upload: {
     name: "Data Upload",
     description: "Upload en analyseer klantdata",
-    icon: "📊"
+    icon: "📊",
+    category: "Overig"
   },
   ai_dashboard: {
     name: "AI Dashboard Generator",
     description: "Genereer gepersonaliseerde dashboards met AI",
-    icon: "🤖"
+    icon: "🤖",
+    category: "Overig"
   },
   qbr_generator: {
     name: "QBR Generator",
     description: "Genereer Quarterly Business Reviews",
-    icon: "📋"
+    icon: "📋",
+    category: "Overig"
   },
   workspace_settings: {
     name: "Workspace Instellingen",
     description: "Beheer workspace configuratie",
-    icon: "⚙️"
+    icon: "⚙️",
+    category: "Overig"
   },
   chatbot_analytics: {
     name: "Chatbot Analytics",
     description: "Analyseer chatbot gesprekken",
-    icon: "🤖"
+    icon: "🤖",
+    category: "Overig"
   },
   admin_panel: {
     name: "Admin Panel",
     description: "Toegang tot admin functionaliteit",
-    icon: "👑"
+    icon: "👑",
+    category: "Overig"
   },
   academy_monitoring: {
     name: "Academy Dashboard",
     description: "Monitor voortgang van deelnemers in Timewax Academy",
-    icon: "🎓"
+    icon: "🎓",
+    category: "Overig"
   },
   // Revenue & Groei Dashboards
   revenue_mrr_arr_trend: {
@@ -937,7 +951,7 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
             {(() => {
               const featuresByCategory = features.reduce((acc, feature) => {
                 const featureInfo = FEATURE_DESCRIPTIONS[feature.feature_name as keyof typeof FEATURE_DESCRIPTIONS];
-                const category = featureInfo?.category || 'Overig';
+                const category = featureInfo?.category ?? 'Overig';
                 if (!acc[category]) {
                   acc[category] = [];
                 }
