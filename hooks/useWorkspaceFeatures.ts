@@ -84,20 +84,59 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
       console.log('Realtime not available, using fallback refresh mechanism');
     }
 
+    // Listen for custom event when features are toggled
+    const handleFeatureChange = (event: CustomEvent) => {
+      const detail = event.detail as { workspaceId: string; featureId: string; enabled: boolean };
+      if (detail.workspaceId === workspaceId && isMounted) {
+        console.log('Feature change event received, reloading features...');
+        loadFeatures();
+      }
+    };
+    window.addEventListener('workspace-feature-changed', handleFeatureChange as EventListener);
+
+    // Listen for localStorage changes (cross-tab communication)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === `workspace-feature-updated-${workspaceId}` && isMounted) {
+        console.log('Feature update detected via localStorage, reloading features...');
+        loadFeatures();
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also check localStorage on mount and periodically
+    const checkLocalStorage = () => {
+      if (!isMounted) return;
+      const lastUpdate = localStorage.getItem(`workspace-feature-updated-${workspaceId}`);
+      if (lastUpdate) {
+        const lastUpdateTime = parseInt(lastUpdate, 10);
+        const now = Date.now();
+        // If update was within last 5 seconds, reload
+        if (now - lastUpdateTime < 5000) {
+          console.log('Recent feature update detected, reloading features...');
+          loadFeatures();
+        }
+      }
+    };
+
     // Fallback: Refresh on window focus (when user switches back to tab)
     const handleFocus = () => {
       if (isMounted) {
+        checkLocalStorage();
         loadFeatures();
       }
     };
     window.addEventListener('focus', handleFocus);
 
-    // Fallback: Periodic refresh every 30 seconds (only when tab is visible)
+    // Fallback: Periodic refresh every 10 seconds (only when tab is visible)
     const intervalId = setInterval(() => {
       if (isMounted && document.visibilityState === 'visible') {
+        checkLocalStorage();
         loadFeatures();
       }
-    }, 30000);
+    }, 10000);
+
+    // Initial localStorage check
+    checkLocalStorage();
 
     // Cleanup subscription and event listeners on unmount
     return () => {
@@ -105,6 +144,8 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
       if (channel) {
         supabase.removeChannel(channel);
       }
+      window.removeEventListener('workspace-feature-changed', handleFeatureChange as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
       clearInterval(intervalId);
     };

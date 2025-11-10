@@ -587,6 +587,15 @@ export default function WorkspaceManagementPage() {
 
         setSuccess(`Feature ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}!`);
         await loadFeatures();
+        
+        // Trigger custom event to notify other pages/tabs
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('workspace-feature-changed', {
+            detail: { workspaceId, featureId: data.id, enabled }
+          }));
+          // Also update localStorage as a fallback for cross-tab communication
+          localStorage.setItem(`workspace-feature-updated-${workspaceId}`, Date.now().toString());
+        }
         return;
       }
 
@@ -604,6 +613,15 @@ export default function WorkspaceManagementPage() {
 
       setSuccess(`Feature ${enabled ? 'ingeschakeld' : 'uitgeschakeld'}!`);
       await loadFeatures();
+      
+      // Trigger custom event to notify other pages/tabs
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('workspace-feature-changed', {
+          detail: { workspaceId, featureId, enabled }
+        }));
+        // Also update localStorage as a fallback for cross-tab communication
+        localStorage.setItem(`workspace-feature-updated-${workspaceId}`, Date.now().toString());
+      }
     } catch (err) {
       console.error('Unexpected error:', err);
       setError(`Onverwachte fout: ${err}`);
