@@ -20,8 +20,11 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
       return;
     }
 
+    let isMounted = true;
+
     const loadFeatures = async () => {
       try {
+        if (!isMounted) return;
         setLoading(true);
         setError(null);
 
@@ -33,20 +36,53 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
 
         if (featuresError) {
           console.error('Error loading workspace features:', featuresError);
-          setError('Fout bij laden van workspace features');
+          if (isMounted) {
+            setError('Fout bij laden van workspace features');
+          }
           return;
         }
 
-        setFeatures(data || []);
+        if (isMounted) {
+          setFeatures(data || []);
+        }
       } catch (err) {
         console.error('Error loading workspace features:', err);
-        setError('Onverwachte fout bij laden van features');
+        if (isMounted) {
+          setError('Onverwachte fout bij laden van features');
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     loadFeatures();
+
+    // Set up real-time subscription for feature changes
+    const channel = supabase
+      .channel(`workspace_features:${workspaceId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'workspace_features',
+          filter: `workspace_id=eq.${workspaceId}`
+        },
+        () => {
+          console.log('Feature change detected, reloading...');
+          // Reload features when any change occurs
+          loadFeatures();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscription on unmount
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
   }, [supabase, workspaceId]);
 
   const isFeatureEnabled = (featureName: string): boolean => {
