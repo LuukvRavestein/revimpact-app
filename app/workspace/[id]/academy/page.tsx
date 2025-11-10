@@ -850,6 +850,13 @@ export default function AcademyMonitoringPage() {
   const maxValue = weeklyTrends.length > 0 
     ? Math.max(...weeklyTrends.map(w => Math.max(w.started, w.completed)))
     : 1;
+  
+  // Calculate chart dimensions and spacing
+  const labelInterval = weeklyTrends.length > 20 ? Math.ceil(weeklyTrends.length / 20) : 1;
+  const chartHeight = 320;
+  const chartPadding = { top: 20, right: 20, bottom: 60, left: 50 };
+  const chartWidth = Math.max(weeklyTrends.length * 50, 600);
+  const pointSpacing = weeklyTrends.length > 1 ? (chartWidth - chartPadding.left - chartPadding.right) / (weeklyTrends.length - 1) : 0;
 
   if (loading) {
     return (
@@ -1021,126 +1028,164 @@ export default function AcademyMonitoringPage() {
         {/* Weekly Trends Chart */}
         {weeklyTrends.length > 0 && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Trend per Week</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Trend per Week</h3>
             <div className="relative">
-              <div className="h-64 relative pl-10 pb-8">
-                <svg className="w-full h-full" viewBox={`0 0 ${Math.max(weeklyTrends.length * 40, 400)} 240`} preserveAspectRatio="xMidYMid meet">
-                  {/* Grid lines */}
-                  {[0, 0.25, 0.5, 0.75, 1].map((ratio) => (
-                    <line
-                      key={ratio}
-                      x1="0"
-                      y1={240 * ratio}
-                      x2={Math.max(weeklyTrends.length * 40, 400)}
-                      y2={240 * ratio}
-                      stroke="#e5e7eb"
-                      strokeWidth="1"
-                      strokeDasharray="2,2"
+              <div className="overflow-x-auto">
+                <div className="relative" style={{ minWidth: `${chartWidth}px`, height: `${chartHeight}px` }}>
+                  <svg 
+                    className="absolute inset-0" 
+                    viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+                    preserveAspectRatio="none"
+                  >
+                    {/* Grid lines */}
+                    {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
+                      const y = chartPadding.top + (chartHeight - chartPadding.top - chartPadding.bottom) * (1 - ratio);
+                      return (
+                        <line
+                          key={ratio}
+                          x1={chartPadding.left}
+                          y1={y}
+                          x2={chartWidth - chartPadding.right}
+                          y2={y}
+                          stroke="#e5e7eb"
+                          strokeWidth="1"
+                          strokeDasharray="4,4"
+                        />
+                      );
+                    })}
+                    
+                    {/* Started line */}
+                    <polyline
+                      points={weeklyTrends.map((w, i) => {
+                        const x = chartPadding.left + i * pointSpacing;
+                        const chartAreaHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+                        const y = chartPadding.top + chartAreaHeight - (maxValue > 0 ? (w.started / maxValue) * chartAreaHeight : 0);
+                        return `${x},${y}`;
+                      }).join(' ')}
+                      fill="none"
+                      stroke="#3b82f6"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
                     />
-                  ))}
+                    
+                    {/* Completed line */}
+                    <polyline
+                      points={weeklyTrends.map((w, i) => {
+                        const x = chartPadding.left + i * pointSpacing;
+                        const chartAreaHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+                        const y = chartPadding.top + chartAreaHeight - (maxValue > 0 ? (w.completed / maxValue) * chartAreaHeight : 0);
+                        return `${x},${y}`;
+                      }).join(' ')}
+                      fill="none"
+                      stroke="#10b981"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    
+                    {/* Data points for started */}
+                    {weeklyTrends.map((w, i) => {
+                      const x = chartPadding.left + i * pointSpacing;
+                      const chartAreaHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+                      const y = chartPadding.top + chartAreaHeight - (maxValue > 0 ? (w.started / maxValue) * chartAreaHeight : 0);
+                      return (
+                        <g key={`started-${i}`}>
+                          <circle
+                            cx={x}
+                            cy={y}
+                            r="5"
+                            fill="#ffffff"
+                            stroke="#3b82f6"
+                            strokeWidth="2"
+                            className="hover:r-7 transition-all cursor-pointer"
+                          />
+                          <title>{`Week ${w.week}: ${w.started} gestart`}</title>
+                        </g>
+                      );
+                    })}
+                    
+                    {/* Data points for completed */}
+                    {weeklyTrends.map((w, i) => {
+                      const x = chartPadding.left + i * pointSpacing;
+                      const chartAreaHeight = chartHeight - chartPadding.top - chartPadding.bottom;
+                      const y = chartPadding.top + chartAreaHeight - (maxValue > 0 ? (w.completed / maxValue) * chartAreaHeight : 0);
+                      return (
+                        <g key={`completed-${i}`}>
+                          <circle
+                            cx={x}
+                            cy={y}
+                            r="5"
+                            fill="#ffffff"
+                            stroke="#10b981"
+                            strokeWidth="2"
+                            className="hover:r-7 transition-all cursor-pointer"
+                          />
+                          <title>{`Week ${w.week}: ${w.completed} voltooid`}</title>
+                        </g>
+                      );
+                    })}
+                  </svg>
                   
-                  {/* Started line */}
-                  <polyline
-                    points={weeklyTrends.map((w, i) => {
-                      const x = i * 40 + 20;
-                      const y = 240 - (maxValue > 0 ? (w.started / maxValue) * 240 : 0);
-                      return `${x},${y}`;
-                    }).join(' ')}
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                  {/* Y-axis labels */}
+                  <div 
+                    className="absolute top-0 bottom-0 flex flex-col justify-between text-xs font-medium text-gray-600" 
+                    style={{ 
+                      left: '0', 
+                      width: `${chartPadding.left}px`,
+                      paddingTop: `${chartPadding.top}px`,
+                      paddingBottom: `${chartPadding.bottom}px`
+                    }}
+                  >
+                    {[0, 0.25, 0.5, 0.75, 1].reverse().map((ratio) => (
+                      <span key={ratio} className="text-right pr-2">
+                        {Math.round(maxValue * ratio)}
+                      </span>
+                    ))}
+                  </div>
                   
-                  {/* Completed line */}
-                  <polyline
-                    points={weeklyTrends.map((w, i) => {
-                      const x = i * 40 + 20;
-                      const y = 240 - (maxValue > 0 ? (w.completed / maxValue) * 240 : 0);
-                      return `${x},${y}`;
-                    }).join(' ')}
-                    fill="none"
-                    stroke="#10b981"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  
-                  {/* Data points for started */}
-                  {weeklyTrends.map((w, i) => {
-                    const x = i * 40 + 20;
-                    const y = 240 - (maxValue > 0 ? (w.started / maxValue) * 240 : 0);
-                    return (
-                      <g key={`started-${i}`}>
-                        <circle
-                          cx={x}
-                          cy={y}
-                          r="4"
-                          fill="#3b82f6"
-                          className="hover:r-6 transition-all cursor-pointer"
-                        />
-                        <title>{`Week ${w.week}: ${w.started} gestart`}</title>
-                      </g>
-                    );
-                  })}
-                  
-                  {/* Data points for completed */}
-                  {weeklyTrends.map((w, i) => {
-                    const x = i * 40 + 20;
-                    const y = 240 - (maxValue > 0 ? (w.completed / maxValue) * 240 : 0);
-                    return (
-                      <g key={`completed-${i}`}>
-                        <circle
-                          cx={x}
-                          cy={y}
-                          r="4"
-                          fill="#10b981"
-                          className="hover:r-6 transition-all cursor-pointer"
-                        />
-                        <title>{`Week ${w.week}: ${w.completed} voltooid`}</title>
-                      </g>
-                    );
-                  })}
-                </svg>
-                
-                {/* Y-axis labels */}
-                <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-xs text-gray-500" style={{ width: '40px' }}>
-                  {[0, 0.25, 0.5, 0.75, 1].reverse().map((ratio) => (
-                    <span key={ratio} className="text-right">
-                      {Math.round(maxValue * ratio)}
-                    </span>
-                  ))}
-                </div>
-                
-                {/* Week labels */}
-                <div className="absolute bottom-0 left-10 right-0 flex" style={{ height: '32px' }}>
-                  {weeklyTrends.map((w, i) => (
-                    <div
-                      key={w.week}
-                      className="text-xs text-gray-500 text-center"
-                      style={{ 
-                        width: `${100 / weeklyTrends.length}%`,
-                        transform: 'rotate(-45deg)',
-                        transformOrigin: 'top left',
-                        paddingTop: '20px'
-                      }}
-                    >
-                      {w.week}
-                    </div>
-                  ))}
+                  {/* Week labels - only show every Nth label */}
+                  <div 
+                    className="absolute bottom-0 left-0 right-0 flex justify-start" 
+                    style={{ 
+                      height: `${chartPadding.bottom}px`,
+                      paddingLeft: `${chartPadding.left}px`,
+                      paddingRight: `${chartPadding.right}px`
+                    }}
+                  >
+                    {weeklyTrends.map((w, i) => {
+                      // Only show label if it's at the interval or first/last
+                      const showLabel = i % labelInterval === 0 || i === 0 || i === weeklyTrends.length - 1;
+                      if (!showLabel) return null;
+                      
+                      return (
+                        <div
+                          key={w.week}
+                          className="text-xs text-gray-600 font-medium text-center"
+                          style={{ 
+                            position: 'absolute',
+                            left: `${i * pointSpacing}px`,
+                            transform: 'translateX(-50%)',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {w.week.replace('W', ' W')}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
               
               {/* Legend */}
-              <div className="flex items-center justify-center space-x-6 mt-6">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm text-gray-700">Gestart</span>
+              <div className="flex items-center justify-center space-x-8 mt-8 pt-4 border-t border-gray-200">
+                <div className="flex items-center space-x-3">
+                  <div className="w-5 h-5 bg-blue-500 rounded-full border-2 border-white shadow-sm"></div>
+                  <span className="text-sm font-medium text-gray-700">Gestart</span>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-700">Voltooid</span>
+                <div className="flex items-center space-x-3">
+                  <div className="w-5 h-5 bg-green-500 rounded-full border-2 border-white shadow-sm"></div>
+                  <span className="text-sm font-medium text-gray-700">Voltooid</span>
                 </div>
               </div>
             </div>
