@@ -122,6 +122,15 @@ function parseDuration(duration: string): number {
   return 0;
 }
 
+// Helper function to get ISO week number
+function getWeekNumber(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
 // Helper function to parse date from various formats
 function parseDate(dateValue: any): string | null {
   if (!dateValue) return null;
@@ -799,6 +808,49 @@ export default function AcademyMonitoringPage() {
     .slice(0, 10)
     .map(([name, count]) => ({ name, count }));
 
+  // Calculate weekly trends: started and completed per week
+  const weeklyTrends = useMemo(() => {
+    const weeklyData = new Map<string, { started: number; completed: number }>();
+    
+    filteredParticipants.forEach(p => {
+      // Count started per week
+      if (p.start_date) {
+        const startDate = new Date(p.start_date);
+        const year = startDate.getFullYear();
+        const weekNumber = getWeekNumber(startDate);
+        const weekKey = `${year}-W${weekNumber}`;
+        
+        if (!weeklyData.has(weekKey)) {
+          weeklyData.set(weekKey, { started: 0, completed: 0 });
+        }
+        weeklyData.get(weekKey)!.started++;
+      }
+      
+      // Count completed per week
+      if (p.completed_on) {
+        const completedDate = new Date(p.completed_on);
+        const year = completedDate.getFullYear();
+        const weekNumber = getWeekNumber(completedDate);
+        const weekKey = `${year}-W${weekNumber}`;
+        
+        if (!weeklyData.has(weekKey)) {
+          weeklyData.set(weekKey, { started: 0, completed: 0 });
+        }
+        weeklyData.get(weekKey)!.completed++;
+      }
+    });
+    
+    // Convert to array and sort by week
+    return Array.from(weeklyData.entries())
+      .map(([week, data]) => ({ week, ...data }))
+      .sort((a, b) => a.week.localeCompare(b.week));
+  }, [filteredParticipants]);
+  
+  // Find max value for scaling the chart
+  const maxValue = weeklyTrends.length > 0 
+    ? Math.max(...weeklyTrends.map(w => Math.max(w.started, w.completed)))
+    : 1;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-impact-light via-white to-impact-light flex items-center justify-center">
@@ -965,6 +1017,135 @@ export default function AcademyMonitoringPage() {
             <p className="text-3xl font-bold text-impact-blue">{uniqueCustomers}</p>
           </div>
         </div>
+
+        {/* Weekly Trends Chart */}
+        {weeklyTrends.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Trend per Week</h3>
+            <div className="relative">
+              <div className="h-64 relative pl-10 pb-8">
+                <svg className="w-full h-full" viewBox={`0 0 ${Math.max(weeklyTrends.length * 40, 400)} 240`} preserveAspectRatio="xMidYMid meet">
+                  {/* Grid lines */}
+                  {[0, 0.25, 0.5, 0.75, 1].map((ratio) => (
+                    <line
+                      key={ratio}
+                      x1="0"
+                      y1={240 * ratio}
+                      x2={Math.max(weeklyTrends.length * 40, 400)}
+                      y2={240 * ratio}
+                      stroke="#e5e7eb"
+                      strokeWidth="1"
+                      strokeDasharray="2,2"
+                    />
+                  ))}
+                  
+                  {/* Started line */}
+                  <polyline
+                    points={weeklyTrends.map((w, i) => {
+                      const x = i * 40 + 20;
+                      const y = 240 - (maxValue > 0 ? (w.started / maxValue) * 240 : 0);
+                      return `${x},${y}`;
+                    }).join(' ')}
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  
+                  {/* Completed line */}
+                  <polyline
+                    points={weeklyTrends.map((w, i) => {
+                      const x = i * 40 + 20;
+                      const y = 240 - (maxValue > 0 ? (w.completed / maxValue) * 240 : 0);
+                      return `${x},${y}`;
+                    }).join(' ')}
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  
+                  {/* Data points for started */}
+                  {weeklyTrends.map((w, i) => {
+                    const x = i * 40 + 20;
+                    const y = 240 - (maxValue > 0 ? (w.started / maxValue) * 240 : 0);
+                    return (
+                      <g key={`started-${i}`}>
+                        <circle
+                          cx={x}
+                          cy={y}
+                          r="4"
+                          fill="#3b82f6"
+                          className="hover:r-6 transition-all cursor-pointer"
+                        />
+                        <title>{`Week ${w.week}: ${w.started} gestart`}</title>
+                      </g>
+                    );
+                  })}
+                  
+                  {/* Data points for completed */}
+                  {weeklyTrends.map((w, i) => {
+                    const x = i * 40 + 20;
+                    const y = 240 - (maxValue > 0 ? (w.completed / maxValue) * 240 : 0);
+                    return (
+                      <g key={`completed-${i}`}>
+                        <circle
+                          cx={x}
+                          cy={y}
+                          r="4"
+                          fill="#10b981"
+                          className="hover:r-6 transition-all cursor-pointer"
+                        />
+                        <title>{`Week ${w.week}: ${w.completed} voltooid`}</title>
+                      </g>
+                    );
+                  })}
+                </svg>
+                
+                {/* Y-axis labels */}
+                <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-xs text-gray-500" style={{ width: '40px' }}>
+                  {[0, 0.25, 0.5, 0.75, 1].reverse().map((ratio) => (
+                    <span key={ratio} className="text-right">
+                      {Math.round(maxValue * ratio)}
+                    </span>
+                  ))}
+                </div>
+                
+                {/* Week labels */}
+                <div className="absolute bottom-0 left-10 right-0 flex" style={{ height: '32px' }}>
+                  {weeklyTrends.map((w, i) => (
+                    <div
+                      key={w.week}
+                      className="text-xs text-gray-500 text-center"
+                      style={{ 
+                        width: `${100 / weeklyTrends.length}%`,
+                        transform: 'rotate(-45deg)',
+                        transformOrigin: 'top left',
+                        paddingTop: '20px'
+                      }}
+                    >
+                      {w.week}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Legend */}
+              <div className="flex items-center justify-center space-x-6 mt-6">
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">Gestart</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                  <span className="text-sm text-gray-700">Voltooid</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Top 10 Lists */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
