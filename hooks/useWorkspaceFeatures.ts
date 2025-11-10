@@ -31,6 +31,7 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
     const loadFeatures = async () => {
       try {
         if (!isMounted) return;
+        console.log('Loading features for workspace:', workspaceId);
         setLoading(true);
         setError(null);
 
@@ -48,8 +49,10 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
           return;
         }
 
+        console.log('Loaded features:', data?.length || 0, 'enabled features');
         if (isMounted) {
           setFeatures(data || []);
+          console.log('Features state updated:', data?.map(f => f.feature_name) || []);
         }
       } catch (err) {
         console.error('Error loading workspace features:', err);
@@ -91,14 +94,23 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
     }
 
     // Listen for custom event when features are toggled
-    const handleFeatureChange = (event: CustomEvent) => {
-      const detail = event.detail as { workspaceId: string; featureId: string; enabled: boolean };
+    const handleFeatureChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      const detail = customEvent.detail as { workspaceId: string; featureId: string; enabled: boolean; timestamp?: string };
+      console.log('Feature change event received:', detail);
       if (detail.workspaceId === workspaceId && isMounted) {
-        console.log('Feature change event received, reloading features...');
-        loadFeatures();
+        console.log('Workspace ID matches, reloading features...');
+        // Small delay to ensure database is updated
+        setTimeout(() => {
+          if (isMounted) {
+            loadFeatures();
+          }
+        }, 500);
+      } else {
+        console.log('Workspace ID mismatch or not mounted:', { detailWorkspaceId: detail.workspaceId, currentWorkspaceId: workspaceId, isMounted });
       }
     };
-    window.addEventListener('workspace-feature-changed', handleFeatureChange as EventListener);
+    window.addEventListener('workspace-feature-changed', handleFeatureChange);
 
     // Listen for localStorage changes (cross-tab communication)
     const handleStorageChange = (e: StorageEvent) => {
@@ -165,11 +177,13 @@ export function useWorkspaceFeatures(workspaceId: string | null) {
     };
   }, [supabase, workspaceId, refreshKey]);
 
-  const isFeatureEnabled = (featureName: string): boolean => {
-    return features.some(feature => 
+  const isFeatureEnabled = useCallback((featureName: string): boolean => {
+    const enabled = features.some(feature => 
       feature.feature_name === featureName && feature.enabled
     );
-  };
+    console.log(`isFeatureEnabled('${featureName}'):`, enabled, 'from features:', features.map(f => f.feature_name));
+    return enabled;
+  }, [features]);
 
   return {
     features,
