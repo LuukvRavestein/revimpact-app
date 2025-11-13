@@ -942,9 +942,13 @@ export default function AcademyMonitoringPage() {
   const weeklyTrends = useMemo(() => {
     const weeklyData = new Map<string, { started: number; completed: number }>();
     
+    let participantsWithStartDate = 0;
+    let participantsWithCompletedOn = 0;
+    
     filteredParticipants.forEach(p => {
       // Count started per week
       if (p.start_date) {
+        participantsWithStartDate++;
         const startDate = new Date(p.start_date);
         const year = startDate.getFullYear();
         const weekNumber = getWeekNumber(startDate);
@@ -958,6 +962,7 @@ export default function AcademyMonitoringPage() {
       
       // Count completed per week
       if (p.completed_on) {
+        participantsWithCompletedOn++;
         const completedDate = new Date(p.completed_on);
         const year = completedDate.getFullYear();
         const weekNumber = getWeekNumber(completedDate);
@@ -969,6 +974,16 @@ export default function AcademyMonitoringPage() {
         weeklyData.get(weekKey)!.completed++;
       }
     });
+    
+    // Debug logging
+    if (filteredParticipants.length > 0) {
+      console.log('Weekly trends calculation:', {
+        totalParticipants: filteredParticipants.length,
+        withStartDate: participantsWithStartDate,
+        withCompletedOn: participantsWithCompletedOn,
+        weeklyDataSize: weeklyData.size
+      });
+    }
     
     // Convert to array and sort by week
     return Array.from(weeklyData.entries())
@@ -1156,9 +1171,9 @@ export default function AcademyMonitoringPage() {
         </div>
 
         {/* Weekly Trends Chart */}
-        {weeklyTrends.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Trend per Week</h3>
+        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Trend per Week</h3>
+          {weeklyTrends.length > 0 ? (
             <div className="relative">
               <div className="flex">
                 {/* Sticky Y-axis labels */}
@@ -1399,8 +1414,15 @@ export default function AcademyMonitoringPage() {
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500 mb-2">Geen trend data beschikbaar</p>
+              <p className="text-sm text-gray-400">
+                Upload een Excel bestand met startdatum en/of voltooid datum om de trend per week te zien.
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Top 10 Lists */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
