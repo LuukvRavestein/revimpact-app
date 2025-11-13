@@ -366,6 +366,14 @@ export default function AcademyMonitoringPage() {
         return;
       }
 
+      // Log available columns from first row for debugging
+      if (jsonData.length > 0) {
+        const firstRow = jsonData[0];
+        const availableColumns = Object.keys(firstRow);
+        console.log('Available columns in Excel file:', availableColumns);
+        console.log('First row sample:', firstRow);
+      }
+
       // Create upload record
       const { data: uploadRecord, error: uploadError } = await supabase
         .from('academy_data_uploads')
@@ -401,40 +409,113 @@ export default function AcademyMonitoringPage() {
       
       const progressRecords: any[] = [];
       
-      // Helper function to find column value (case-insensitive)
+      // Helper function to find column value (case-insensitive, with fuzzy matching)
       const findColumn = (row: any, possibleNames: string[]): any => {
+        const rowKeys = Object.keys(row);
+        
+        // First, try exact match (case-sensitive)
         for (const name of possibleNames) {
           if (row[name] !== undefined && row[name] !== null && row[name] !== '') {
             return row[name];
           }
         }
-        // Try case-insensitive match
-        const rowKeys = Object.keys(row);
+        
+        // Then, try case-insensitive exact match
         for (const key of rowKeys) {
           for (const name of possibleNames) {
-            if (key.toLowerCase() === name.toLowerCase()) {
-              return row[key];
+            if (key.toLowerCase().trim() === name.toLowerCase().trim()) {
+              const value = row[key];
+              if (value !== undefined && value !== null && value !== '') {
+                return value;
+              }
             }
           }
         }
+        
+        // Finally, try fuzzy match (contains)
+        for (const key of rowKeys) {
+          for (const name of possibleNames) {
+            const keyLower = key.toLowerCase().trim();
+            const nameLower = name.toLowerCase().trim();
+            // Check if key contains the name or vice versa
+            if (keyLower.includes(nameLower) || nameLower.includes(keyLower)) {
+              const value = row[key];
+              if (value !== undefined && value !== null && value !== '') {
+                return value;
+              }
+            }
+          }
+        }
+        
         return '';
       };
       
+      // Track which columns were found for debugging
+      let foundColumns: Record<string, boolean> = {};
+      let missingColumns: string[] = [];
+      
       for (const row of jsonData) {
         // Map Excel columns to our data structure (flexible column matching)
-        const participantName = findColumn(row, ['Gebruiker', 'gebruiker', 'Gebruiker']) || '';
-        const participantEmail = findColumn(row, ['E-mail', 'e-mail', 'E-mail', 'Email', 'email']) || '';
-        const lessonModuleRaw = findColumn(row, ['Lesmodule', 'lesmodule', 'Lesmodule']) || '';
+        // Try multiple variations of column names
+        const participantName = findColumn(row, [
+          'Gebruiker', 'gebruiker', 'Gebruiker', 
+          'User', 'user', 'USER',
+          'Resource', 'resource', 'RESOURCE',
+          'Naam', 'naam', 'NAAM',
+          'Participant', 'participant', 'PARTICIPANT',
+          'Deelnemer', 'deelnemer', 'DEELNEMER'
+        ]) || '';
+        
+        const participantEmail = findColumn(row, [
+          'E-mail', 'e-mail', 'E-mail', 'Email', 'email', 'EMAIL',
+          'Emailadres', 'emailadres', 'EMAILADRES',
+          'Mail', 'mail', 'MAIL'
+        ]) || '';
+        
+        const lessonModuleRaw = findColumn(row, [
+          'Lesmodule', 'lesmodule', 'Lesmodule',
+          'Module', 'module', 'MODULE',
+          'Les', 'les', 'LES',
+          'Course', 'course', 'COURSE',
+          'Training', 'training', 'TRAINING'
+        ]) || '';
+        
         const lessonModule = normalizeLessonModule(lessonModuleRaw); // Normalize to Dutch
+        
+        // Track found columns for first few rows
+        if (progressRecords.length < 3) {
+          foundColumns['participantName'] = !!participantName;
+          foundColumns['participantEmail'] = !!participantEmail;
+          foundColumns['lessonModule'] = !!lessonModuleRaw;
+          if (!participantName) missingColumns.push('participantName');
+          if (!participantEmail) missingColumns.push('participantEmail');
+          if (!lessonModuleRaw) missingColumns.push('lessonModule');
+        }
         
         // Skip rows without essential data (name or email)
         if (!participantName && !participantEmail) {
-          console.warn('Skipping row without participant name or email:', row);
+          console.warn('Skipping row without participant name or email:', {
+            rowKeys: Object.keys(row),
+            rowSample: Object.fromEntries(Object.entries(row).slice(0, 5))
+          });
           continue;
         }
         
-        const startDateRaw = findColumn(row, ['Startdatum', 'startdatum', 'Startdatum']) || '';
-        const completedOnRaw = findColumn(row, ['Voltooid op', 'voltooid op', 'Voltooid op', 'Voltooid op']) || '';
+        const startDateRaw = findColumn(row, [
+          'Startdatum', 'startdatum', 'Startdatum',
+          'Start Date', 'start date', 'START DATE',
+          'Start', 'start', 'START',
+          'Begindatum', 'begindatum', 'BEGINDATUM'
+        ]) || '';
+        
+        const completedOnRaw = findColumn(row, [
+          'Voltooid op', 'voltooid op', 'Voltooid op',
+          'Completed On', 'completed on', 'COMPLETED ON',
+          'Voltooid', 'voltooid', 'VOLTOOID',
+          'Completed', 'completed', 'COMPLETED',
+          'Einddatum', 'einddatum', 'EINDDATUM',
+          'Finish Date', 'finish date', 'FINISH DATE'
+        ]) || '';
         
         // Debug: log first few dates to see what Excel returns
         if (progressRecords.length < 3) {
@@ -449,13 +530,47 @@ export default function AcademyMonitoringPage() {
         
         const startDate = parseDate(startDateRaw);
         const completedOn = parseDate(completedOnRaw);
-        const score = findColumn(row, ['Score', 'score']) || null;
-        const passThreshold = findColumn(row, ['Slaagdrempel voor score', 'slaagdrempel voor score']) || null;
-        const progress = findColumn(row, ['Voortgang', 'voortgang']) || null;
-        const duration = findColumn(row, ['Tijdsduur', 'tijdsduur']) || '0:00:00';
-        const externalUser = findColumn(row, ['Externe gebruiker', 'externe gebruiker']) || 'Nee';
+        const score = findColumn(row, [
+          'Score', 'score', 'SCORE',
+          'Punten', 'punten', 'PUNTEN',
+          'Points', 'points', 'POINTS'
+        ]) || null;
+        
+        const passThreshold = findColumn(row, [
+          'Slaagdrempel voor score', 'slaagdrempel voor score',
+          'Pass Threshold', 'pass threshold', 'PASS THRESHOLD',
+          'Slaagdrempel', 'slaagdrempel', 'SLAAGDREMPEL',
+          'Minimum Score', 'minimum score', 'MINIMUM SCORE'
+        ]) || null;
+        
+        const progress = findColumn(row, [
+          'Voortgang', 'voortgang', 'VOORTGANG',
+          'Progress', 'progress', 'PROGRESS',
+          'Voortgang %', 'voortgang %', 'VOORTGANG %',
+          'Progress %', 'progress %', 'PROGRESS %'
+        ]) || null;
+        
+        const duration = findColumn(row, [
+          'Tijdsduur', 'tijdsduur', 'TIJDSDUUR',
+          'Duration', 'duration', 'DURATION',
+          'Tijd', 'tijd', 'TIJD',
+          'Time', 'time', 'TIME'
+        ]) || '0:00:00';
+        
+        const externalUser = findColumn(row, [
+          'Externe gebruiker', 'externe gebruiker',
+          'External User', 'external user', 'EXTERNAL USER',
+          'Extern', 'extern', 'EXTERN'
+        ]) || 'Nee';
+        
         const isExternal = (externalUser.toString().toLowerCase() === 'ja' || externalUser.toString().toLowerCase() === 'yes');
-        const userGroupsStr = findColumn(row, ['Gebruikersgroepen', 'gebruikersgroepen']) || '';
+        
+        const userGroupsStr = findColumn(row, [
+          'Gebruikersgroepen', 'gebruikersgroepen',
+          'User Groups', 'user groups', 'USER GROUPS',
+          'Groups', 'groups', 'GROUPS',
+          'Groepen', 'groepen', 'GROEPEN'
+        ]) || '';
         const userGroups = userGroupsStr
           .toString()
           .split(',')
@@ -483,7 +598,20 @@ export default function AcademyMonitoringPage() {
         });
       }
       
-      console.log(`Processed ${progressRecords.length} records from ${jsonData.length} rows`);
+      // Log summary of column detection
+      if (progressRecords.length > 0) {
+        console.log(`Processed ${progressRecords.length} records from ${jsonData.length} rows`);
+        if (missingColumns.length > 0) {
+          console.warn('Some columns were not found in the Excel file:', missingColumns);
+          console.log('Found columns:', foundColumns);
+        }
+      } else {
+        console.error('No records were processed! Check column names in Excel file.');
+        setError('Geen records verwerkt. Controleer of de kolomnamen in het Excel bestand overeenkomen met de verwachte namen (Gebruiker, E-mail, Lesmodule, etc.).');
+        setIsUploading(false);
+        setIsProcessing(false);
+        return;
+      }
 
       // Insert progress records in batches
       const batchSize = 100;
