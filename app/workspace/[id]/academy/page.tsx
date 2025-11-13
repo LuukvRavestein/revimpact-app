@@ -527,7 +527,9 @@ export default function AcademyMonitoringPage() {
             startDateRaw: startDateRaw,
             startDateType: typeof startDateRaw,
             startDateValue: startDateRaw,
-            parsedStartDate: parseDate(startDateRaw)
+            parsedStartDate: parseDate(startDateRaw),
+            completedOnRaw: completedOnRaw,
+            parsedCompletedOn: parseDate(completedOnRaw)
           });
         }
         
