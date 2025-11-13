@@ -458,12 +458,12 @@ export default function AcademyMonitoringPage() {
         // Map Excel columns to our data structure (flexible column matching)
         // Try multiple variations of column names
         const participantName = findColumn(row, [
+          'Deelnemer', 'deelnemer', 'DEELNEMER',
           'Gebruiker', 'gebruiker', 'Gebruiker', 
           'User', 'user', 'USER',
           'Resource', 'resource', 'RESOURCE',
           'Naam', 'naam', 'NAAM',
-          'Participant', 'participant', 'PARTICIPANT',
-          'Deelnemer', 'deelnemer', 'DEELNEMER'
+          'Participant', 'participant', 'PARTICIPANT'
         ]) || '';
         
         const participantEmail = findColumn(row, [
@@ -473,6 +473,7 @@ export default function AcademyMonitoringPage() {
         ]) || '';
         
         const lessonModuleRaw = findColumn(row, [
+          'Leerlijn', 'leerlijn', 'LEERLIJN',
           'Lesmodule', 'lesmodule', 'Lesmodule',
           'Module', 'module', 'MODULE',
           'Les', 'les', 'LES',
@@ -502,6 +503,7 @@ export default function AcademyMonitoringPage() {
         }
         
         const startDateRaw = findColumn(row, [
+          'Begonnen op', 'begonnen op', 'BEGONNEN OP',
           'Startdatum', 'startdatum', 'Startdatum',
           'Start Date', 'start date', 'START DATE',
           'Start', 'start', 'START',
@@ -510,6 +512,7 @@ export default function AcademyMonitoringPage() {
         
         const completedOnRaw = findColumn(row, [
           'Voltooid op', 'voltooid op', 'Voltooid op',
+          'Afgerond op', 'afgerond op', 'AFGEROND OP',
           'Completed On', 'completed on', 'COMPLETED ON',
           'Voltooid', 'voltooid', 'VOLTOOID',
           'Completed', 'completed', 'COMPLETED',
