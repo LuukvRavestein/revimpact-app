@@ -451,8 +451,8 @@ export default function AcademyMonitoringPage() {
       };
       
       // Track which columns were found for debugging
-      let foundColumns: Record<string, boolean> = {};
-      let missingColumns: string[] = [];
+      const foundColumns: Record<string, boolean> = {};
+      const missingColumns: string[] = [];
       
       for (const row of jsonData) {
         // Map Excel columns to our data structure (flexible column matching)
