@@ -802,10 +802,13 @@ export default function ChatbotPage() {
 
     // Weekly trends - group by conversation_id to get unique conversations per week
     const weeklyData = new Map<string, Set<string>>();
+    const allDates: Date[] = [];
+    
     userQuestions.forEach(q => {
       const timestamp = q.Timestamp || q.timestamp || '';
       if (timestamp) {
         const date = new Date(timestamp);
+        allDates.push(date);
         // Get the week number using ISO week
         const year = date.getFullYear();
         const weekNumber = getWeekNumber(date);
@@ -819,9 +822,54 @@ export default function ChatbotPage() {
       }
     });
 
-    const weeklyTrends = Array.from(weeklyData.entries())
-      .map(([week, conversationSet]) => ({ week, questions: conversationSet.size }))
-      .sort((a, b) => a.week.localeCompare(b.week));
+    // Generate all weeks between earliest and latest date
+    let weeklyTrends: Array<{ week: string; questions: number }> = [];
+    
+    if (allDates.length > 0) {
+      const sortedDates = allDates.sort((a, b) => a.getTime() - b.getTime());
+      const earliestDate = sortedDates[0];
+      const latestDate = sortedDates[sortedDates.length - 1];
+      
+      // Helper function to get the Monday of a week
+      const getMondayOfWeek = (date: Date): Date => {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+        return new Date(d.setDate(diff));
+      };
+      
+      // Helper function to add weeks to a date
+      const addWeeks = (date: Date, weeks: number): Date => {
+        const result = new Date(date);
+        result.setDate(result.getDate() + (weeks * 7));
+        return result;
+      };
+      
+      // Get the Monday of the earliest week
+      const startMonday = getMondayOfWeek(earliestDate);
+      const endMonday = getMondayOfWeek(latestDate);
+      
+      // Generate all weeks between start and end
+      const allWeeksSet = new Set<string>();
+      let currentMonday = new Date(startMonday);
+      
+      while (currentMonday <= endMonday) {
+        const year = currentMonday.getFullYear();
+        const weekNumber = getWeekNumber(currentMonday);
+        const week = `${year}-W${weekNumber}`;
+        allWeeksSet.add(week);
+        currentMonday = addWeeks(currentMonday, 1);
+      }
+      
+      // Convert to sorted array
+      const allWeeks = Array.from(allWeeksSet).sort((a, b) => a.localeCompare(b));
+      
+      // Create weekly trends with all weeks, filling in 0 for weeks without data
+      weeklyTrends = allWeeks.map(week => ({
+        week,
+        questions: weeklyData.has(week) ? weeklyData.get(week)!.size : 0
+      }));
+    }
 
     // Top customers with real data
     const customerStats = new Map<string, { 
