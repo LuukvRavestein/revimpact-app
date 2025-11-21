@@ -96,6 +96,24 @@ function normalizeLessonModule(moduleName: string): string {
   return normalized.charAt(0).toUpperCase() + normalized.slice(1);
 }
 
+// Helper function to check if a participant is a Timewax employee
+function isTimewaxEmployee(name: string | null | undefined, email: string | null | undefined): boolean {
+  const nameLower = (name || '').toLowerCase();
+  const emailLower = (email || '').toLowerCase();
+  
+  // Check if email contains timewax domain
+  if (emailLower.includes('@timewax') || emailLower.includes('timewax.')) {
+    return true;
+  }
+  
+  // Check if name contains timewax (case-insensitive)
+  if (nameLower.includes('timewax')) {
+    return true;
+  }
+  
+  return false;
+}
+
 // Helper function to extract customer name from email domain
 function extractCustomerName(email: string): string {
   if (!email || !email.includes('@')) {
@@ -249,8 +267,13 @@ export default function AcademyMonitoringPage() {
         from += limit;
       }
 
-      console.log(`Loaded ${allData.length} participant records`);
-      setParticipants(allData);
+      // Filter out Timewax employees
+      const filteredData = allData.filter(p => 
+        !isTimewaxEmployee(p.participant_name, p.participant_email)
+      );
+      
+      console.log(`Loaded ${allData.length} participant records, filtered out ${allData.length - filteredData.length} Timewax employees`);
+      setParticipants(filteredData);
     } catch (err) {
       console.error('Error loading participant progress:', err);
       setError('Fout bij laden van voortgang');
@@ -499,6 +522,12 @@ export default function AcademyMonitoringPage() {
             rowKeys: Object.keys(row),
             rowSample: Object.fromEntries(Object.entries(row).slice(0, 5))
           });
+          continue;
+        }
+        
+        // Skip Timewax employees
+        if (isTimewaxEmployee(participantName, participantEmail)) {
+          console.log('Skipping Timewax employee:', participantName, participantEmail);
           continue;
         }
         
