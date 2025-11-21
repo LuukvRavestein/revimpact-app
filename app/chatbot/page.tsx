@@ -830,7 +830,7 @@ export default function ChatbotPage() {
       const earliestDate = sortedDates[0];
       const latestDate = sortedDates[sortedDates.length - 1];
       
-      // Helper function to get the Monday of a week
+      // Helper function to get the Monday of a week (ISO week starts on Monday)
       const getMondayOfWeek = (date: Date): Date => {
         const d = new Date(date);
         const day = d.getDay();
@@ -847,13 +847,23 @@ export default function ChatbotPage() {
       
       // Get the Monday of the earliest week
       const startMonday = getMondayOfWeek(earliestDate);
-      const endMonday = getMondayOfWeek(latestDate);
+      // Get the Monday of the latest week, then add 7 days to ensure we include the full week
+      const endMonday = addWeeks(getMondayOfWeek(latestDate), 0);
       
-      // Generate all weeks between start and end
+      // Generate all weeks between start and end (inclusive)
       const allWeeksSet = new Set<string>();
-      let currentMonday = new Date(startMonday);
       
-      while (currentMonday <= endMonday) {
+      // First, add all weeks that have data (this ensures we capture week 47 if it has data)
+      weeklyData.forEach((_, week) => {
+        allWeeksSet.add(week);
+      });
+      
+      // Then, generate all weeks between earliest and latest to fill gaps
+      let currentMonday = new Date(startMonday);
+      const endDate = new Date(latestDate);
+      endDate.setDate(endDate.getDate() + 7); // Add 7 days to ensure we include the week of the latest date
+      
+      while (currentMonday <= endDate) {
         const year = currentMonday.getFullYear();
         const weekNumber = getWeekNumber(currentMonday);
         const week = `${year}-W${weekNumber}`;
@@ -862,7 +872,13 @@ export default function ChatbotPage() {
       }
       
       // Convert to sorted array
-      const allWeeks = Array.from(allWeeksSet).sort((a, b) => a.localeCompare(b));
+      const allWeeks = Array.from(allWeeksSet).sort((a, b) => {
+        // Sort by year first, then by week number
+        const [yearA, weekA] = a.split('-W').map(Number);
+        const [yearB, weekB] = b.split('-W').map(Number);
+        if (yearA !== yearB) return yearA - yearB;
+        return weekA - weekB;
+      });
       
       // Create weekly trends with all weeks, filling in 0 for weeks without data
       weeklyTrends = allWeeks.map(week => ({
