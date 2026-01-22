@@ -10,14 +10,14 @@ import {
   AlertCircle,
   Clock,
 } from 'lucide-react';
-import type { DashboardStats, DetractorOverview } from '@/lib/types/nps';
 
 export const dynamic = 'force-dynamic';
 
-async function getDashboardData() {
+async function getDashboardData(workspaceId: string) {
   const supabase = createServerComponentClient({ cookies });
 
-  // Get dashboard stats
+  // Get dashboard stats - for now showing all data
+  // TODO: Add workspace_id filtering when we add workspace support to tables
   const { data: stats } = await supabase
     .from('nps_dashboard_stats')
     .select('*')
@@ -50,14 +50,18 @@ async function getDashboardData() {
     .limit(5);
 
   return {
-    stats: stats as DashboardStats | null,
-    recentDetractors: recentDetractors as DetractorOverview[] | null,
+    stats: stats || null,
+    recentDetractors: recentDetractors || [],
     urgentTasks: urgentTasks || [],
   };
 }
 
-export default async function CSMAgentDashboard() {
-  const { stats, recentDetractors, urgentTasks } = await getDashboardData();
+export default async function CSMAgentDashboard({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const { stats, recentDetractors, urgentTasks } = await getDashboardData(params.id);
 
   const statCards = [
     {
@@ -103,7 +107,7 @@ export default async function CSMAgentDashboard() {
         </h2>
         <p className="text-blue-100 text-lg">
           Automatische NPS detractor opvolging en analyse. Start met het{' '}
-          <Link href="/csm-agent/import" className="underline font-semibold hover:text-white">
+          <Link href={`/workspace/${params.id}/csm-agent/import`} className="underline font-semibold hover:text-white">
             importeren van NPS data
           </Link>
           .
@@ -144,10 +148,10 @@ export default async function CSMAgentDashboard() {
           </div>
           <div className="divide-y divide-gray-200">
             {recentDetractors && recentDetractors.length > 0 ? (
-              recentDetractors.map((detractor) => (
+              recentDetractors.map((detractor: any) => (
                 <Link
                   key={detractor.id}
-                  href={`/csm-agent/detractors/${detractor.id}`}
+                  href={`/workspace/${params.id}/csm-agent/detractors/${detractor.id}`}
                   className="block px-6 py-4 hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-start justify-between">
@@ -210,7 +214,7 @@ export default async function CSMAgentDashboard() {
                 </p>
                 <div className="mt-6">
                   <Link
-                    href="/csm-agent/import"
+                    href={`/workspace/${params.id}/csm-agent/import`}
                     className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                   >
                     Import CSV
@@ -222,7 +226,7 @@ export default async function CSMAgentDashboard() {
           {recentDetractors && recentDetractors.length > 0 && (
             <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
               <Link
-                href="/csm-agent/detractors"
+                href={`/workspace/${params.id}/csm-agent/detractors`}
                 className="text-sm font-medium text-blue-600 hover:text-blue-800"
               >
                 Bekijk alle detractors →
@@ -289,7 +293,7 @@ export default async function CSMAgentDashboard() {
           {urgentTasks && urgentTasks.length > 0 && (
             <div className="px-6 py-3 bg-gray-50 border-t border-gray-200">
               <Link
-                href="/csm-agent/tasks"
+                href={`/workspace/${params.id}/csm-agent/tasks`}
                 className="text-sm font-medium text-blue-600 hover:text-blue-800"
               >
                 Bekijk alle taken →
@@ -306,7 +310,7 @@ export default async function CSMAgentDashboard() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
-            href="/csm-agent/import"
+            href={`/workspace/${params.id}/csm-agent/import`}
             className="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all group"
           >
             <div className="bg-blue-100 p-3 rounded-lg group-hover:bg-blue-200">
@@ -319,7 +323,7 @@ export default async function CSMAgentDashboard() {
           </Link>
 
           <Link
-            href="/csm-agent/detractors"
+            href={`/workspace/${params.id}/csm-agent/detractors`}
             className="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all group"
           >
             <div className="bg-purple-100 p-3 rounded-lg group-hover:bg-purple-200">
@@ -332,7 +336,7 @@ export default async function CSMAgentDashboard() {
           </Link>
 
           <Link
-            href="/csm-agent/tasks"
+            href={`/workspace/${params.id}/csm-agent/tasks`}
             className="flex items-center space-x-3 p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all group"
           >
             <div className="bg-green-100 p-3 rounded-lg group-hover:bg-green-200">

@@ -1,35 +1,72 @@
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { LayoutDashboard, Upload, Users, CheckSquare, Settings } from 'lucide-react';
+import { redirect } from 'next/navigation';
 
-export default function CSMAgentLayout({
+export default async function CSMAgentLayout({
   children,
+  params,
 }: {
   children: React.ReactNode;
+  params: { id: string };
 }) {
+  const supabase = createServerComponentClient({ cookies });
+
+  // Check authentication
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    redirect('/signin');
+  }
+
+  // Check if user has access to this workspace
+  const { data: membership } = await supabase
+    .from('workspace_members')
+    .select('*')
+    .eq('workspace_id', params.id)
+    .eq('user_id', session.user.id)
+    .single();
+
+  if (!membership) {
+    redirect('/dashboard');
+  }
+
+  // Get workspace name
+  const { data: workspace } = await supabase
+    .from('workspaces')
+    .select('name')
+    .eq('id', params.id)
+    .single();
+
+  const workspaceName = workspace?.name || 'Workspace';
+
   const navItems = [
     {
       name: 'Dashboard',
-      href: '/csm-agent',
+      href: `/workspace/${params.id}/csm-agent`,
       icon: LayoutDashboard,
     },
     {
       name: 'Import CSV',
-      href: '/csm-agent/import',
+      href: `/workspace/${params.id}/csm-agent/import`,
       icon: Upload,
     },
     {
       name: 'Detractors',
-      href: '/csm-agent/detractors',
+      href: `/workspace/${params.id}/csm-agent/detractors`,
       icon: Users,
     },
     {
       name: 'Taken',
-      href: '/csm-agent/tasks',
+      href: `/workspace/${params.id}/csm-agent/tasks`,
       icon: CheckSquare,
     },
     {
       name: 'Instellingen',
-      href: '/csm-agent/settings',
+      href: `/workspace/${params.id}/csm-agent/settings`,
       icon: Settings,
     },
   ];
@@ -45,13 +82,16 @@ export default function CSMAgentLayout({
                 🤖 CSM Agent - NPS Automation
               </h1>
               <p className="text-sm text-gray-600 mt-1">
-                Automatische NPS detractor opvolging voor Timewax
+                {workspaceName} • Automatische NPS detractor opvolging
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
-                Luuk van Ravestein
-              </span>
+              <Link
+                href={`/workspace/${params.id}`}
+                className="text-sm font-medium text-blue-600 hover:text-blue-800"
+              >
+                ← Terug naar Workspace
+              </Link>
             </div>
           </div>
         </div>

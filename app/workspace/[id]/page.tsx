@@ -91,6 +91,12 @@ const FEATURE_DESCRIPTIONS: Record<string, FeatureDescription> = {
     icon: "🎓",
     category: "Overig"
   },
+  csm_agent_nps: {
+    name: "CSM Agent - NPS Automation",
+    description: "Automatische NPS detractor opvolging met AI analyse",
+    icon: "🤖",
+    category: "Customer Success"
+  },
   // Revenue & Groei Dashboards
   revenue_mrr_arr_trend: {
     name: "MRR / ARR Trend",
@@ -968,6 +974,9 @@ De gebruiker kan nu inloggen en het wachtwoord wijzigen.`);
                             } else if (feature.feature_name === 'academy_monitoring') {
                               hasLink = true;
                               linkUrl = `/workspace/${workspaceId}/academy`;
+                            } else if (feature.feature_name === 'csm_agent_nps') {
+                              hasLink = true;
+                              linkUrl = `/workspace/${workspaceId}/csm-agent`;
                             } else if (feature.feature_name === 'data_upload') {
                               hasLink = true;
                               linkUrl = '/data';
